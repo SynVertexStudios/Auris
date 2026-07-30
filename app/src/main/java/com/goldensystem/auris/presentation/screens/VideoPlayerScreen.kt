@@ -304,11 +304,11 @@ fun VideoPlayerScreen(
                 }
         )
 
-        // 🔥 CONTROLES - TOPO (animação separada)
+        // 🔥 TOPO - Animação separada: desliza de CIMA
         AnimatedVisibility(
             visible = showControls,
-            enter = fadeIn(tween(220)) + slideInVertically(tween(220)) { -it / 8 },
-            exit = fadeOut(tween(180)) + slideOutVertically(tween(180)) { it / 8 },
+            enter = fadeIn(tween(220)) + slideInVertically(tween(220)) { -it / 8 }, // Entra de CIMA
+            exit = fadeOut(tween(180)) + slideOutVertically(tween(180)) { it / 8 },  // Sai pra CIMA
             label = "controlsTop"
         ) {
             Row(
@@ -338,185 +338,180 @@ fun VideoPlayerScreen(
             }
         }
 
-        // 🔥 CONTROLES - INFERIOR (agora com Box específico para não vazar)
+        // 🔥 INFERIOR - Animação separada: desliza de BAIXO
         AnimatedVisibility(
             visible = showControls,
-            enter = fadeIn(tween(220)) + slideInVertically(tween(220)) { it / 8 },
-            exit = fadeOut(tween(180)) + slideOutVertically(tween(180)) { -it / 8 },
+            enter = fadeIn(tween(220)) + slideInVertically(tween(220)) { it / 8 }, // Entra de BAIXO
+            exit = fadeOut(tween(180)) + slideOutVertically(tween(180)) { -it / 8 }, // Sai pra BAIXO
             label = "controlsBottom"
         ) {
-            Box(
+            Column(
                 Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 12.dp)
+                    .navigationBarsPadding()
             ) {
-                Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 12.dp)
-                        .navigationBarsPadding()
-                ) {
-                    var isDragging by remember { mutableStateOf(false) }
-                    var dragPosition by remember { mutableFloatStateOf(0f) }
+                var isDragging by remember { mutableStateOf(false) }
+                var dragPosition by remember { mutableFloatStateOf(0f) }
 
-                    // Barra de progresso
-                    Canvas(
-                        Modifier.fillMaxWidth()
-                            .height(20.dp)
-                            .offset(y = 4.dp)
-                            .pointerInput(Unit) {
-                                detectHorizontalDragGestures(
-                                    onDragStart = {
-                                        isDragging = true
-                                        dragPosition = (it.x / size.width).coerceIn(0f, 1f)
-                                        resetAutoHide()
-                                    },
-                                    onHorizontalDrag = { _, dragAmount ->
-                                        dragPosition = (dragPosition + dragAmount / size.width).coerceIn(0f, 1f)
-                                    },
-                                    onDragEnd = {
-                                        viewModel.seekTo((dragPosition * state.durationMs).toLong())
-                                        isDragging = false
-                                    },
-                                    onDragCancel = { isDragging = false }
-                                )
-                            }
-                    ) {
-                        val eff = if (isDragging) dragPosition else if (state.durationMs > 0) state.currentPositionMs.toFloat() / state.durationMs else 0f
-                        val buf = (viewModel.exoPlayer?.bufferedPercentage?.toFloat() ?: 0f) / 100f
-                        val th = if (isDragging) 5.dp.toPx() else 3.dp.toPx()
-                        val tr = if (isDragging) 8.dp.toPx() else 3.dp.toPx()
-
-                        drawRoundRect(
-                            color = Color.White.copy(alpha = 0.15f),
-                            topLeft = Offset.Zero,
-                            size = Size(size.width, th),
-                            cornerRadius = CornerRadius(th / 2)
-                        )
-                        drawRoundRect(
-                            color = Color.White.copy(alpha = 0.25f),
-                            topLeft = Offset.Zero,
-                            size = Size(size.width * buf, th),
-                            cornerRadius = CornerRadius(th / 2)
-                        )
-                        drawRoundRect(
-                            color = Color.White,
-                            topLeft = Offset.Zero,
-                            size = Size(size.width * eff, th),
-                            cornerRadius = CornerRadius(th / 2)
-                        )
-                        if (tr > 0f) {
-                            drawCircle(
-                                color = Color.White,
-                                radius = tr,
-                                center = Offset(size.width * eff, th / 2)
-                            )
-                            if (isDragging) {
-                                drawCircle(
-                                    color = Color.White.copy(alpha = 0.5f),
-                                    radius = tr + 2.dp.toPx(),
-                                    center = Offset(size.width * eff, th / 2),
-                                    style = Stroke(1.dp.toPx())
-                                )
-                            }
-                        }
-                    }
-
-                    // Tempo
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        val displayedPos = if (isDragging) (dragPosition * state.durationMs).toLong() else state.currentPositionMs
-                        Text(
-                            VideoUtils.formatDuration(displayedPos),
-                            color = Color.White.copy(alpha = 0.7f),
-                            fontSize = 10.sp
-                        )
-                        Text(
-                            VideoUtils.formatDuration(state.durationMs),
-                            color = Color.White.copy(alpha = 0.7f),
-                            fontSize = 10.sp
-                        )
-                    }
-
-                    Spacer(Modifier.height(6.dp))
-
-                    // Botões
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(
-                            onClick = { viewModel.goToPrevious() },
-                            modifier = Modifier.size(36.dp),
-                            enabled = state.queue.hasPrevious
-                        ) {
-                            Icon(Icons.Filled.SkipPrevious, "Anterior", tint = Color.White, modifier = Modifier.size(20.dp))
-                        }
-                        
-                        Spacer(Modifier.width(8.dp))
-                        
-                        IconButton(
-                            { viewModel.seekBy(-10000) },
-                            Modifier.size(36.dp)
-                        ) {
-                            Icon(Icons.Filled.Replay10, "-10s", tint = Color.White, modifier = Modifier.size(20.dp))
-                        }
-                        
-                        Spacer(Modifier.width(12.dp))
-                        
-                        IconButton(
-                            { viewModel.playPause() },
-                            Modifier.size(44.dp)
-                        ) {
-                            AnimatedContent(
-                                state.isPlaying,
-                                transitionSpec = {
-                                    scaleIn(spring(dampingRatio = 0.55f, stiffness = 350f)) togetherWith
-                                    fadeOut(spring(dampingRatio = 0.55f, stiffness = 350f))
+                // Barra de progresso
+                Canvas(
+                    Modifier.fillMaxWidth()
+                        .height(20.dp)
+                        .offset(y = 4.dp)
+                        .pointerInput(Unit) {
+                            detectHorizontalDragGestures(
+                                onDragStart = {
+                                    isDragging = true
+                                    dragPosition = (it.x / size.width).coerceIn(0f, 1f)
+                                    resetAutoHide()
                                 },
-                                label = "playPauseSm"
-                            ) { playing ->
-                                Icon(
-                                    if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                                    null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(28.dp)
-                                )
-                            }
+                                onHorizontalDrag = { _, dragAmount ->
+                                    dragPosition = (dragPosition + dragAmount / size.width).coerceIn(0f, 1f)
+                                },
+                                onDragEnd = {
+                                    viewModel.seekTo((dragPosition * state.durationMs).toLong())
+                                    isDragging = false
+                                },
+                                onDragCancel = { isDragging = false }
+                            )
                         }
-                        
-                        Spacer(Modifier.width(12.dp))
-                        
-                        IconButton(
-                            { viewModel.seekBy(10000) },
-                            Modifier.size(36.dp)
-                        ) {
-                            Icon(Icons.Filled.Forward10, "+10s", tint = Color.White, modifier = Modifier.size(20.dp))
-                        }
-                        
-                        Spacer(Modifier.width(8.dp))
-                        
-                        IconButton(
-                            onClick = { viewModel.advanceToNext() },
-                            modifier = Modifier.size(36.dp),
-                            enabled = state.queue.hasNext
-                        ) {
-                            Icon(Icons.Filled.SkipNext, "Próximo", tint = Color.White, modifier = Modifier.size(20.dp))
+                ) {
+                    val eff = if (isDragging) dragPosition else if (state.durationMs > 0) state.currentPositionMs.toFloat() / state.durationMs else 0f
+                    val buf = (viewModel.exoPlayer?.bufferedPercentage?.toFloat() ?: 0f) / 100f
+                    val th = if (isDragging) 5.dp.toPx() else 3.dp.toPx()
+                    val tr = if (isDragging) 8.dp.toPx() else 3.dp.toPx()
+
+                    drawRoundRect(
+                        color = Color.White.copy(alpha = 0.15f),
+                        topLeft = Offset.Zero,
+                        size = Size(size.width, th),
+                        cornerRadius = CornerRadius(th / 2)
+                    )
+                    drawRoundRect(
+                        color = Color.White.copy(alpha = 0.25f),
+                        topLeft = Offset.Zero,
+                        size = Size(size.width * buf, th),
+                        cornerRadius = CornerRadius(th / 2)
+                    )
+                    drawRoundRect(
+                        color = Color.White,
+                        topLeft = Offset.Zero,
+                        size = Size(size.width * eff, th),
+                        cornerRadius = CornerRadius(th / 2)
+                    )
+                    if (tr > 0f) {
+                        drawCircle(
+                            color = Color.White,
+                            radius = tr,
+                            center = Offset(size.width * eff, th / 2)
+                        )
+                        if (isDragging) {
+                            drawCircle(
+                                color = Color.White.copy(alpha = 0.5f),
+                                radius = tr + 2.dp.toPx(),
+                                center = Offset(size.width * eff, th / 2),
+                                style = Stroke(1.dp.toPx())
+                            )
                         }
                     }
+                }
 
-                    Spacer(Modifier.height(4.dp))
-                    
+                // Tempo
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    val displayedPos = if (isDragging) (dragPosition * state.durationMs).toLong() else state.currentPositionMs
                     Text(
-                        state.queue.positionDescription,
-                        color = Color.White.copy(alpha = 0.4f),
-                        fontSize = 10.sp,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                        VideoUtils.formatDuration(displayedPos),
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 10.sp
+                    )
+                    Text(
+                        VideoUtils.formatDuration(state.durationMs),
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 10.sp
                     )
                 }
+
+                Spacer(Modifier.height(6.dp))
+
+                // Botões
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = { viewModel.goToPrevious() },
+                        modifier = Modifier.size(36.dp),
+                        enabled = state.queue.hasPrevious
+                    ) {
+                        Icon(Icons.Filled.SkipPrevious, "Anterior", tint = Color.White, modifier = Modifier.size(20.dp))
+                    }
+                    
+                    Spacer(Modifier.width(8.dp))
+                    
+                    IconButton(
+                        { viewModel.seekBy(-10000) },
+                        Modifier.size(36.dp)
+                    ) {
+                        Icon(Icons.Filled.Replay10, "-10s", tint = Color.White, modifier = Modifier.size(20.dp))
+                    }
+                    
+                    Spacer(Modifier.width(12.dp))
+                    
+                    IconButton(
+                        { viewModel.playPause() },
+                        Modifier.size(44.dp)
+                    ) {
+                        AnimatedContent(
+                            state.isPlaying,
+                            transitionSpec = {
+                                scaleIn(spring(dampingRatio = 0.55f, stiffness = 350f)) togetherWith
+                                fadeOut(spring(dampingRatio = 0.55f, stiffness = 350f))
+                            },
+                            label = "playPauseSm"
+                        ) { playing ->
+                            Icon(
+                                if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                                null,
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }
+                    
+                    Spacer(Modifier.width(12.dp))
+                    
+                    IconButton(
+                        { viewModel.seekBy(10000) },
+                        Modifier.size(36.dp)
+                    ) {
+                        Icon(Icons.Filled.Forward10, "+10s", tint = Color.White, modifier = Modifier.size(20.dp))
+                    }
+                    
+                    Spacer(Modifier.width(8.dp))
+                    
+                    IconButton(
+                        onClick = { viewModel.advanceToNext() },
+                        modifier = Modifier.size(36.dp),
+                        enabled = state.queue.hasNext
+                    ) {
+                        Icon(Icons.Filled.SkipNext, "Próximo", tint = Color.White, modifier = Modifier.size(20.dp))
+                    }
+                }
+
+                Spacer(Modifier.height(4.dp))
+                
+                Text(
+                    state.queue.positionDescription,
+                    color = Color.White.copy(alpha = 0.4f),
+                    fontSize = 10.sp,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
             }
         }
     }
