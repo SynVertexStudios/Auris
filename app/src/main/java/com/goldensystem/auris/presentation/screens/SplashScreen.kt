@@ -1,21 +1,29 @@
 // presentation/screens/SplashScreen.kt
 package com.goldensystem.auris.presentation.screens
 
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,108 +36,10 @@ import kotlinx.coroutines.delay
 fun SplashScreen(
     onAnimationComplete: () -> Unit
 ) {
-    // Animações usando Animatable para controle preciso
-    val scale = remember { Animatable(0.2f) }
-    val rotation = remember { Animatable(-15f) }
-    val alphaAnim = remember { Animatable(0f) }
-    val glowProgress = remember { Animatable(0f) }
-    val textAlphaAnim = remember { Animatable(0f) }
-    val textTranslationY = remember { Animatable(20f) }
-    val shadeAlpha = remember { Animatable(0f) }
-    val finalFade = remember { Animatable(1f) }
-    val impactScale = remember { Animatable(1f) }
-
-    var isAnimationComplete by remember { mutableStateOf(false) }
-
+    // Timer de 0.80 segundos
     LaunchedEffect(Unit) {
-        // Fase 1: Logo aparece (fade + escala + rotação)
-        alphaAnim.animateTo(1f, animationSpec = tween(400, easing = FastOutSlowInEasing))
-        delay(50)
-        scale.animateTo(
-            targetValue = 1f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioLowBouncy,
-                stiffness = Spring.StiffnessMediumLow
-            )
-        )
-        rotation.animateTo(
-            targetValue = 0f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioLowBouncy,
-                stiffness = Spring.StiffnessMedium
-            )
-        )
-        delay(150)
-
-        // Fase 2: Efeito de IMPACTO
-        impactScale.animateTo(
-            targetValue = 1.04f,
-            animationSpec = tween(80, easing = FastOutSlowInEasing)
-        )
-        impactScale.animateTo(
-            targetValue = 1f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioLowBouncy,
-                stiffness = Spring.StiffnessHigh
-            )
-        )
-        delay(50)
-
-        // Fase 3: Sombras
-        shadeAlpha.animateTo(1f, animationSpec = tween(300, easing = FastOutSlowInEasing))
-        delay(100)
-
-        // Fase 4: Brilho diagonal - agora na tela toda
-        glowProgress.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(600, easing = FastOutSlowInEasing) // mais lento pra atravessar
-        )
-        delay(100)
-        glowProgress.animateTo(
-            targetValue = 0f,
-            animationSpec = tween(400, easing = FastOutSlowInEasing) // mais lento pra sumir
-        )
-        delay(150)
-
-        // Fase 5: Micro-vibração
-        rotation.animateTo(
-            targetValue = 0f,
-            animationSpec = keyframes {
-                durationMillis = 120
-                -2f at 0
-                2f at 30
-                -1.5f at 55
-                1.5f at 75
-                0f at 120
-            }
-        )
-        delay(50)
-
-        // Fase 6: Texto aparece
-        textAlphaAnim.animateTo(1f, animationSpec = tween(350, easing = FastOutSlowInEasing))
-        textTranslationY.animateTo(
-            targetValue = 0f,
-            animationSpec = tween(400, easing = FastOutSlowInEasing)
-        )
-        delay(300)
-
-        // Fase 7: Pausa
-        delay(400)
-
-        // Fase 8: Fade out
-        finalFade.animateTo(
-            targetValue = 0f,
-            animationSpec = tween(350, easing = FastOutSlowInEasing)
-        )
-        
-        isAnimationComplete = true
-    }
-
-    LaunchedEffect(isAnimationComplete) {
-        if (isAnimationComplete) {
-            delay(50)
-            onAnimationComplete()
-        }
+        delay(800) // 0.80 segundos
+        onAnimationComplete()
     }
 
     val gradientBrush = Brush.verticalGradient(
@@ -140,129 +50,47 @@ fun SplashScreen(
         )
     )
 
-    // Brilho diagonal - agora se move pela TELA INTEIRA (de -300% a 300%)
-    val glowTranslationX = (glowProgress.value * 600f) - 300f // -300 a +300 (tela toda)
-
-    Surface(
-        modifier = Modifier
-            .fillMaxSize()
-            .graphicsLayer {
-                alpha = finalFade.value
-            },
-        color = Color.Transparent
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(gradientBrush),
-            contentAlignment = Alignment.Center
-        ) {
-            FloatingParticles()
-
-            // BRILHO DIAGONAL - AGORA NA TELA TODA (em cima de tudo, mas atrás do texto)
-            if (glowProgress.value > 0.01f) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer {
-                            alpha = glowProgress.value * 0.15f // mais sutil pra não ofuscar
-                            translationX = glowTranslationX
-                        }
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color.White.copy(alpha = 0.3f),
-                                    Color.White.copy(alpha = 0.15f),
-                                    Color.Transparent
-                                )
-                            )
-                        )
-                )
-            }
-
-            // LOGO - sem a CAMADA 3 (fundo radial roxo)
-            // LOGO - sem shadow
-Box(
-    modifier = Modifier
-        .size(170.dp)
-        .graphicsLayer {
-            scaleX = scale.value * impactScale.value
-            scaleY = scale.value * impactScale.value
-            rotationZ = rotation.value
-            alpha = alphaAnim.value
-            transformOrigin = TransformOrigin(0.5f, 0.5f)
-        }
-        .background(Color.Transparent), // FUNDO TRANSPARENTE
-    contentAlignment = Alignment.Center
-) {
-    // Imagem do logo
-    Image(
-        painter = painterResource(R.drawable.ic_auris_logo_transparent),
-        contentDescription = "Auris Logo",
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(12.dp),
-        contentScale = ContentScale.Fit
-    )
-
-    // Efeito de brilho radial pulsante (mantido)
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .graphicsLayer {
-                alpha = (1f - scale.value.coerceIn(0f, 1f)) * 0.3f
-            }
-            .background(
-                Brush.radialGradient(
-                    colors = listOf(
-                        Color(0xFF6C5CE7).copy(alpha = 0.1f),
-                        Color.Transparent
-                    ),
-                    radius = 60f
-                ),
-                shape = androidx.compose.foundation.shape.CircleShape
-            )
-    )
-}
+            .background(gradientBrush),
+        contentAlignment = Alignment.Center
+    ) {
+        // Partículas flutuantes
+        FloatingParticles()
 
-            // Texto "Auris"
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .padding(top = 240.dp)
-                    .graphicsLayer {
-                        alpha = textAlphaAnim.value
-                        translationY = textTranslationY.value
-                    }
-            ) {
-                Text(
-                    text = "Auris",
-                    color = Color.White,
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.5.sp,
-                    modifier = Modifier.alpha(0.9f)
-                )
-                
-                Box(
-                    modifier = Modifier
-                        .width(40.dp)
-                        .height(2.dp)
-                        .padding(top = 4.dp)
-                        .alpha(0.3f * textAlphaAnim.value)
-                        .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color(0xFF6C5CE7),
-                                    Color.Transparent
-                                )
-                            )
-                        )
-                )
-            }
-        }
+        // Logo centralizado
+        Image(
+            painter = painterResource(R.drawable.ic_auris_logo_transparent),
+            contentDescription = "Auris Logo",
+            modifier = Modifier.size(170.dp),
+            contentScale = ContentScale.Fit
+        )
+
+        // Texto "Auris" abaixo do logo
+        Text(
+            text = "Auris",
+            color = Color.White,
+            fontSize = 32.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.5.sp,
+            modifier = Modifier
+                .padding(top = 240.dp)
+                .alpha(0.9f)
+        )
+
+        // Texto "by Golden System" no rodapé
+        Text(
+            text = "by Golden System",
+            color = Color.White.copy(alpha = 0.4f),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Normal,
+            letterSpacing = 0.5.sp,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 48.dp)
+                .alpha(0.7f)
+        )
     }
 }
 
@@ -304,7 +132,7 @@ private fun FloatingParticles() {
                 )
                 .size(particle.size)
                 .alpha(particle.alphaBase + (0.15f * (1f - floatValue.coerceIn(0f, 1f))))
-                .background(Color.White, androidx.compose.foundation.shape.CircleShape)
+                .background(Color.White, CircleShape)
         )
     }
 }
