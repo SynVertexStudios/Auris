@@ -309,7 +309,7 @@ fun VideoPlayerScreen(
             AnimatedVisibility(
                 visible = showControls,
                 enter = fadeIn(tween(220)) + slideInVertically(tween(220)) { -it / 8 }, // Entra de CIMA
-                exit = fadeOut(tween(180)) + slideOutVertically(tween(180)) { it / 8 },  // Sai pra CIMA
+                exit = fadeOut(tween(180)) + slideOutVertically(tween(180)) { -it / 8 },  // Sai pra CIMA
                 label = "controlsTop"
             ) {
                 Row(
@@ -344,7 +344,7 @@ fun VideoPlayerScreen(
             AnimatedVisibility(
                 visible = showControls,
                 enter = fadeIn(tween(220)) + slideInVertically(tween(220)) { it / 8 }, // Entra de BAIXO
-                exit = fadeOut(tween(180)) + slideOutVertically(tween(180)) { -it / 8 }, // Sai pra BAIXO
+                exit = fadeOut(tween(180)) + slideOutVertically(tween(180)) { it / 8 }, // Sai pra BAIXO
                 label = "controlsBottom"
             ) {
                 Column(

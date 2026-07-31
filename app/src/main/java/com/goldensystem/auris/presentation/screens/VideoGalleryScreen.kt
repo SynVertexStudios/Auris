@@ -3,7 +3,6 @@
 package com.goldensystem.auris.presentation.screens
 
 import android.Manifest
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.animation.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,7 +35,6 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
@@ -55,7 +53,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -84,7 +81,6 @@ import com.goldensystem.auris.utils.VideoUtils
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import kotlin.math.roundToInt
 
 enum class NavigationDirection { FORWARD, BACK }
 
@@ -100,36 +96,6 @@ fun VideoGalleryScreen(
     val transitionKey = "${state.currentContext.name}_${state.showFoldersOnly}_${state.currentFolder ?: "root"}"
     
     var navDirection by remember { mutableStateOf(NavigationDirection.FORWARD) }
-    
-    // Definir as abas disponíveis
-    val tabs = listOf(
-        TabItem(QueueContext.ALL, false),   // Todos (índice 0)
-        TabItem(QueueContext.RECENT, false), // Recentes (índice 1)
-        TabItem(QueueContext.FOLDER, true)   // Pastas (índice 2)
-    )
-    
-    // Determinar o índice atual baseado no estado
-    val currentIndex = remember(state.currentContext, state.showFoldersOnly) {
-        when {
-            state.showFoldersOnly -> 2 // Pastas
-            state.currentContext == QueueContext.RECENT -> 1 // Recentes
-            else -> 0 // Todos
-        }
-    }
-    
-    // Guardar o índice anterior para comparação
-    var previousIndex by remember { mutableStateOf(currentIndex) }
-    
-    // Detectar mudanças de índice e determinar direção
-    LaunchedEffect(currentIndex) {
-        val direction = when {
-            currentIndex > previousIndex -> NavigationDirection.FORWARD
-            currentIndex < previousIndex -> NavigationDirection.BACK
-            else -> NavigationDirection.FORWARD
-        }
-        navDirection = direction
-        previousIndex = currentIndex
-    }
     
     val customThemeViewModel: CustomThemeViewModel = hiltViewModel()
     val config by customThemeViewModel.customThemeConfig.collectAsStateWithLifecycle()
@@ -173,27 +139,8 @@ fun VideoGalleryScreen(
                         state = state,
                         onSearchChange = viewModel::setSearchQuery,
                         onSortChange = viewModel::setSortMode,
-                        onContextChange = { newContext ->
-                            // Atualizar o índice baseado no novo contexto
-                            val newIndex = when {
-                                newContext == QueueContext.FOLDER -> 2
-                                newContext == QueueContext.RECENT -> 1
-                                else -> 0
-                            }
-                            // A direção será calculada no LaunchedEffect
-                            previousIndex = currentIndex
-                            viewModel.setContext(newContext)
-                            if (newContext != QueueContext.FOLDER) {
-                                viewModel.setShowFoldersOnly(false)
-                            }
-                        },
-                        onToggleShowFolders = { show ->
-                            previousIndex = currentIndex
-                            viewModel.setShowFoldersOnly(show)
-                            if (show) {
-                                viewModel.setContext(QueueContext.FOLDER)
-                            }
-                        },
+                        onContextChange = viewModel::setContext,
+                        onToggleShowFolders = viewModel::setShowFoldersOnly,
                         onBack = {
                             if (state.currentContext == QueueContext.FOLDER) {
                                 navDirection = NavigationDirection.BACK
@@ -203,239 +150,172 @@ fun VideoGalleryScreen(
                     )
                 }
             ) { padding ->
-                // Estado para controle do arraste
-                var dragOffset by remember { mutableStateOf(0f) }
-                var isDragging by remember { mutableStateOf(false) }
-                
-                Box(
-                    modifier = Modifier
-                        .padding(padding)
-                        .pointerInput(Unit) {
-                            detectHorizontalDragGestures(
-                                onDragStart = { offset ->
-                                    isDragging = true
-                                    dragOffset = 0f
-                                },
-                                onDragEnd = {
-                                    isDragging = false
-                                    val threshold = 100f
-                                    when {
-                                        dragOffset < -threshold && currentIndex < tabs.size - 1 -> {
-                                            val newIndex = currentIndex + 1
-                                            navigateToTab(newIndex, viewModel)
-                                        }
-                                        dragOffset > threshold && currentIndex > 0 -> {
-                                            val newIndex = currentIndex - 1
-                                            navigateToTab(newIndex, viewModel)
-                                        }
-                                    }
-                                    dragOffset = 0f
-                                },
-                                onHorizontalDrag = { change, dragAmount ->
-                                    change.consume()
-                                    dragOffset += dragAmount
-                                    // Limitar o arraste para não passar do limite
-                                    val maxOffset = 300f
-                                    dragOffset = when {
-                                        dragOffset > maxOffset -> maxOffset
-                                        dragOffset < -maxOffset -> -maxOffset
-                                        else -> dragOffset
-                                    }
-                                }
-                            )
-                        }
-                ) {
-                    // Animar o conteúdo com base no arraste
-                    val offsetX = if (isDragging) dragOffset else 0f
-                    val animatedOffset by animateFloatAsState(
-                        targetValue = offsetX,
-                        animationSpec = spring(
-                            dampingRatio = 0.8f,
-                            stiffness = 300f
-                        )
-                    )
-                    
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .offset { IntOffset(animatedOffset.roundToInt(), 0) }
-                    ) {
-                        AnimatedContent(
-                            targetState = transitionKey,
-                            transitionSpec = {
-                                when (navDirection) {
-                                    NavigationDirection.FORWARD -> {
-                                        slideInHorizontally(
-                                            initialOffsetX = { fullWidth -> fullWidth }
-                                        ) + fadeIn() togetherWith
-                                        slideOutHorizontally(
-                                            targetOffsetX = { fullWidth -> -fullWidth }
-                                        ) + fadeOut()
-                                    }
-                                    NavigationDirection.BACK -> {
-                                        slideInHorizontally(
-                                            initialOffsetX = { fullWidth -> -fullWidth }
-                                        ) + fadeIn() togetherWith
-                                        slideOutHorizontally(
-                                            targetOffsetX = { fullWidth -> fullWidth }
-                                        ) + fadeOut()
-                                    }
-                                }.using(SizeTransform(clip = false))
+                AnimatedContent(
+                    targetState = transitionKey,
+                    transitionSpec = {
+                        when (navDirection) {
+                            NavigationDirection.FORWARD -> {
+                                slideInHorizontally { it } + fadeIn() togetherWith
+                                slideOutHorizontally { -it } + fadeOut()
                             }
-                        ) { _ ->
-                            Box(modifier = Modifier.fillMaxSize()) {
-                                when {
-                                    state.isLoading -> LoadingState()
-                                    state.errorMessage != null -> ErrorState(state.errorMessage!!) { viewModel.loadVideos() }
-                                    state.showFoldersOnly && state.folders.isEmpty() -> EmptyState()
-                                    state.displayVideos.isEmpty() && !state.showFoldersOnly && state.searchQuery.isNotBlank() -> EmptySearchState()
-                                    state.displayVideos.isEmpty() && !state.showFoldersOnly && state.searchQuery.isBlank() -> EmptyState()
-                                    else -> {
-                                        val showFeatured = !state.showFoldersOnly && state.searchQuery.isBlank() && state.currentContext != QueueContext.FOLDER
-                                        val listState = rememberLazyListState()
-                                        val isRefreshing by remember { mutableStateOf(false) }
-                                        val pullToRefreshState = rememberPullToRefreshState()
-                                        
-                                        val density = LocalDensity.current
-                                        val bottomPadding = with(density) { 16.dp }
+                            NavigationDirection.BACK -> {
+                                slideInHorizontally { -it } + fadeIn() togetherWith
+                                slideOutHorizontally { it } + fadeOut()
+                            }
+                        }.using(SizeTransform(clip = false))
+                    }
+                ) { _ ->
+                    Box(modifier = Modifier.padding(padding)) {
+                        when {
+                            state.isLoading -> LoadingState()
+                            state.errorMessage != null -> ErrorState(state.errorMessage!!) { viewModel.loadVideos() }
+                            state.showFoldersOnly && state.folders.isEmpty() -> EmptyState()
+                            state.displayVideos.isEmpty() && !state.showFoldersOnly && state.searchQuery.isNotBlank() -> EmptySearchState()
+                            state.displayVideos.isEmpty() && !state.showFoldersOnly && state.searchQuery.isBlank() -> EmptyState()
+                            else -> {
+                                val showFeatured = !state.showFoldersOnly && state.searchQuery.isBlank() && state.currentContext != QueueContext.FOLDER
+                                val listState = rememberLazyListState()
+                                val isRefreshing by remember { mutableStateOf(false) }
+                                val pullToRefreshState = rememberPullToRefreshState()
+                                
+                                val density = LocalDensity.current
+                                val bottomPadding = with(density) { 16.dp }
 
-                                        PullToRefreshBox(
-                                            isRefreshing = isRefreshing,
-                                            onRefresh = { viewModel.loadVideos() },
-                                            state = pullToRefreshState,
-                                            modifier = Modifier.fillMaxSize(),
-                                            indicator = {
-                                                PullToRefreshDefaults.LoadingIndicator(
-                                                    state = pullToRefreshState,
-                                                    isRefreshing = isRefreshing,
-                                                    modifier = Modifier.align(Alignment.TopCenter)
-                                                )
-                                            }
+                                PullToRefreshBox(
+                                    isRefreshing = isRefreshing,
+                                    onRefresh = { viewModel.loadVideos() },
+                                    state = pullToRefreshState,
+                                    modifier = Modifier.fillMaxSize(),
+                                    indicator = {
+    PullToRefreshDefaults.LoadingIndicator(
+        state = pullToRefreshState,
+        isRefreshing = isRefreshing,
+        modifier = Modifier.align(Alignment.TopCenter)
+    )
+}
+                                ) {
+                                    Box(modifier = Modifier.fillMaxSize()) {
+                                        LazyColumn(
+                                            state = listState,
+                                            contentPadding = PaddingValues(
+                                                start = 12.dp,
+                                                end = if (listState.canScrollForward || listState.canScrollBackward) 22.dp else 12.dp,
+                                                top = 12.dp,
+                                                bottom = 12.dp
+                                            ),
+                                            verticalArrangement = Arrangement.spacedBy(12.dp)
                                         ) {
-                                            Box(modifier = Modifier.fillMaxSize()) {
-                                                LazyColumn(
-                                                    state = listState,
-                                                    contentPadding = PaddingValues(
-                                                        start = 12.dp,
-                                                        end = if (listState.canScrollForward || listState.canScrollBackward) 22.dp else 12.dp,
-                                                        top = 12.dp,
-                                                        bottom = 12.dp
-                                                    ),
-                                                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                                                ) {
-                                                    if (state.showFoldersOnly) {
-                                                        val foldersChunked = state.folders.chunked(2)
-                                                        items(foldersChunked, key = { it.hashCode() }) { rowFolders ->
+                                            if (state.showFoldersOnly) {
+                                                val foldersChunked = state.folders.chunked(2)
+                                                items(foldersChunked, key = { it.hashCode() }) { rowFolders ->
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                                    ) {
+                                                        rowFolders.forEach { folder ->
+                                                            Box(modifier = Modifier.weight(1f)) {
+                                                                FolderItem(folder) { 
+                                                                    navDirection = NavigationDirection.FORWARD
+                                                                    viewModel.enterFolder(folder.path) 
+                                                                }
+                                                            }
+                                                        }
+                                                        repeat(2 - rowFolders.size) {
+                                                            Spacer(modifier = Modifier.weight(1f))
+                                                        }
+                                                    }
+                                                }
+                                            } else {
+                                                val videos = state.displayVideos
+                                                
+                                                if (showFeatured && videos.isNotEmpty()) {
+                                                    val featured = viewModel.getFeaturedVideo()
+                                                    if (featured != null) {
+                                                        item {
+                                                            FeaturedVideoItem(
+                                                                video = featured,
+                                                                viewModel = viewModel,
+                                                                onClick = { queue ->
+                                                                    viewModel.incrementViewCount(featured.id)
+                                                                    VideoQueueHolder.setQueue(queue)
+                                                                    onOpenPlayerWithQueue(queue)
+                                                                }
+                                                            )
+                                                        }
+                                                        val remainingVideos = videos.filter { it.id != featured.id }
+                                                        val remainingChunked = remainingVideos.chunked(2)
+                                                        items(remainingChunked, key = { it.hashCode() }) { rowVideos ->
                                                             Row(
                                                                 modifier = Modifier.fillMaxWidth(),
                                                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                                                             ) {
-                                                                rowFolders.forEach { folder ->
+                                                                rowVideos.forEach { video ->
                                                                     Box(modifier = Modifier.weight(1f)) {
-                                                                        FolderItem(folder) { 
-                                                                            navDirection = NavigationDirection.FORWARD
-                                                                            viewModel.enterFolder(folder.path) 
+                                                                        VideoGridItem(video, viewModel) { queue ->
+                                                                            viewModel.incrementViewCount(video.id)
+                                                                            VideoQueueHolder.setQueue(queue)
+                                                                            onOpenPlayerWithQueue(queue)
                                                                         }
                                                                     }
                                                                 }
-                                                                repeat(2 - rowFolders.size) {
+                                                                repeat(2 - rowVideos.size) {
                                                                     Spacer(modifier = Modifier.weight(1f))
                                                                 }
                                                             }
                                                         }
                                                     } else {
-                                                        val videos = state.displayVideos
-                                                        
-                                                        if (showFeatured && videos.isNotEmpty()) {
-                                                            val featured = viewModel.getFeaturedVideo()
-                                                            if (featured != null) {
-                                                                item {
-                                                                    FeaturedVideoItem(
-                                                                        video = featured,
-                                                                        viewModel = viewModel,
-                                                                        onClick = { queue ->
-                                                                            viewModel.incrementViewCount(featured.id)
+                                                        val videosChunked = videos.chunked(2)
+                                                        items(videosChunked, key = { it.hashCode() }) { rowVideos ->
+                                                            Row(
+                                                                modifier = Modifier.fillMaxWidth(),
+                                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                                            ) {
+                                                                rowVideos.forEach { video ->
+                                                                    Box(modifier = Modifier.weight(1f)) {
+                                                                        VideoGridItem(video, viewModel) { queue ->
+                                                                            viewModel.incrementViewCount(video.id)
                                                                             VideoQueueHolder.setQueue(queue)
                                                                             onOpenPlayerWithQueue(queue)
                                                                         }
-                                                                    )
-                                                                }
-                                                                val remainingVideos = videos.filter { it.id != featured.id }
-                                                                val remainingChunked = remainingVideos.chunked(2)
-                                                                items(remainingChunked, key = { it.hashCode() }) { rowVideos ->
-                                                                    Row(
-                                                                        modifier = Modifier.fillMaxWidth(),
-                                                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                                                    ) {
-                                                                        rowVideos.forEach { video ->
-                                                                            Box(modifier = Modifier.weight(1f)) {
-                                                                                VideoGridItem(video, viewModel) { queue ->
-                                                                                    viewModel.incrementViewCount(video.id)
-                                                                                    VideoQueueHolder.setQueue(queue)
-                                                                                    onOpenPlayerWithQueue(queue)
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                        repeat(2 - rowVideos.size) {
-                                                                            Spacer(modifier = Modifier.weight(1f))
-                                                                        }
                                                                     }
                                                                 }
-                                                            } else {
-                                                                val videosChunked = videos.chunked(2)
-                                                                items(videosChunked, key = { it.hashCode() }) { rowVideos ->
-                                                                    Row(
-                                                                        modifier = Modifier.fillMaxWidth(),
-                                                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                                                    ) {
-                                                                        rowVideos.forEach { video ->
-                                                                            Box(modifier = Modifier.weight(1f)) {
-                                                                                VideoGridItem(video, viewModel) { queue ->
-                                                                                    viewModel.incrementViewCount(video.id)
-                                                                                    VideoQueueHolder.setQueue(queue)
-                                                                                    onOpenPlayerWithQueue(queue)
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                        repeat(2 - rowVideos.size) {
-                                                                            Spacer(modifier = Modifier.weight(1f))
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-                                                        } else {
-                                                            val videosChunked = videos.chunked(2)
-                                                            items(videosChunked, key = { it.hashCode() }) { rowVideos ->
-                                                                Row(
-                                                                    modifier = Modifier.fillMaxWidth(),
-                                                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                                                ) {
-                                                                    rowVideos.forEach { video ->
-                                                                        Box(modifier = Modifier.weight(1f)) {
-                                                                            VideoGridItem(video, viewModel) { queue ->
-                                                                                viewModel.incrementViewCount(video.id)
-                                                                                VideoQueueHolder.setQueue(queue)
-                                                                                onOpenPlayerWithQueue(queue)
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                    repeat(2 - rowVideos.size) {
-                                                                        Spacer(modifier = Modifier.weight(1f))
-                                                                    }
+                                                                repeat(2 - rowVideos.size) {
+                                                                    Spacer(modifier = Modifier.weight(1f))
                                                                 }
                                                             }
                                                         }
                                                     }
+                                                } else {
+                                                    val videosChunked = videos.chunked(2)
+                                                    items(videosChunked, key = { it.hashCode() }) { rowVideos ->
+                                                        Row(
+                                                            modifier = Modifier.fillMaxWidth(),
+                                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                                        ) {
+                                                            rowVideos.forEach { video ->
+                                                                Box(modifier = Modifier.weight(1f)) {
+                                                                    VideoGridItem(video, viewModel) { queue ->
+                                                                        viewModel.incrementViewCount(video.id)
+                                                                        VideoQueueHolder.setQueue(queue)
+                                                                        onOpenPlayerWithQueue(queue)
+                                                                    }
+                                                                }
+                                                            }
+                                                            repeat(2 - rowVideos.size) {
+                                                                Spacer(modifier = Modifier.weight(1f))
+                                                            }
+                                                        }
+                                                    }
                                                 }
-
-                                                ExpressiveScrollBar(
-                                                    modifier = Modifier
-                                                        .align(Alignment.CenterEnd)
-                                                        .padding(end = 4.dp, top = 16.dp, bottom = bottomPadding),
-                                                    listState = listState
-                                                )
                                             }
                                         }
+
+                                        ExpressiveScrollBar(
+                                            modifier = Modifier
+                                                .align(Alignment.CenterEnd)
+                                                .padding(end = 4.dp, top = 16.dp, bottom = bottomPadding),
+                                            listState = listState
+                                        )
                                     }
                                 }
                             }
@@ -446,30 +326,6 @@ fun VideoGalleryScreen(
         }
     }
 }
-
-// Função auxiliar para navegação entre abas
-private fun navigateToTab(index: Int, viewModel: VideoGalleryViewModel) {
-    when (index) {
-        0 -> { // Todos
-            viewModel.setContext(QueueContext.ALL)
-            viewModel.setShowFoldersOnly(false)
-        }
-        1 -> { // Recentes
-            viewModel.setContext(QueueContext.RECENT)
-            viewModel.setShowFoldersOnly(false)
-        }
-        2 -> { // Pastas
-            viewModel.setShowFoldersOnly(true)
-            viewModel.setContext(QueueContext.FOLDER)
-        }
-    }
-}
-
-// Data class para representar uma aba
-private data class TabItem(
-    val context: QueueContext,
-    val showFolders: Boolean
-)
 
 @Composable
 private fun PermissionScreen(onRequest: () -> Unit) {
