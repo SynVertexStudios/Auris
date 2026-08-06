@@ -1,4 +1,4 @@
-# Changelog-
+# Changelog--
 
 Acompanhe todas as novidades, correções e recursos adicionados ao Auris através do changelog online:
 
