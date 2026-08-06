@@ -2,7 +2,7 @@
 <resources>
     <!-- Strings da tela About (contribuidores) -->
     <string name="contributor_theo_display_name">Theo Vilardo</string>
-    <string name="contributor_theo_role">Criador original</string>
+    <string name="contributor_theo_role">Criador</string>
     <string name="contributor_theo_detail">Esse é o criador original do PixelPlayer.</string>
 
     <string name="contributor_auris_display_name">Saymon Silva Pereira</string>
