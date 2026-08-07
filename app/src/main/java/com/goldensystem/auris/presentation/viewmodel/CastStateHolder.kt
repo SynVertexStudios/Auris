@@ -100,8 +100,9 @@ class CastStateHolder @Inject constructor(
      * Check if a route is a Cast route.
      */
     fun MediaRouter.RouteInfo.isCastRoute(): Boolean {
-        return supportsControlCategory(MediaControlIntent.CATEGORY_REMOTE_PLAYBACK) ||
-            supportsControlCategory(castControlCategory)
+    return true
+        /*return supportsControlCategory(MediaControlIntent.CATEGORY_REMOTE_PLAYBACK) ||
+            supportsControlCategory(castControlCategory)*/
     }
     
     /**
@@ -262,8 +263,26 @@ class CastStateHolder @Inject constructor(
     }
 
     private fun updateRoutes() {
-        _castRoutes.value = mediaRouter.routes.filter { it.isCastRoute() }.distinctBy { it.id }
+    // SEM FILTRO - pega TODAS as rotas
+    val allRoutes = mediaRouter.routes.distinctBy { it.id }
+    
+    // Log para ver o que está sendo encontrado
+    Log.d("CAST_DEBUG", "========== ROTAS ENCONTRADAS ==========")
+    Log.d("CAST_DEBUG", "Total: ${allRoutes.size}")
+    allRoutes.forEach { route ->
+        Log.d("CAST_DEBUG", """
+            Nome: ${route.name}
+            ID: ${route.id}
+            Tipo: ${route.deviceType}
+            Suporta Cast: ${route.supportsControlCategory(castControlCategory)}
+            Suporta Remote: ${route.supportsControlCategory(MediaControlIntent.CATEGORY_REMOTE_PLAYBACK)}
+            É padrão: ${route.isDefault}
+        """.trimIndent())
     }
+    Log.d("CAST_DEBUG", "========================================")
+    
+    _castRoutes.value = allRoutes
+}
 
     private fun syncSelectedRouteFromRouter(router: MediaRouter) {
         val selected = router.selectedRoute
