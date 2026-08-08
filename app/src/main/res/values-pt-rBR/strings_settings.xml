@@ -1,6 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  
+
+<string name="save_theme_preset">Salvar Predefinição</string>
+<string name="theme_presets">Predefinições</string>
+<string name="no_presets">Nenhuma predefinição salva</string>
+<string name="apply_preset">Aplicar predefinição</string>
+<string name="delete_preset">Deletar predefinição</string>
+<string name="preset_name_hint">Nome da predefinição</string>
+<string name="extract_colors">Extrair cores do wallpaper</string>
+
+<!-- res/values/strings.xml - Adicione -->
+<string name="custom_theme_presets">Predefinições</string>
+<string name="custom_theme_preset_apply">Aplicar predefinição</string>
+<string name="custom_theme_preset_rosa">Rosa</string>
+<string name="custom_theme_preset_vermelho">Vermelho</string>
+<string name="custom_theme_preset_verde">Verde</string>
+<string name="custom_theme_preset_preto">Preto</string>
+<string name="custom_theme_preset_azul">Azul</string>
+<string name="custom_theme_preset_roxo">Roxo</string>
+<string name="custom_theme_preset_amarelo">Amarelo</string>
+<string name="custom_theme_preset_laranja">Laranja</string>
+<string name="custom_theme_preset_ciano">Ciano</string>
+<string name="custom_theme_preset_marrom">Marrom</string>
+<string name="custom_theme_preset_cinza">Cinza</string>
+<string name="custom_theme_preset_neon">Neon</string>
+<string name="custom_theme_preset_pastel">Pastel</string>
+<string name="custom_theme_preset_branco">Branco</string>
   
   <string name="setcat_custom_theme_title">Tema Personalizado</string>
 <string name="setcat_custom_theme_subtitle">Personalize cores, wallpapers e estilo do app</string>
@@ -14,7 +39,6 @@
 <string name="custom_theme_secondary_color">Cor Secundária</string>
 <string name="custom_theme_background_color">Cor de Fundo</string>
 <string name="custom_theme_surface_color">Cor de Superfície</string>
-<string name="custom_theme_custom_color">Cor personalizada</string>
 <string name="custom_theme_wallpaper_subtitle">Escolha o fundo do app</string>
 <string name="wallpaper_type_solid">Cor Sólida</string>
 <string name="wallpaper_type_gallery">Galeria</string>
@@ -242,7 +266,7 @@
     <!-- Backup / developer / dialogs -->
     <string name="setcat_create_backup">Criar Backup</string>
     <string name="setcat_export_backup_title">Exportar Backup</string>
-    <string name="setcat_export_backup_subtitle">%1$s Cria um arquivo de backup .gabk.</string>
+    <string name="setcat_export_backup_subtitle">%1$s Cria um arquivo de backup .pxpl.</string>
     <string name="setcat_restore_backup_section">Restaurar Backup</string>
     <string name="setcat_import_backup_title">Importar Backup</string>
     <string name="setcat_import_backup_subtitle">Procurar ou escolher de backups recentes. Os dados selecionados substituirão os dados atuais.</string>
@@ -268,9 +292,9 @@
     <string name="backup_summary_all">Todas as seções selecionadas.</string>
     <string name="backup_summary_partial">%1$d de %2$d seções selecionadas.</string>
     <string name="backup_how_title">Como funciona o backup</string>
-    <string name="backup_how_body">Escolha seções, exporte um arquivo .gabk e importe-o depois. A restauração substitui apenas as seções que você selecionar.</string>
+    <string name="backup_how_body">Escolha seções, exporte um arquivo .pxpl e importe-o depois. A restauração substitui apenas as seções que você selecionar.</string>
     <string name="backup_dialog_supporting_export">Escolha exatamente o que você deseja incluir no pacote de backup.</string>
-    <string name="backup_confirm_export_gabk">Exportar .gabk</string>
+    <string name="backup_confirm_export_pxpl">Exportar .pxpl</string>
     <string name="backup_sections_selected_format">%1$d de %2$d seções selecionadas</string>
     <string name="backup_transfer_in_progress">Transferência em andamento…</string>
     <string name="backup_exporting">Exportando</string>
@@ -306,7 +330,7 @@
     <string name="dialog_regenerate_stats_title">Regenerar Estatísticas?</string>
     <string name="dialog_regenerate_stats_body">Isso limpará o cache de estatísticas e forçará um recálculo a partir do histórico do banco de dados.</string>
     <string name="toast_stats_regeneration_started">Regeneração de estatísticas iniciada</string>
-    <string name="backup_file_name_format">Auris_Backup_%1$d.gabk</string>
+    <string name="backup_file_name_format">Auris_Backup_%1$d.pxpl</string>
 
     <string name="setcat_regenerate_daily_mix_action">Regenerar Mix Diária</string>
     <string name="setcat_regenerate_stats_action">Regenerar Estatísticas</string>
@@ -327,7 +351,7 @@
     <string name="import_backup_toolbar_title">Importar Backup</string>
     <string name="import_inspecting">Inspecionando…</string>
     <string name="import_browse_file">Procurar arquivo</string>
-    <string name="import_backup_hint">Selecione um arquivo de backup .gabk para inspecionar. Você escolherá quais seções restaurar na próxima etapa.</string>
+    <string name="import_backup_hint">Selecione um arquivo de backup .pxpl para inspecionar. Você escolherá quais seções restaurar na próxima etapa.</string>
     <string name="import_recent_backups">Backups Recentes</string>
     <string name="import_no_recent_title">Nenhum backup recente</string>
     <string name="import_no_recent_subtitle">Backups importados anteriormente aparecerão aqui.</string>

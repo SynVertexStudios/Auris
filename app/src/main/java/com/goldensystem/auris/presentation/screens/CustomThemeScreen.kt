@@ -6,6 +6,8 @@ package com.goldensystem.auris.presentation.screens
 
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.RenderEffect
+import com.seuapp.data.preferences.ColorPreset
+import com.seuapp.data.preferences.COLOR_PRESETS
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.unit.dp
 import android.graphics.Shader
@@ -607,18 +609,17 @@ private fun PlayerPreviewContent(colorScheme: ColorScheme) {
     }
 }
 
-// presentation/screens/CustomThemeScreen.kt
-
-// ==================== COLOR PICKER SECTION ====================
-
 @Composable
 private fun ColorPickerSection(
     config: CustomThemeConfig,
     viewModel: CustomThemeViewModel,
     onCustomColorClick: ((Int) -> Unit) -> Unit
 ) {
+    var selectedPreset by remember { mutableStateOf<String?>(null) }
+    var showPresets by remember { mutableStateOf(true) }
+
     Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
             stringResource(R.string.custom_theme_colors_subtitle),
@@ -626,60 +627,226 @@ private fun ColorPickerSection(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Text(
-            "🎨 Cores do Tema",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        
-        // ===== CORES PRINCIPAIS =====
-        ColorPickerRow(
-            label = "Primary",
-            currentColor = config.primaryColor,
-            mainColors = MAIN_COLORS,
-            additionalColors = ADDITIONAL_COLORS,
-            onColorSelected = { viewModel.updatePrimaryColor(it) },
-            onCustomColorClick = { onCustomColorClick(viewModel::updatePrimaryColor) }
-        )
-        
-        ColorPickerRow(
-            label = "Secondary",
-            currentColor = config.secondaryColor,
-            mainColors = MAIN_COLORS,
-            additionalColors = ADDITIONAL_COLORS,
-            onColorSelected = { viewModel.updateSecondaryColor(it) },
-            onCustomColorClick = { onCustomColorClick(viewModel::updateSecondaryColor) }
-        )
-        
-        ColorPickerRow(
-            label = "Background",
-            currentColor = config.backgroundColor,
-            mainColors = MAIN_COLORS,
-            additionalColors = ADDITIONAL_COLORS,
-            onColorSelected = { viewModel.updateBackgroundColor(it) },
-            onCustomColorClick = { onCustomColorClick(viewModel::updateBackgroundColor) }
-        )
-        
-        ColorPickerRow(
-            label = "On Primary (Texto)",
-            currentColor = config.onPrimaryColor,
-            mainColors = listOf(0xFFFFFFFF.toInt(), 0xFF000000.toInt()),
-            additionalColors = ADDITIONAL_COLORS,
-            onColorSelected = { viewModel.updateOnPrimaryColor(it) },
-            onCustomColorClick = { onCustomColorClick(viewModel::updateOnPrimaryColor) }
-        )
-        
-        ColorPickerRow(
-            label = "On Surface (Texto)",
-            currentColor = config.onSurfaceColor,
-            mainColors = listOf(0xFFFFFFFF.toInt(), 0xFF000000.toInt()),
-            additionalColors = ADDITIONAL_COLORS,
-            onColorSelected = { viewModel.updateOnSurfaceColor(it) },
-            onCustomColorClick = { onCustomColorClick(viewModel::updateOnSurfaceColor) }
-        )
+        // ===== SEÇÃO DE PREDEFINIÇÕES =====
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "🎨 Predefinições",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    IconButton(
+                        onClick = { showPresets = !showPresets },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            if (showPresets) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = showPresets,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(COLOR_PRESETS) { preset ->
+                            PresetItem(
+                                preset = preset,
+                                isSelected = selectedPreset == preset.name,
+                                onSelect = {
+                                    selectedPreset = preset.name
+                                    viewModel.updatePrimaryColor(preset.primaryColor)
+                                    viewModel.updateSecondaryColor(preset.secondaryColor)
+                                    viewModel.updateBackgroundColor(preset.backgroundColor)
+                                    viewModel.updateOnPrimaryColor(preset.onPrimaryColor)
+                                    viewModel.updateOnSurfaceColor(preset.onSurfaceColor)
+                                    viewModel.updateAccentColor(preset.accentColor)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // ===== CORES INDIVIDUAIS =====
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    "✨ Cores Personalizadas",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                ColorPickerRow(
+                    label = "Primary",
+                    currentColor = config.primaryColor,
+                    mainColors = MAIN_COLORS,
+                    additionalColors = ADDITIONAL_COLORS,
+                    onColorSelected = { 
+                        selectedPreset = null 
+                        viewModel.updatePrimaryColor(it) 
+                    },
+                    onCustomColorClick = { onCustomColorClick(viewModel::updatePrimaryColor) }
+                )
+                
+                ColorPickerRow(
+                    label = "Secondary",
+                    currentColor = config.secondaryColor,
+                    mainColors = MAIN_COLORS,
+                    additionalColors = ADDITIONAL_COLORS,
+                    onColorSelected = { 
+                        selectedPreset = null 
+                        viewModel.updateSecondaryColor(it) 
+                    },
+                    onCustomColorClick = { onCustomColorClick(viewModel::updateSecondaryColor) }
+                )
+                
+                ColorPickerRow(
+                    label = "Background",
+                    currentColor = config.backgroundColor,
+                    mainColors = MAIN_COLORS,
+                    additionalColors = ADDITIONAL_COLORS,
+                    onColorSelected = { 
+                        selectedPreset = null 
+                        viewModel.updateBackgroundColor(it) 
+                    },
+                    onCustomColorClick = { onCustomColorClick(viewModel::updateBackgroundColor) }
+                )
+                
+                ColorPickerRow(
+                    label = "On Primary (Texto)",
+                    currentColor = config.onPrimaryColor,
+                    mainColors = listOf(0xFFFFFFFF.toInt(), 0xFF000000.toInt()),
+                    additionalColors = ADDITIONAL_COLORS,
+                    onColorSelected = { 
+                        selectedPreset = null 
+                        viewModel.updateOnPrimaryColor(it) 
+                    },
+                    onCustomColorClick = { onCustomColorClick(viewModel::updateOnPrimaryColor) }
+                )
+                
+                ColorPickerRow(
+                    label = "On Surface (Texto)",
+                    currentColor = config.onSurfaceColor,
+                    mainColors = listOf(0xFFFFFFFF.toInt(), 0xFF000000.toInt()),
+                    additionalColors = ADDITIONAL_COLORS,
+                    onColorSelected = { 
+                        selectedPreset = null 
+                        viewModel.updateOnSurfaceColor(it) 
+                    },
+                    onCustomColorClick = { onCustomColorClick(viewModel::updateOnSurfaceColor) }
+                    )
+                }
+            }
+        }
     }
-}
+
+@Composable
+private fun PresetItem(
+    preset: ColorPreset,
+    isSelected: Boolean,
+    onSelect: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val itemScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.92f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy),
+        label = "preset_item_scale"
+    )
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .width(72.dp)
+            .scale(itemScale)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onSelect() }
+    ) {
+        // Círculo com as cores
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(
+                    Brush.sweepGradient(
+                        colors = listOf(
+                            Color(preset.primaryColor),
+                            Color(preset.secondaryColor),
+                            Color(preset.accentColor),
+                            Color(preset.primaryColor)
+                        )
+                    )
+                )
+                .then(
+                    if (isSelected) {
+                        Modifier.border(3.dp, Color.White, CircleShape)
+                    } else Modifier
+                )
+        ) {
+            // Ícone central
+            Icon(
+                preset.icon,
+                contentDescription = preset.name,
+                tint = Color(preset.onPrimaryColor).copy(alpha = 0.9f),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp)
+            )
+        }
+        
+        // Nome da predefinição
+        Text(
+            preset.name,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (isSelected) 
+                MaterialTheme.colorScheme.primary 
+            else 
+                MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            maxLines = 1,
+            modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+    }
 
 @Composable
 private fun ColorPickerRow(

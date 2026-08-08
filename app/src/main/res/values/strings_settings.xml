@@ -1,6 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+  
+  
+<string name="save_theme_preset">Salvar Predefinição</string>
+<string name="theme_presets">Predefinições</string>
+<string name="no_presets">Nenhuma predefinição salva</string>
+<string name="apply_preset">Aplicar predefinição</string>
+<string name="delete_preset">Deletar predefinição</string>
+<string name="preset_name_hint">Nome da predefinição</string>
+<string name="extract_colors">Extrair cores do wallpaper</string>
 
+<!-- res/values/strings.xml - Adicione -->
+<string name="custom_theme_presets">Predefinições</string>
+<string name="custom_theme_preset_apply">Aplicar predefinição</string>
+<string name="custom_theme_preset_rosa">Rosa</string>
+<string name="custom_theme_preset_vermelho">Vermelho</string>
+<string name="custom_theme_preset_verde">Verde</string>
+<string name="custom_theme_preset_preto">Preto</string>
+<string name="custom_theme_preset_azul">Azul</string>
+<string name="custom_theme_preset_roxo">Roxo</string>
+<string name="custom_theme_preset_amarelo">Amarelo</string>
+<string name="custom_theme_preset_laranja">Laranja</string>
+<string name="custom_theme_preset_ciano">Ciano</string>
+<string name="custom_theme_preset_marrom">Marrom</string>
+<string name="custom_theme_preset_cinza">Cinza</string>
+<string name="custom_theme_preset_neon">Neon</string>
+<string name="custom_theme_preset_pastel">Pastel</string>
+<string name="custom_theme_preset_branco">Branco</string>
 
 
 <!-- Settings > Appearance > Custom Theme -->
