@@ -233,28 +233,30 @@ class CastStateHolder @Inject constructor(
     private var refreshRoutesJob: kotlinx.coroutines.Job? = null
 
     fun refreshRoutes(scope: kotlinx.coroutines.CoroutineScope) {
-        refreshRoutesJob?.cancel()
-        refreshRoutesJob = scope.launch {
-            _isRefreshingRoutes.value = true
-            mediaRouter.removeCallback(mediaRouterCallback)
-            val mediaRouteSelector = buildCastRouteSelector()
-            mediaRouter.addCallback(
-                mediaRouteSelector,
-                mediaRouterCallback,
-                MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY or MediaRouter.CALLBACK_FLAG_PERFORM_ACTIVE_SCAN
-            )
-            updateRoutes()
-            syncSelectedRouteFromRouter(mediaRouter)
-
-            kotlinx.coroutines.delay(1800)
-
-            mediaRouter.removeCallback(mediaRouterCallback)
-            mediaRouter.addCallback(mediaRouteSelector, mediaRouterCallback, MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY)
-            updateRoutes()
-            syncSelectedRouteFromRouter(mediaRouter)
-            _isRefreshingRoutes.value = false
-        }
+    refreshRoutesJob?.cancel()
+    refreshRoutesJob = scope.launch {
+        _isRefreshingRoutes.value = true
+        
+        // 👇 NUNCA REMOVA O CALLBACK - MANTÉM SEMPRE ATIVO
+        val selector = buildCastRouteSelector()
+        mediaRouter.addCallback(
+            selector,
+            mediaRouterCallback,
+            MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY or MediaRouter.CALLBACK_FLAG_PERFORM_ACTIVE_SCAN
+        )
+        
+        // 👇 ESPERA MAIS TEMPO PARA A TV APARECER
+        delay(5000)  // 5 segundos
+        
+        updateRoutes()
+        syncSelectedRouteFromRouter(mediaRouter)
+        
+        // 👇 NÃO REMOVE O CALLBACK AQUI!
+        // mediaRouter.removeCallback(mediaRouterCallback)  // ❌ REMOVA ESTA LINHA
+        
+        _isRefreshingRoutes.value = false
     }
+}
 
     fun startDiscovery() {
         val mediaRouteSelector = buildCastRouteSelector()
@@ -311,9 +313,17 @@ class CastStateHolder @Inject constructor(
         mediaRouter.removeCallback(mediaRouterCallback)
     }
 
-    init {
-        // Initial setup? No, we wait for refresh or explicit usage?
-        // ViewModel initialized it.
-        // We can attach callback passively? No, battery drain.
+        init {
+        startDiscovery()  // 👇 ESTA FUNÇÃO MANTÉM O CALLBACK ATIVO
+    }
+
+    fun startDiscovery() {
+        val selector = buildCastRouteSelector()
+        mediaRouter.addCallback(
+            selector,
+            mediaRouterCallback,
+            MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY  // SEMPRE ATIVO
+        )
+        updateRoutes()
     }
 }
