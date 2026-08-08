@@ -25,10 +25,10 @@ val COLOR_PRESETS = listOf(
         name = "Rosa",
         icon = Icons.Rounded.Favorite,
         primaryColor = 0xFFE91E63.toInt(),
-        secondaryColor = 0xFFF06292.toInt(),
-        backgroundColor = 0xFFFFF0F5.toInt(),
-        onPrimaryColor = 0xFFFFFFFF.toInt(),
-        onSurfaceColor = 0xFF1A1A1A.toInt(),
+        secondaryColor = 0xFFE91E63.toInt(),
+        backgroundColor = 0xFF2A000E.toInt(),
+        onPrimaryColor = 0xFFFF88B0.toInt(),
+        onSurfaceColor = 0xFFE91E63.toInt(),
         accentColor = 0xFFFF4081.toInt()
     ),
     ColorPreset(
