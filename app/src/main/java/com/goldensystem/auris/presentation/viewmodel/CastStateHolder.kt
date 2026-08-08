@@ -259,10 +259,13 @@ class CastStateHolder @Inject constructor(
 }
 
     fun startDiscovery() {
-        val mediaRouteSelector = buildCastRouteSelector()
-        mediaRouter.addCallback(mediaRouteSelector, mediaRouterCallback, MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY)
+        val selector = buildCastRouteSelector()
+        mediaRouter.addCallback(
+            selector,
+            mediaRouterCallback,
+            MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY  // SEMPRE ATIVO
+        )
         updateRoutes()
-        syncSelectedRouteFromRouter(mediaRouter)
     }
 
     private fun updateRoutes() {
@@ -317,13 +320,4 @@ class CastStateHolder @Inject constructor(
         startDiscovery()  // 👇 ESTA FUNÇÃO MANTÉM O CALLBACK ATIVO
     }
 
-    fun startDiscovery() {
-        val selector = buildCastRouteSelector()
-        mediaRouter.addCallback(
-            selector,
-            mediaRouterCallback,
-            MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY  // SEMPRE ATIVO
-        )
-        updateRoutes()
-    }
 }
