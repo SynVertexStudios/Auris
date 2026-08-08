@@ -264,23 +264,23 @@ class CastStateHolder @Inject constructor(
     }
 
     private fun updateRoutes() {
-    // SEM FILTRO - pega TODAS as rotas
     val allRoutes = mediaRouter.routes.distinctBy { it.id }
     
-    // Log para ver o que está sendo encontrado
-    Log.d("CAST_DEBUG", "========== ROTAS ENCONTRADAS ==========")
-    Log.d("CAST_DEBUG", "Total: ${allRoutes.size}")
+    // 👇 MOSTRA UM TOAST NA TELA
+    android.widget.Toast.makeText(
+        context, 
+        "Rotas encontradas: ${allRoutes.size}", 
+        android.widget.Toast.LENGTH_LONG
+    ).show()
+    
+    // 👇 MOSTRA O NOME DE CADA ROTA
     allRoutes.forEach { route ->
-        Log.d("CAST_DEBUG", """
-            Nome: ${route.name}
-            ID: ${route.id}
-            Tipo: ${route.deviceType}
-            Suporta Cast: ${route.supportsControlCategory(castControlCategory)}
-            Suporta Remote: ${route.supportsControlCategory(MediaControlIntent.CATEGORY_REMOTE_PLAYBACK)}
-            É padrão: ${route.isDefault}
-        """.trimIndent())
+        android.widget.Toast.makeText(
+            context, 
+            "Rota: ${route.name}", 
+            android.widget.Toast.LENGTH_SHORT
+        ).show()
     }
-    Log.d("CAST_DEBUG", "========================================")
     
     _castRoutes.value = allRoutes
 }
