@@ -1,6 +1,7 @@
 package com.goldensystem.auris.presentation.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.mediarouter.media.MediaControlIntent
 import androidx.mediarouter.media.MediaRouteSelector
 import androidx.mediarouter.media.MediaRouter
