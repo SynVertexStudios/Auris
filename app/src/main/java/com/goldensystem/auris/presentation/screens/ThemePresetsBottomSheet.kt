@@ -9,7 +9,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +21,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -29,9 +29,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.goldensystem.auris.R
-import com.goldensystem.auris.data.preferences.ColorPreset
 import com.goldensystem.auris.data.preferences.COLOR_PRESETS
 import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -44,6 +44,28 @@ fun ThemePresetsBottomSheet(
     val config by viewModel.customThemeConfig.collectAsStateWithLifecycle()
     var selectedPresetName by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
+    
+    // 🔥 DEBOUNCE IGUAL AO DA CustomThemeScreen
+    var saveJob by remember { mutableStateOf<Job?>(null) }
+
+    // 🔥 SALVAR COM DEBOUNCE (MESMO MECANISMO)
+    LaunchedEffect(config) {
+        saveJob?.cancel()
+        saveJob = scope.launch {
+            delay(800)
+            viewModel.saveCustomTheme()
+        }
+    }
+
+    // 🔥 SALVAR AO SAIR (MESMO MECANISMO)
+    DisposableEffect(Unit) {
+        onDispose {
+            saveJob?.cancel()
+            scope.launch {
+                viewModel.saveCustomTheme()
+            }
+        }
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -118,7 +140,8 @@ fun ThemePresetsBottomSheet(
                         isSelected = isSelected,
                         onClick = {
                             selectedPresetName = preset.name
-                            // Aplicar as cores
+                            
+                            // 🔥 APLICA AS CORES (MESMO MODO)
                             viewModel.updatePrimaryColor(preset.primaryColor)
                             viewModel.updateSecondaryColor(preset.secondaryColor)
                             viewModel.updateBackgroundColor(preset.backgroundColor)
@@ -126,7 +149,10 @@ fun ThemePresetsBottomSheet(
                             viewModel.updateOnSurfaceColor(preset.onSurfaceColor)
                             viewModel.updateAccentColor(preset.accentColor)
                             
-                            // Fechar após selecionar com delay para feedback
+                            // 🔥 NÃO CHAMA saveCustomTheme() AQUI!
+                            // O LaunchedEffect vai salvar automaticamente com debounce
+                            
+                            // Fecha com delay pequeno
                             scope.launch {
                                 delay(300)
                                 onDismiss()
@@ -138,11 +164,14 @@ fun ThemePresetsBottomSheet(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Botão de reset
+            // Botão de reset (MESMO MODO)
             TextButton(
                 onClick = {
+                    selectedPresetName = null
+                    viewModel.resetToDefault()
+                    // O LaunchedEffect vai salvar automaticamente
                     scope.launch {
-                        viewModel.resetToDefault()
+                        delay(300)
                         onDismiss()
                     }
                 },
@@ -195,10 +224,10 @@ private fun PresetCard(
     )
 
     Surface(
-    modifier = Modifier
-        .fillMaxWidth()
-        .scale(cardScale)
-        .clip(RoundedCornerShape(20.dp))
+        modifier = Modifier
+            .fillMaxWidth()
+            .scale(cardScale)
+            .clip(RoundedCornerShape(20.dp))
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
@@ -221,7 +250,6 @@ private fun PresetCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Círculo com gradiente das cores
             Box(
                 modifier = Modifier
                     .size(56.dp)
@@ -237,7 +265,6 @@ private fun PresetCard(
                         )
                     )
             ) {
-                // Ícone central
                 Icon(
                     preset.icon,
                     contentDescription = preset.name,
@@ -248,7 +275,6 @@ private fun PresetCard(
                 )
             }
             
-            // Informações
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -263,17 +289,17 @@ private fun PresetCard(
                         MaterialTheme.colorScheme.onSurface
                 )
                 
-                // Mini preview das cores
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    listOf(
+                    val colors = listOf(
                         preset.primaryColor,
                         preset.secondaryColor,
                         preset.backgroundColor,
                         preset.accentColor
-                    ).forEach { color ->
+                    )
+                    colors.forEach { color: Int ->
                         Surface(
                             modifier = Modifier
                                 .weight(1f)
@@ -285,7 +311,6 @@ private fun PresetCard(
                 }
             }
             
-            // Indicador de seleção
             if (isSelected) {
                 AnimatedVisibility(
                     visible = true,
