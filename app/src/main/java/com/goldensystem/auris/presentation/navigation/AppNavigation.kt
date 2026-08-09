@@ -1,8 +1,11 @@
+// presentation/navigation/NavGraph.kt
+
 package com.goldensystem.auris.presentation.navigation
 
 import com.goldensystem.auris.presentation.screens.WordDelimiterConfigScreen
 import com.goldensystem.auris.presentation.screens.CustomThemeScreen
 import com.goldensystem.auris.presentation.screens.CustomThemeSettingsScreen
+import com.goldensystem.auris.presentation.screens.WallpaperScreen  // ✅ ADICIONADO
 import com.goldensystem.auris.presentation.screens.DelimiterConfigScreen
 import android.annotation.SuppressLint
 import androidx.annotation.OptIn
@@ -91,6 +94,9 @@ fun AppNavigation(
             navController = navController,
             startDestination = initialRoute
         ) {
+            // ============================================================
+            // ROTAS PRINCIPAIS (BOTTOM NAV)
+            // ============================================================
             composable(
                 Screen.Home.route,
                 enterTransition = {
@@ -131,6 +137,7 @@ fun AppNavigation(
                     )
                 }
             }
+
             composable(
                 Screen.Search.route,
                 enterTransition = {
@@ -171,6 +178,7 @@ fun AppNavigation(
                     )
                 }
             }
+
             composable(
                 Screen.Library.route,
                 enterTransition = {
@@ -206,6 +214,10 @@ fun AppNavigation(
                     LibraryScreen(navController = navController, playerViewModel = playerViewModel)
                 }
             }
+
+            // ============================================================
+            // ROTAS DE SETTINGS E CONFIGURAÇÕES
+            // ============================================================
             composable(
                 Screen.Settings.route,
                 enterTransition = { enterTransition() },
@@ -221,6 +233,7 @@ fun AppNavigation(
                     )
                 }
             }
+
             composable(
                 Screen.Accounts.route,
                 enterTransition = { enterTransition() },
@@ -237,12 +250,13 @@ fun AppNavigation(
                         onOpenJellyfinDashboard = {
                             navController.navigateSafely(Screen.JellyfinDashboard.route)
                         },
-                     onOpenGDriveDashboard = {  // ← NOVO
-                    navController.navigateSafely(Screen.GDriveDashboard.route)
+                        onOpenGDriveDashboard = {
+                            navController.navigateSafely(Screen.GDriveDashboard.route)
+                        }
+                    )
                 }
-            )
-        }
-    }
+            }
+
             composable(
                 route = Screen.SettingsCategory.route,
                 arguments = listOf(navArgument("categoryId") { type = NavType.StringType }),
@@ -263,6 +277,7 @@ fun AppNavigation(
                     }
                 }
             }
+
             composable(
                 Screen.PaletteStyle.route,
                 enterTransition = { enterTransition() },
@@ -277,6 +292,7 @@ fun AppNavigation(
                     )
                 }
             }
+
             composable(
                 Screen.Experimental.route,
                 enterTransition = { enterTransition() },
@@ -292,6 +308,59 @@ fun AppNavigation(
                     )
                 }
             }
+
+            // ============================================================
+            // ROTAS DE TEMA PERSONALIZADO (CORRIGIDAS)
+            // ============================================================
+            
+            // Tela principal de configurações de tema
+            composable(
+                Screen.CustomThemeSettings.route,
+                enterTransition = { enterTransition() },
+                exitTransition = { exitTransition() },
+                popEnterTransition = { popEnterTransition() },
+                popExitTransition = { popExitTransition() },
+            ) {
+                ScreenWrapper(navController = navController, playerViewModel = playerViewModel) {
+                    CustomThemeSettingsScreen(
+                        navController = navController
+                    )
+                }
+            }
+
+            // Tela de edição de cores
+            composable(
+                Screen.CustomTheme.route,
+                enterTransition = { enterTransition() },
+                exitTransition = { exitTransition() },
+                popEnterTransition = { popEnterTransition() },
+                popExitTransition = { popExitTransition() },
+            ) {
+                ScreenWrapper(navController = navController, playerViewModel = playerViewModel) {
+                    CustomThemeScreen(
+                        navController = navController
+                    )
+                }
+            }
+
+            // ✅ Tela de papel de parede (NOVA)
+            composable(
+                Screen.Wallpaper.route,
+                enterTransition = { enterTransition() },
+                exitTransition = { exitTransition() },
+                popEnterTransition = { popEnterTransition() },
+                popExitTransition = { popExitTransition() },
+            ) {
+                ScreenWrapper(navController = navController, playerViewModel = playerViewModel) {
+                    WallpaperScreen(
+                        navController = navController
+                    )
+                }
+            }
+
+            // ============================================================
+            // ROTAS DE MÍDIA E PLAYER
+            // ============================================================
             composable(
                 Screen.DailyMixScreen.route,
                 enterTransition = { enterTransition() },
@@ -306,6 +375,7 @@ fun AppNavigation(
                     )
                 }
             }
+
             composable(
                 Screen.RecentlyPlayed.route,
                 enterTransition = { enterTransition() },
@@ -320,6 +390,7 @@ fun AppNavigation(
                     )
                 }
             }
+
             composable(
                 Screen.Stats.route,
                 enterTransition = { enterTransition() },
@@ -333,6 +404,7 @@ fun AppNavigation(
                     )
                 }
             }
+
             composable(
                 route = Screen.PlaylistDetail.route,
                 arguments = listOf(navArgument("playlistId") { type = NavType.StringType }),
@@ -356,6 +428,7 @@ fun AppNavigation(
                     }
                 }
             }
+
             composable(
                 Screen.DJSpace.route,
                 enterTransition = { enterTransition() },
@@ -367,6 +440,7 @@ fun AppNavigation(
                     MashupScreen()
                 }
             }
+
             composable(
                 route = Screen.GenreDetail.route,
                 arguments = listOf(navArgument("genreId") { type = NavType.StringType }),
@@ -388,6 +462,7 @@ fun AppNavigation(
                     Text(stringResource(R.string.nav_error_genre_id_missing), modifier = Modifier)
                 }
             }
+
             composable(
                 route = Screen.AlbumDetail.route,
                 arguments = listOf(navArgument("albumId") { type = NavType.StringType }),
@@ -407,12 +482,7 @@ fun AppNavigation(
                     }
                 }
             }
-            composable(Screen.CustomTheme.route) {
-                  CustomThemeScreen(navController = navController)
-                        }
-            composable(Screen.CustomThemeSettings.route) {
-                  CustomThemeSettingsScreen(navController = navController)
-                        }
+
             composable(
                 route = Screen.ArtistDetail.route,
                 arguments = listOf(navArgument("artistId") { type = NavType.StringType }),
@@ -432,8 +502,12 @@ fun AppNavigation(
                     }
                 }
             }
+
+            // ============================================================
+            // ROTAS DE CONFIGURAÇÕES AVANÇADAS
+            // ============================================================
             composable(
-                "nav_bar_corner_radius",
+                Screen.NavBarCrRad.route,
                 enterTransition = { enterTransition() },
                 exitTransition = { exitTransition() },
                 popEnterTransition = { popEnterTransition() },
@@ -443,6 +517,7 @@ fun AppNavigation(
                     NavBarCornerRadiusScreen(navController)
                 }
             }
+
             composable(
                 route = Screen.EditTransition.route,
                 arguments = listOf(navArgument("playlistId") {
@@ -458,6 +533,7 @@ fun AppNavigation(
                     EditTransitionScreen(navController = navController)
                 }
             }
+
             composable(
                 Screen.About.route,
                 enterTransition = { enterTransition() },
@@ -473,6 +549,7 @@ fun AppNavigation(
                     )
                 }
             }
+
             composable(
                 Screen.EasterEgg.route,
                 enterTransition = { enterTransition() },
@@ -487,6 +564,7 @@ fun AppNavigation(
                     )
                 }
             }
+
             composable(
                 Screen.ArtistSettings.route,
                 enterTransition = { enterTransition() },
@@ -498,6 +576,7 @@ fun AppNavigation(
                     ArtistSettingsScreen(navController = navController)
                 }
             }
+
             composable(
                 Screen.DelimiterConfig.route,
                 enterTransition = { enterTransition() },
@@ -509,6 +588,7 @@ fun AppNavigation(
                     DelimiterConfigScreen(navController = navController)
                 }
             }
+
             composable(
                 Screen.WordDelimiterConfig.route,
                 enterTransition = { enterTransition() },
@@ -520,6 +600,7 @@ fun AppNavigation(
                     WordDelimiterConfigScreen(navController = navController)
                 }
             }
+
             composable(
                 Screen.Equalizer.route,
                 enterTransition = { enterTransition() },
@@ -534,6 +615,7 @@ fun AppNavigation(
                     )
                 }
             }
+
             composable(
                 Screen.DeviceCapabilities.route,
                 enterTransition = { enterTransition() },
@@ -548,6 +630,10 @@ fun AppNavigation(
                     )
                 }
             }
+
+            // ============================================================
+            // ROTAS DE DASHBOARDS
+            // ============================================================
             composable(
                 Screen.NavidromeDashboard.route,
                 enterTransition = { enterTransition() },
@@ -561,6 +647,7 @@ fun AppNavigation(
                     )
                 }
             }
+
             composable(
                 Screen.JellyfinDashboard.route,
                 enterTransition = { enterTransition() },
@@ -574,36 +661,39 @@ fun AppNavigation(
                     )
                 }
             }
-            
+
             composable(
                 Screen.GDriveDashboard.route,
                 enterTransition = { enterTransition() },
                 exitTransition = { exitTransition() },
                 popEnterTransition = { popEnterTransition() },
                 popExitTransition = { popExitTransition() },
-) {
+            ) {
                 ScreenWrapper(navController = navController, playerViewModel = playerViewModel) {
-                com.goldensystem.auris.presentation.gdrive.dashboard.GDriveDashboardScreen(
-                onBack = { navController.popBackStack() }
+                    com.goldensystem.auris.presentation.gdrive.dashboard.GDriveDashboardScreen(
+                        onBack = { navController.popBackStack() }
                     )
                 }
             }
 
-            // ===== NOVAS ROTAS DO SISTEMA DE VÍDEOS =====
-
+            // ============================================================
+            // ROTAS DE VÍDEO
+            // ============================================================
             composable(
-                "video_gallery",
+                Screen.VideoGallery.route,
                 enterTransition = { enterTransition() },
                 exitTransition = { exitTransition() },
                 popEnterTransition = { popEnterTransition() },
                 popExitTransition = { popExitTransition() },
             ) {
-                VideoGalleryScreen(
-                    onOpenPlayerWithQueue = { queue ->
-                        navController.navigate("video_player")
-                    },
-                    onBack = { navController.popBackStack() }
-                )
+                ScreenWrapper(navController = navController, playerViewModel = playerViewModel) {
+                    VideoGalleryScreen(
+                        onOpenPlayerWithQueue = { queue ->
+                            navController.navigate("video_player")
+                        },
+                        onBack = { navController.popBackStack() }
+                    )
+                }
             }
 
             composable(
@@ -613,9 +703,11 @@ fun AppNavigation(
                 popEnterTransition = { popEnterTransition() },
                 popExitTransition = { popExitTransition() },
             ) {
-                VideoPlayerScreen(
-                    onBack = { navController.popBackStack() }
-                )
+                ScreenWrapper(navController = navController, playerViewModel = playerViewModel) {
+                    VideoPlayerScreen(
+                        onBack = { navController.popBackStack() }
+                    )
+                }
             }
         }
     }

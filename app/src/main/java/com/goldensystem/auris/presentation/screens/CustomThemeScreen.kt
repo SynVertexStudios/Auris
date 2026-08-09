@@ -1,25 +1,10 @@
 // presentation/screens/CustomThemeScreen.kt
 
-@file:OptIn(ExperimentalAnimationApi::class)
-
 package com.goldensystem.auris.presentation.screens
 
-import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.RenderEffect
-import com.goldensystem.auris.data.preferences.ColorPreset
-import com.goldensystem.auris.data.preferences.COLOR_PRESETS
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.unit.dp
-import android.graphics.Shader
-import android.net.Uri
-import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
-import androidx.navigation.NavController
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -38,102 +23,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import androidx.navigation.NavController
 import com.goldensystem.auris.R
-import com.goldensystem.auris.data.preferences.CustomThemeConfig
-import com.goldensystem.auris.data.preferences.WallpaperType
 import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
 import com.goldensystem.auris.ui.theme.customColorScheme
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
-// ============================================================
-// 1. CONFIGURAÇÃO DAS CATEGORIAS (Fácil de editar)
-// ============================================================
-// Chave: Categoria / Valor: (nome_da_pasta, quantidade_de_imagens)
-private val CATEGORY_CONFIG = mapOf(
-    WallpaperCategory.ANIME to ("anime" to 7),   // Wallpaper1 até Wallpaper7
-    WallpaperCategory.CARR  to ("carr" to 12),   // Wallpaper1 até Wallpaper12
-    WallpaperCategory.NEON  to ("neon" to 7),    // Wallpaper1 até Wallpaper7
-    WallpaperCategory.OTRS  to ("otrs" to 7),    // Wallpaper1 até Wallpaper7
-    WallpaperCategory.SPACE to ("space" to 10)   // Wallpaper1 até Wallpaper10
-)
-
-// ============================================================
-// 2. GERADOR DE URLs (Automático)
-// ============================================================
-private const val BASE_URL = "https://raw.githubusercontent.com/pereirasaymonsilva-a11y/Auris/main/assets/wallpaper"
-
-// Mapa principal com as listas separadas por categoria (já inclui a ALL)
-val WALLPAPER_CATEGORIES = mutableMapOf<WallpaperCategory, List<String>>().apply {
-    CATEGORY_CONFIG.forEach { (category, config) ->
-        val (folder, count) = config
-        // Gera os links de Wallpaper1 até WallpaperN
-        val urls = (1..count).map { index ->
-            "$BASE_URL/$folder/Wallpaper$index.jpg"
-        }
-        this[category] = urls
-    }
-    // Adiciona a categoria ALL com TODAS as imagens juntas
-    this[WallpaperCategory.ALL] = this.values.flatten()
-}
-
-// Lista global com todos os wallpapers (para manter compatibilidade com seu código antigo)
-val SERVER_WALLPAPERS: List<String> = WALLPAPER_CATEGORIES[WallpaperCategory.ALL] ?: emptyList()
-
-// ============================================================
-// 3. ENUM (Mantenha o seu ou use este)
-// ============================================================
-enum class WallpaperCategory {
-    ALL, SPACE, CARR, ANIME, NEON, OTRS
-}
-
-// Cores principais
-val MAIN_COLORS = listOf(
-    0xFF000000.toInt(), // Preto
-    0xFF795548.toInt(), // Marrom
-    0xFFE53935.toInt(), // Vermelho
-    0xFFFF9800.toInt(), // Laranja
-    0xFFFFEB3B.toInt(), // Amarelo
-    0xFF8BC34A.toInt(), // Verde claro
-    0xFF2E7D32.toInt(), // Verde escuro
-    0xFF42A5F5.toInt(), // Azul claro
-    0xFF0D47A1.toInt(), // Azul escuro
-    0xFF7B1FA2.toInt(), // Roxo
-    0xFFE91E63.toInt(), // Rosa
-    0xFFFFFFFF.toInt()  // Branco
-)
-
-// Cores adicionais
-val ADDITIONAL_COLORS = listOf(
-    0xFFFF6F00.toInt(), // Âmbar
-    0xFF00BCD4.toInt(), // Ciano
-    0xFF00E676.toInt(), // Verde neon
-    0xFFFF4081.toInt(), // Rosa neon
-    0xFF651FFF.toInt(), // Roxo profundo
-    0xFF2979FF.toInt(), // Azul vibrante
-    0xFFFF6E40.toInt(), // Coral
-    0xFFF50057.toInt(), // Vermelho neon
-    0xFF00E5FF.toInt(), // Ciano claro
-    0xFF76FF03.toInt(), // Verde limão
-    0xFFD500F9.toInt(), // Magenta
-    0xFFFFAB00.toInt()  // Ouro
-)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
@@ -142,22 +46,15 @@ fun CustomThemeScreen(
     viewModel: CustomThemeViewModel = hiltViewModel()
 ) {
     val config by viewModel.customThemeConfig.collectAsStateWithLifecycle()
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var selectedTab by remember { mutableStateOf(0) }
     var resetTrigger by remember { mutableStateOf(false) }
     var showColorPickerDialog by remember { mutableStateOf(false) }
     var colorPickerTarget by remember { mutableStateOf<((Int) -> Unit)?>(null) }
     
-    // Debounce para salvar automaticamente
     var saveJob by remember { mutableStateOf<Job?>(null) }
 
-    // Preview do tema
-    val previewColorScheme = remember(config) {
-        customColorScheme(config, true)
-    }
+    val colorScheme = remember(config) { customColorScheme(config, true) }
 
-    // Reset
     LaunchedEffect(resetTrigger) {
         if (resetTrigger) {
             viewModel.resetToDefault()
@@ -165,56 +62,50 @@ fun CustomThemeScreen(
         }
     }
 
-    // Salvar com debounce
     LaunchedEffect(config) {
         saveJob?.cancel()
         saveJob = scope.launch {
-            delay(800) // Aguarda 800ms sem mudanças
+            delay(800)
             viewModel.saveCustomTheme()
         }
     }
 
-    // Salvar ao sair da tela
     DisposableEffect(Unit) {
-    onDispose {
-        saveJob?.cancel()
-        saveJob = scope.launch {
-            viewModel.saveCustomTheme()
+        onDispose {
+            saveJob?.cancel()
+            saveJob = scope.launch {
+                viewModel.saveCustomTheme()
+            }
         }
     }
-}
 
-    // Animações
     val animatedAlpha by animateFloatAsState(
         targetValue = 1f,
         animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
         label = "screen_alpha"
     )
 
-// presentation/screens/CustomThemeScreen.kt
-
-// Dialog de color picker
-if (showColorPickerDialog && colorPickerTarget != null) {
-    CustomColorPickerDialog(
-        initialColor = when {
-            colorPickerTarget == viewModel::updatePrimaryColor -> config.primaryColor
-            colorPickerTarget == viewModel::updateSecondaryColor -> config.secondaryColor
-            colorPickerTarget == viewModel::updateBackgroundColor -> config.backgroundColor
-            colorPickerTarget == viewModel::updateOnPrimaryColor -> config.onPrimaryColor
-            colorPickerTarget == viewModel::updateOnSurfaceColor -> config.onSurfaceColor
-            colorPickerTarget == viewModel::updateAccentColor -> config.accentColor
-            else -> config.primaryColor
-        },
-        onColorSelected = { color ->
-            colorPickerTarget?.invoke(color)
-            colorPickerTarget = null
-        },
-        onDismiss = {
-            showColorPickerDialog = false
-            colorPickerTarget = null
-        }
-    )
-}
+    if (showColorPickerDialog && colorPickerTarget != null) {
+        CustomColorPickerDialog(
+            initialColor = when {
+                colorPickerTarget == viewModel::updatePrimaryColor -> config.primaryColor
+                colorPickerTarget == viewModel::updateSecondaryColor -> config.secondaryColor
+                colorPickerTarget == viewModel::updateBackgroundColor -> config.backgroundColor
+                colorPickerTarget == viewModel::updateOnPrimaryColor -> config.onPrimaryColor
+                colorPickerTarget == viewModel::updateOnSurfaceColor -> config.onSurfaceColor
+                colorPickerTarget == viewModel::updateAccentColor -> config.accentColor
+                else -> config.primaryColor
+            },
+            onColorSelected = { color ->
+                colorPickerTarget?.invoke(color)
+                colorPickerTarget = null
+            },
+            onDismiss = {
+                showColorPickerDialog = false
+                colorPickerTarget = null
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -223,31 +114,38 @@ if (showColorPickerDialog && colorPickerTarget != null) {
                     Text(
                         stringResource(R.string.custom_theme_title),
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = colorScheme.onSurface
                     )
                 },
                 navigationIcon = {
                     IconButton(
                         onClick = { 
                             saveJob?.cancel()
-                            saveJob = scope.launch {
-                            viewModel.saveCustomTheme()
-                            }
+                            saveJob = scope.launch { viewModel.saveCustomTheme() }
                             navController.popBackStack() 
                         }
                     ) {
-                        Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.auth_cd_back))
+                        Icon(
+                            Icons.Rounded.Close,
+                            contentDescription = stringResource(R.string.auth_cd_back),
+                            tint = colorScheme.onSurface
+                        )
                     }
                 },
                 actions = {
                     IconButton(
                         onClick = { resetTrigger = true }
                     ) {
-                        Icon(Icons.Rounded.RestartAlt, contentDescription = stringResource(R.string.cd_reset))
+                        Icon(
+                            Icons.Rounded.RestartAlt,
+                            contentDescription = stringResource(R.string.cd_reset),
+                            tint = colorScheme.onSurface
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = previewColorScheme.surface
+                    containerColor = colorScheme.surface
                 )
             )
         }
@@ -255,59 +153,117 @@ if (showColorPickerDialog && colorPickerTarget != null) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(previewColorScheme.background)
+                .background(colorScheme.background)
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-                .graphicsLayer {
-    alpha = animatedAlpha
-},
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Preview do Player - Tamanho aumentado
+            // Preview do Player
             CustomThemePreviewCard(config = config)
 
-            // Tabs
-            TabRow(
-                selectedTabIndex = selectedTab,
-                containerColor = previewColorScheme.surface.copy(alpha = 0.8f),
-                modifier = Modifier.clip(RoundedCornerShape(16.dp))
-            ) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    text = { Text(stringResource(R.string.custom_theme_colors)) },
-                    modifier = Modifier
-                )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    text = { Text(stringResource(R.string.custom_theme_wallpaper)) },
-                    modifier = Modifier
-                )
-            }
+            Text(
+                stringResource(R.string.custom_theme_colors_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = colorScheme.onSurfaceVariant
+            )
 
-            // Conteúdo das tabs
-            AnimatedContent(
-                targetState = selectedTab,
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(300, delayMillis = 50)) with
-                            fadeOut(animationSpec = tween(200))
-                },
-                label = "tab_content"
-            ) { tab ->
-                when (tab) {
-                    0 -> ColorPickerSection(
-                        config = config,
-                        viewModel = viewModel,
-                        onCustomColorClick = { target ->
-                            colorPickerTarget = target
-                            showColorPickerDialog = true
-                        }
+            // Seletor de cores
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        "✨ ${stringResource(R.string.custom_theme_custom_colors)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = colorScheme.onSurface
                     )
-                    1 -> WallpaperSection(
-                        config = config,
-                        viewModel = viewModel
+                    
+                    ColorPickerRow(
+                        label = stringResource(R.string.custom_theme_primary),
+                        currentColor = config.primaryColor,
+                        mainColors = MAIN_COLORS,
+                        additionalColors = ADDITIONAL_COLORS,
+                        onColorSelected = { viewModel.updatePrimaryColor(it) },
+                        onCustomColorClick = { 
+                            colorPickerTarget = viewModel::updatePrimaryColor
+                            showColorPickerDialog = true
+                        },
+                        colorScheme = colorScheme
+                    )
+                    
+                    ColorPickerRow(
+                        label = stringResource(R.string.custom_theme_secondary),
+                        currentColor = config.secondaryColor,
+                        mainColors = MAIN_COLORS,
+                        additionalColors = ADDITIONAL_COLORS,
+                        onColorSelected = { viewModel.updateSecondaryColor(it) },
+                        onCustomColorClick = { 
+                            colorPickerTarget = viewModel::updateSecondaryColor
+                            showColorPickerDialog = true
+                        },
+                        colorScheme = colorScheme
+                    )
+                    
+                    ColorPickerRow(
+                        label = stringResource(R.string.custom_theme_background),
+                        currentColor = config.backgroundColor,
+                        mainColors = MAIN_COLORS,
+                        additionalColors = ADDITIONAL_COLORS,
+                        onColorSelected = { viewModel.updateBackgroundColor(it) },
+                        onCustomColorClick = { 
+                            colorPickerTarget = viewModel::updateBackgroundColor
+                            showColorPickerDialog = true
+                        },
+                        colorScheme = colorScheme
+                    )
+                    
+                    ColorPickerRow(
+                        label = stringResource(R.string.custom_theme_on_primary),
+                        currentColor = config.onPrimaryColor,
+                        mainColors = listOf(0xFFFFFFFF.toInt(), 0xFF000000.toInt()),
+                        additionalColors = ADDITIONAL_COLORS,
+                        onColorSelected = { viewModel.updateOnPrimaryColor(it) },
+                        onCustomColorClick = { 
+                            colorPickerTarget = viewModel::updateOnPrimaryColor
+                            showColorPickerDialog = true
+                        },
+                        colorScheme = colorScheme
+                    )
+                    
+                    ColorPickerRow(
+                        label = stringResource(R.string.custom_theme_on_surface),
+                        currentColor = config.onSurfaceColor,
+                        mainColors = listOf(0xFFFFFFFF.toInt(), 0xFF000000.toInt()),
+                        additionalColors = ADDITIONAL_COLORS,
+                        onColorSelected = { viewModel.updateOnSurfaceColor(it) },
+                        onCustomColorClick = { 
+                            colorPickerTarget = viewModel::updateOnSurfaceColor
+                            showColorPickerDialog = true
+                        },
+                        colorScheme = colorScheme
+                    )
+
+                    ColorPickerRow(
+                        label = stringResource(R.string.custom_theme_accent),
+                        currentColor = config.accentColor,
+                        mainColors = MAIN_COLORS,
+                        additionalColors = ADDITIONAL_COLORS,
+                        onColorSelected = { viewModel.updateAccentColor(it) },
+                        onCustomColorClick = { 
+                            colorPickerTarget = viewModel::updateAccentColor
+                            showColorPickerDialog = true
+                        },
+                        colorScheme = colorScheme
                     )
                 }
             }
@@ -318,8 +274,6 @@ if (showColorPickerDialog && colorPickerTarget != null) {
 }
 
 // ==================== PREVIEW CARD ====================
-
-// CustomThemeScreen.kt
 
 @Composable
 private fun CustomThemePreviewCard(config: CustomThemeConfig) {
@@ -336,13 +290,13 @@ private fun CustomThemePreviewCard(config: CustomThemeConfig) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(260.dp)
+            .height(200.dp)
             .scale(cardScale)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
             ) { /* Apenas feedback */ },
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
             containerColor = colorScheme.surface
@@ -353,6 +307,7 @@ private fun CustomThemePreviewCard(config: CustomThemeConfig) {
                 .fillMaxSize()
                 .background(colorScheme.surface)
         ) {
+            // Preview do wallpaper simplificado
             when (config.wallpaperType) {
                 WallpaperType.SOLID -> {
                     Box(
@@ -363,59 +318,45 @@ private fun CustomThemePreviewCard(config: CustomThemeConfig) {
                 }
                 WallpaperType.GALLERY -> {
                     config.wallpaperUri?.let { uri ->
-                        // 🔥 BLUR NO BOX QUE ENVOLVE O ASYNCIMAGE
-                        Box(
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(uri)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = null,
                             modifier = Modifier
                                 .fillMaxSize()
-                                .blur(radius = (config.wallpaperBlur * 18f).dp)
-                        ) {
-                            AsyncImage(
-                                model = ImageRequest.Builder(context)
-                                    .data(uri)
-                                    .crossfade(true)
-                                    .build(),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .graphicsLayer {
-                                        scaleX = 1.1f
-                                        scaleY = 1.1f
-                                        this.alpha = 1f - config.wallpaperDim
-                                    },
-                                contentScale = ContentScale.Crop
-                            )
-                        }
+                                .graphicsLayer {
+                                    scaleX = 1.1f
+                                    scaleY = 1.1f
+                                    this.alpha = 1f - config.wallpaperDim
+                                },
+                            contentScale = ContentScale.Crop
+                        )
                     } ?: Box(modifier = Modifier.fillMaxSize().background(colorScheme.surface))
                 }
                 WallpaperType.SERVER -> {
                     config.wallpaperUrl?.let { url ->
-                        // 🔥 BLUR NO BOX QUE ENVOLVE O ASYNCIMAGE
-                        Box(
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(url)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = null,
                             modifier = Modifier
                                 .fillMaxSize()
-                                .blur(radius = (config.wallpaperBlur * 18f).dp)
-                        ) {
-                            AsyncImage(
-                                model = ImageRequest.Builder(context)
-                                    .data(url)
-                                    .crossfade(true)
-                                    .build(),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .graphicsLayer {
-                                        scaleX = 1.1f
-                                        scaleY = 1.1f
-                                        this.alpha = 1f - config.wallpaperDim
-                                    },
-                                contentScale = ContentScale.Crop
-                            )
-                        }
+                                .graphicsLayer {
+                                    scaleX = 1.1f
+                                    scaleY = 1.1f
+                                    this.alpha = 1f - config.wallpaperDim
+                                },
+                            contentScale = ContentScale.Crop
+                        )
                     } ?: Box(modifier = Modifier.fillMaxSize().background(colorScheme.surface))
                 }
             }
 
-            // Overlay de escurecimento (dim)
+            // Overlay de escurecimento
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -432,19 +373,17 @@ private fun PlayerPreviewContent(colorScheme: ColorScheme) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(20.dp),
+            .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Topo: informações da música
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Album Art com efeito de gradiente
             Box(
                 modifier = Modifier
-                    .size(72.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
@@ -460,37 +399,36 @@ private fun PlayerPreviewContent(colorScheme: ColorScheme) {
                     tint = colorScheme.onPrimary,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp)
+                        .padding(12.dp)
                 )
             }
 
             Column(Modifier.weight(1f)) {
                 Text(
                     "♪ Blinding Lights",
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleSmall,
                     color = colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1
                 )
                 Text(
                     "The Weeknd",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = colorScheme.onSurfaceVariant,
                     maxLines = 1
                 )
             }
         }
 
-        // Meio: Barra de progresso com tempo
+        // Barra de progresso
         Column(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            // Barra de progresso estilizada
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp))
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
                     .background(colorScheme.primary.copy(alpha = 0.2f))
             ) {
                 Box(
@@ -505,23 +443,7 @@ private fun PlayerPreviewContent(colorScheme: ColorScheme) {
                                 )
                             )
                         )
-                        .clip(RoundedCornerShape(3.dp))
-                )
-                // Bolinha do progresso
-                Box(
-                    modifier = Modifier
-                        .size(14.dp)
-                        .offset(x = (45 - 7).dp) // 45% da largura - metade do tamanho
-                        .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(
-                                colors = listOf(
-                                    colorScheme.primary,
-                                    colorScheme.secondary
-                                )
-                            )
-                        )
-                        .border(2.dp, Color.White.copy(alpha = 0.8f), CircleShape)
+                        .clip(RoundedCornerShape(2.dp))
                 )
             }
             
@@ -542,29 +464,16 @@ private fun PlayerPreviewContent(colorScheme: ColorScheme) {
             }
         }
 
-        // Base: Controles
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Botões de controle
             listOf(
                 Icons.Rounded.SkipPrevious,
                 Icons.Rounded.PlayArrow,
                 Icons.Rounded.SkipNext
             ).forEachIndexed { index, icon ->
-                val controlInteractionSource = remember { MutableInteractionSource() }
-                val isControlPressed by controlInteractionSource.collectIsPressedAsState()
-                val controlScale by animateFloatAsState(
-                    targetValue = if (isControlPressed) 0.85f else 1f,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioLowBouncy,
-                        stiffness = Spring.StiffnessMedium
-                    ),
-                    label = "control_scale_$index"
-                )
-
                 Surface(
                     shape = CircleShape,
                     color = colorScheme.primary.copy(
@@ -575,12 +484,7 @@ private fun PlayerPreviewContent(colorScheme: ColorScheme) {
                         }
                     ),
                     modifier = Modifier
-                        .size(if (index == 1) 56.dp else 44.dp)
-                        .scale(controlScale)
-                        .clickable(
-                            interactionSource = controlInteractionSource,
-                            indication = null
-                        ) { /* Apenas feedback */ }
+                        .size(if (index == 1) 48.dp else 36.dp)
                 ) {
                     Icon(
                         if (index == 1) Icons.Rounded.PlayArrow else icon,
@@ -588,199 +492,16 @@ private fun PlayerPreviewContent(colorScheme: ColorScheme) {
                         tint = colorScheme.primary,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(if (index == 1) 14.dp else 10.dp)
+                            .padding(if (index == 1) 12.dp else 8.dp)
                     )
                 }
-                Spacer(Modifier.width(if (index == 1) 20.dp else 12.dp))
+                Spacer(Modifier.width(if (index == 1) 16.dp else 8.dp))
             }
-        }
-        
-        // Indicador de qualidade
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                "♫ FLAC • 24bit",
-                style = MaterialTheme.typography.labelSmall,
-                color = colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-            )
         }
     }
 }
 
-@Composable
-private fun ColorPickerSection(
-    config: CustomThemeConfig,
-    viewModel: CustomThemeViewModel,
-    onCustomColorClick: ((Int) -> Unit) -> Unit
-) {
-    var selectedPreset by remember { mutableStateOf<String?>(null) }
-    var showPresets by remember { mutableStateOf(true) }
-
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            stringResource(R.string.custom_theme_colors_subtitle),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        // ===== CORES INDIVIDUAIS =====
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    "✨ Cores Personalizadas",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                
-                ColorPickerRow(
-                    label = "Primary",
-                    currentColor = config.primaryColor,
-                    mainColors = MAIN_COLORS,
-                    additionalColors = ADDITIONAL_COLORS,
-                    onColorSelected = { 
-                        selectedPreset = null 
-                        viewModel.updatePrimaryColor(it) 
-                    },
-                    onCustomColorClick = { onCustomColorClick(viewModel::updatePrimaryColor) }
-                )
-                
-                ColorPickerRow(
-                    label = "Secondary",
-                    currentColor = config.secondaryColor,
-                    mainColors = MAIN_COLORS,
-                    additionalColors = ADDITIONAL_COLORS,
-                    onColorSelected = { 
-                        selectedPreset = null 
-                        viewModel.updateSecondaryColor(it) 
-                    },
-                    onCustomColorClick = { onCustomColorClick(viewModel::updateSecondaryColor) }
-                )
-                
-                ColorPickerRow(
-                    label = "Background",
-                    currentColor = config.backgroundColor,
-                    mainColors = MAIN_COLORS,
-                    additionalColors = ADDITIONAL_COLORS,
-                    onColorSelected = { 
-                        selectedPreset = null 
-                        viewModel.updateBackgroundColor(it) 
-                    },
-                    onCustomColorClick = { onCustomColorClick(viewModel::updateBackgroundColor) }
-                )
-                
-                ColorPickerRow(
-                    label = "On Primary (Texto)",
-                    currentColor = config.onPrimaryColor,
-                    mainColors = listOf(0xFFFFFFFF.toInt(), 0xFF000000.toInt()),
-                    additionalColors = ADDITIONAL_COLORS,
-                    onColorSelected = { 
-                        selectedPreset = null 
-                        viewModel.updateOnPrimaryColor(it) 
-                    },
-                    onCustomColorClick = { onCustomColorClick(viewModel::updateOnPrimaryColor) }
-                )
-                
-                ColorPickerRow(
-                    label = "On Surface (Texto)",
-                    currentColor = config.onSurfaceColor,
-                    mainColors = listOf(0xFFFFFFFF.toInt(), 0xFF000000.toInt()),
-                    additionalColors = ADDITIONAL_COLORS,
-                    onColorSelected = { 
-                        selectedPreset = null 
-                        viewModel.updateOnSurfaceColor(it) 
-                    },
-                    onCustomColorClick = { onCustomColorClick(viewModel::updateOnSurfaceColor) }
-                    )
-                }
-            }
-        }
-    }
-
-@Composable
-private fun PresetItem(
-    preset: ColorPreset,
-    isSelected: Boolean,
-    onSelect: () -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val itemScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.92f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy),
-        label = "preset_item_scale"
-    )
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .width(72.dp)
-            .scale(itemScale)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) { onSelect() }
-    ) {
-        // Círculo com as cores
-        Box(
-            modifier = Modifier
-                .size(56.dp)
-                .clip(CircleShape)
-                .background(
-                    Brush.sweepGradient(
-                        colors = listOf(
-                            Color(preset.primaryColor),
-                            Color(preset.secondaryColor),
-                            Color(preset.accentColor),
-                            Color(preset.primaryColor)
-                        )
-                    )
-                )
-                .then(
-                    if (isSelected) {
-                        Modifier.border(3.dp, Color.White, CircleShape)
-                    } else Modifier
-                )
-        ) {
-            // Ícone central
-            Icon(
-                preset.icon,
-                contentDescription = preset.name,
-                tint = Color(preset.onPrimaryColor).copy(alpha = 0.9f),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(12.dp)
-            )
-        }
-        
-        // Nome da predefinição
-        Text(
-            preset.name,
-            style = MaterialTheme.typography.labelSmall,
-            color = if (isSelected) 
-                MaterialTheme.colorScheme.primary 
-            else 
-                MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            maxLines = 1,
-            modifier = Modifier.padding(top = 4.dp)
-            )
-        }
-    }
+// ==================== COLOR PICKER ROW ====================
 
 @Composable
 private fun ColorPickerRow(
@@ -789,7 +510,8 @@ private fun ColorPickerRow(
     mainColors: List<Int>,
     additionalColors: List<Int>,
     onColorSelected: (Int) -> Unit,
-    onCustomColorClick: () -> Unit
+    onCustomColorClick: () -> Unit,
+    colorScheme: ColorScheme
 ) {
     var showAdditional by remember { mutableStateOf(false) }
 
@@ -799,11 +521,10 @@ private fun ColorPickerRow(
         Text(
             label,
             style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = colorScheme.onSurface,
             fontWeight = FontWeight.Medium
         )
 
-        // Cores principais
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -811,12 +532,12 @@ private fun ColorPickerRow(
                 ColorItem(
                     color = color,
                     isSelected = color == currentColor,
-                    onColorSelected = onColorSelected
+                    onColorSelected = onColorSelected,
+                    colorScheme = colorScheme
                 )
             }
         }
 
-        // Cores adicionais com toggle
         AnimatedContent(
             targetState = showAdditional,
             transitionSpec = {
@@ -826,7 +547,10 @@ private fun ColorPickerRow(
             if (!show) {
                 TextButton(
                     onClick = { showAdditional = true },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextButtonDefaults.textButtonColors(
+                        contentColor = colorScheme.primary
+                    )
                 ) {
                     Icon(Icons.Rounded.ExpandMore, contentDescription = null)
                     Text(stringResource(R.string.custom_theme_more_colors))
@@ -838,7 +562,7 @@ private fun ColorPickerRow(
                     Text(
                         stringResource(R.string.custom_theme_additional_colors),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = colorScheme.onSurfaceVariant
                     )
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -847,13 +571,17 @@ private fun ColorPickerRow(
                             ColorItem(
                                 color = color,
                                 isSelected = color == currentColor,
-                                onColorSelected = onColorSelected
+                                onColorSelected = onColorSelected,
+                                colorScheme = colorScheme
                             )
                         }
                     }
                     TextButton(
                         onClick = { showAdditional = false },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextButtonDefaults.textButtonColors(
+                            contentColor = colorScheme.primary
+                        )
                     ) {
                         Icon(Icons.Rounded.ExpandLess, contentDescription = null)
                         Text(stringResource(R.string.custom_theme_less_colors))
@@ -862,10 +590,12 @@ private fun ColorPickerRow(
             }
         }
 
-        // Botão cor personalizada
         TextButton(
             onClick = onCustomColorClick,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = TextButtonDefaults.textButtonColors(
+                contentColor = colorScheme.primary
+            )
         ) {
             Icon(Icons.Rounded.ColorLens, contentDescription = null)
             Text(stringResource(R.string.custom_theme_custom_color))
@@ -873,11 +603,14 @@ private fun ColorPickerRow(
     }
 }
 
+// ==================== COLOR ITEM ====================
+
 @Composable
 private fun ColorItem(
     color: Int,
     isSelected: Boolean,
-    onColorSelected: (Int) -> Unit
+    onColorSelected: (Int) -> Unit,
+    colorScheme: ColorScheme
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -933,7 +666,7 @@ private fun ColorItem(
     }
 }
 
-// ==================== CUSTOM COLOR PICKER DIALOG (HSV) ====================
+// ==================== CUSTOM COLOR PICKER DIALOG ====================
 
 @Composable
 private fun CustomColorPickerDialog(
@@ -980,7 +713,6 @@ private fun CustomColorPickerDialog(
                         .clip(RoundedCornerShape(12.dp))
                         .background(selectedColor)
                 ) {
-                    // Texto de contraste
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -998,7 +730,6 @@ private fun CustomColorPickerDialog(
                 Column(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Matiz (Hue)
                     HSVSlider(
                         label = stringResource(R.string.custom_theme_hue),
                         value = hue,
@@ -1015,7 +746,6 @@ private fun CustomColorPickerDialog(
                         )
                     )
 
-                    // Saturação (Saturation)
                     HSVSlider(
                         label = stringResource(R.string.custom_theme_saturation),
                         value = saturation,
@@ -1027,7 +757,6 @@ private fun CustomColorPickerDialog(
                         )
                     )
 
-                    // Brilho (Brightness/Value)
                     HSVSlider(
                         label = stringResource(R.string.custom_theme_brightness),
                         value = brightness,
@@ -1110,7 +839,6 @@ private fun HSVSlider(
             )
         }
         
-        // Slider com gradiente
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1137,393 +865,6 @@ private fun HSVSlider(
     }
 }
 
-// ==================== WALLPAPER SECTION ====================
-
-@Composable
-private fun WallpaperSection(
-    config: CustomThemeConfig,
-    viewModel: CustomThemeViewModel
-) {
-    val context = LocalContext.current
-    var selectedCategory by remember { mutableStateOf(WallpaperCategory.ALL) }
-
-    // Launcher para galeria
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            viewModel.saveWallpaperFromGallery(it.toString())
-        }
-    }
-
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            stringResource(R.string.custom_theme_wallpaper_subtitle),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        // Tipo de Wallpaper
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            WallpaperType.entries.forEach { type ->
-                val isSelected = config.wallpaperType == type
-                val interactionSource = remember { MutableInteractionSource() }
-                val isPressed by interactionSource.collectIsPressedAsState()
-                val chipScale by animateFloatAsState(
-                    targetValue = if (isPressed) 0.96f else 1f,
-                    animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy),
-                    label = "chip_scale_${type.name}"
-                )
-
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { viewModel.setWallpaperType(type) },
-                    label = {
-                        Text(
-                            when (type) {
-                                WallpaperType.SOLID -> stringResource(R.string.wallpaper_type_solid)
-                                WallpaperType.GALLERY -> stringResource(R.string.wallpaper_type_gallery)
-                                WallpaperType.SERVER -> stringResource(R.string.wallpaper_type_server)
-                            }
-                        )
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .scale(chipScale),
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    interactionSource = interactionSource
-                )
-            }
-        }
-
-        when (config.wallpaperType) {
-            WallpaperType.SOLID -> {
-                ColorPickerRow(
-                    label = stringResource(R.string.custom_theme_background_color),
-                    currentColor = config.backgroundColor,
-                    mainColors = MAIN_COLORS,
-                    additionalColors = ADDITIONAL_COLORS + listOf(0xFF1E1234.toInt()),
-                    onColorSelected = { viewModel.updateBackgroundColor(it) },
-                    onCustomColorClick = { viewModel::updateBackgroundColor }
-                )
-
-                // Preview da cor
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(config.backgroundColor)
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            stringResource(R.string.custom_theme_wallpaper_preview),
-                            color = Color(config.backgroundColor).contrastTextColor(),
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 18.sp
-                        )
-                    }
-                }
-            }
-
-            WallpaperType.GALLERY -> {
-                Button(
-                    onClick = { galleryLauncher.launch("image/*") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Icon(Icons.Rounded.PhotoLibrary, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.wallpaper_select_from_gallery))
-                }
-
-                if (config.wallpaperUri != null) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(250.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                    ) {
-                        AsyncImage(
-                            model = Uri.parse(config.wallpaperUri),
-                            contentDescription = stringResource(R.string.custom_theme_selected_wallpaper),
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-                } else {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    Icons.Rounded.Image,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(48.dp)
-                                )
-                                Spacer(Modifier.height(8.dp))
-                                Text(
-                                    stringResource(R.string.custom_theme_no_image_selected),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            WallpaperType.SERVER -> {
-                Text(
-                    stringResource(R.string.wallpaper_server_subtitle),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                // Categorias com ícones Material
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    WallpaperCategory.entries.forEach { category ->
-                        val isSelected = selectedCategory == category
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = { selectedCategory = category },
-                            label = {
-                                Text(
-                                    when (category) {
-                                        WallpaperCategory.ALL -> "Todos"
-                                        WallpaperCategory.CARR -> "Carros"
-                                        WallpaperCategory.ANIME -> "Anime"
-                                        WallpaperCategory.SPACE -> "Espaço"
-                                        WallpaperCategory.NEON -> "Neon"
-                                        WallpaperCategory.OTRS -> "Outros"
-                                    }
-                                )
-                            },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                            )
-                        )
-                    }
-                }
-
-                // Wallpapers
-                val wallpapers = WALLPAPER_CATEGORIES[selectedCategory] ?: emptyList()
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                ) {
-                    items(wallpapers) { url ->
-                        ServerWallpaperItem(
-                            url = url,
-                            isSelected = config.wallpaperUrl == url,
-                            onSelect = { viewModel.setWallpaperFromServer(url) }
-                        )
-                    }
-                }
-            }
-        }
-
-        // Controles adicionais (blur e dim)
-        if (config.wallpaperType != WallpaperType.SOLID) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                SliderWithLabel(
-                    label = stringResource(R.string.wallpaper_blur),
-                    value = config.wallpaperBlur,
-                    onValueChange = { viewModel.setWallpaperBlur(it) },
-                    valueRange = 0f..1f
-                )
-                SliderWithLabel(
-                    label = stringResource(R.string.wallpaper_dim),
-                    value = config.wallpaperDim,
-                    onValueChange = { viewModel.setWallpaperDim(it) },
-                    valueRange = 0f..0.8f
-                )
-            }
-        }
-    }
-}
-
-// ==================== SERVER WALLPAPER ITEM ====================
-
-@Composable
-private fun ServerWallpaperItem(
-    url: String,
-    isSelected: Boolean,
-    onSelect: () -> Unit
-) {
-    var isLoading by remember { mutableStateOf(true) }
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val itemScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy),
-        label = "server_item_scale"
-    )
-
-    Box(
-        modifier = Modifier
-            .width(120.dp)
-            .height(180.dp)
-            .scale(itemScale)
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) { onSelect() }
-            .then(
-                if (isSelected) {
-                    Modifier.border(3.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp))
-                } else Modifier
-            )
-    ) {
-        // Shimmer deslizante melhorado
-        if (isLoading) {
-            ShimmerLoading(
-                modifier = Modifier.fillMaxSize(),
-                shape = RoundedCornerShape(16.dp)
-            )
-        }
-
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(url)
-                .crossfade(true)
-                .listener(
-                    onStart = { isLoading = true },
-                    onSuccess = { _, _ -> isLoading = false },
-                    onError = { _, _ -> isLoading = false }
-                )
-                .build(),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-
-        // Seleção
-        if (isSelected) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.3f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Rounded.Check,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-        }
-    }
-}
-
-// ==================== SHIMMER LOADING MELHORADO ====================
-
-@Composable
-private fun ShimmerLoading(
-    modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(8.dp)
-) {
-    val transition = rememberInfiniteTransition()
-    val shimmerState by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        )
-    )
-
-    Box(
-        modifier = modifier
-            .clip(shape)
-            .background(
-                Brush.horizontalGradient(
-                    colors = listOf(
-                        Color.Gray.copy(alpha = 0.3f),
-                        Color.Gray.copy(alpha = 0.6f),
-                        Color.Gray.copy(alpha = 0.3f)
-                    ),
-                    startX = shimmerState * 2f - 1f,
-                    endX = shimmerState * 2f + 1f
-                )
-            )
-    )
-}
-
-// ==================== SLIDER WITH LABEL ====================
-
-@Composable
-private fun SliderWithLabel(
-    label: String,
-    value: Float,
-    onValueChange: (Float) -> Unit,
-    valueRange: ClosedFloatingPointRange<Float>
-) {
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                label,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                "${(value * 100).toInt()}%",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-        Slider(
-            value = value,
-            onValueChange = onValueChange,
-            valueRange = valueRange,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
 // ==================== UTILITY FUNCTIONS ====================
 
 fun Color.contrastTextColor(): Color {
@@ -1531,7 +872,6 @@ fun Color.contrastTextColor(): Color {
     return if (luminance > 0.5) Color.Black else Color.White
 }
 
-// Extensão para HSV - CORRIGIDA
 private val Color.hue: Float
     get() {
         val max = maxOf(red, green, blue)
@@ -1546,7 +886,6 @@ private val Color.hue: Float
             else -> ((red - green) / delta) + 4f
         }
         
-        // 🔥 GARANTE QUE FIQUE ENTRE 0 E 360
         var hueDegrees = hue * 60f
         if (hueDegrees < 0) hueDegrees += 360f
         if (hueDegrees >= 360f) hueDegrees -= 360f
@@ -1563,3 +902,18 @@ private val Color.saturation: Float
 
 private val Color.brightness: Float
     get() = maxOf(red, green, blue)
+
+// Cores
+val MAIN_COLORS = listOf(
+    0xFF000000.toInt(), 0xFF795548.toInt(), 0xFFE53935.toInt(),
+    0xFFFF9800.toInt(), 0xFFFFEB3B.toInt(), 0xFF8BC34A.toInt(),
+    0xFF2E7D32.toInt(), 0xFF42A5F5.toInt(), 0xFF0D47A1.toInt(),
+    0xFF7B1FA2.toInt(), 0xFFE91E63.toInt(), 0xFFFFFFFF.toInt()
+)
+
+val ADDITIONAL_COLORS = listOf(
+    0xFFFF6F00.toInt(), 0xFF00BCD4.toInt(), 0xFF00E676.toInt(),
+    0xFFFF4081.toInt(), 0xFF651FFF.toInt(), 0xFF2979FF.toInt(),
+    0xFFFF6E40.toInt(), 0xFFF50057.toInt(), 0xFF00E5FF.toInt(),
+    0xFF76FF03.toInt(), 0xFFD500F9.toInt(), 0xFFFFAB00.toInt()
+)

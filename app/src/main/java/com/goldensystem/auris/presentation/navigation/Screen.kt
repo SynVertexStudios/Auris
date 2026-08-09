@@ -51,7 +51,10 @@ sealed class Screen(val route: String) {
     object GDriveDashboard : Screen("gdrive_dashboard")
     object VideoGallery : Screen("video_gallery")
     
-    // ✅ NOVAS ROTAS CORRIGIDAS
+    // ============================================================
+    // ROTAS DE TEMA PERSONALIZADO (CORRIGIDAS E COMPLETAS)
+    // ============================================================
     object CustomThemeSettings : Screen("custom_theme_settings")
-    object CustomTheme : Screen("custom_theme")
+    object CustomTheme : Screen("custom_theme_colors")  // ← Nome único para tela de cores
+    object Wallpaper : Screen("wallpaper")               // ← ADICIONADO
 }

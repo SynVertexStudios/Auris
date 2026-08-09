@@ -1,3 +1,5 @@
+// presentation/screens/CustomThemeSettingsScreen.kt
+
 package com.goldensystem.auris.presentation.screens
 
 import androidx.compose.foundation.background
@@ -100,96 +102,25 @@ fun CustomThemeSettingsScreen(
         ) {
             // Header com preview do tema atual
             item {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .clip(RoundedCornerShape(20.dp)),
-                    color = colorScheme.surface,
-                    tonalElevation = 2.dp
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Surface(
-                                modifier = Modifier.size(48.dp),
-                                shape = RoundedCornerShape(14.dp),
-                                color = colorScheme.primary.copy(alpha = 0.15f)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        Icons.Rounded.Palette,
-                                        contentDescription = null,
-                                        tint = colorScheme.primary,
-                                        modifier = Modifier.size(28.dp)
-                                    )
-                                }
-                            }
-
-                            Column {
-                                Text(
-                                    stringResource(R.string.custom_theme_current_theme),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = colorScheme.onSurface,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    when (config.wallpaperType) {
-                                        WallpaperType.SOLID -> stringResource(R.string.wallpaper_type_solid)
-                                        WallpaperType.GALLERY -> stringResource(R.string.wallpaper_type_gallery)
-                                        WallpaperType.SERVER -> stringResource(R.string.wallpaper_type_server)
-                                    },
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        // Mini preview das cores
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            listOf(
-                                config.primaryColor to "Primary",
-                                config.secondaryColor to "Secondary",
-                                config.backgroundColor to "Background",
-                                config.accentColor to "Accent"
-                            ).forEach { (colorValue, _) ->
-                                Surface(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(8.dp),
-                                    shape = RoundedCornerShape(4.dp),
-                                    color = Color(colorValue)
-                                ) {}
-                            }
-                        }
-                    }
-                }
+                ThemePreviewHeader(
+                    config = config,
+                    colorScheme = colorScheme
+                )
             }
 
             // Seção: Personalização do Tema
             item {
-                SettingsGroupHeader(title = stringResource(R.string.custom_theme_personalization))
+                SettingsGroupHeader(
+                    title = stringResource(R.string.custom_theme_personalization)
+                )
             }
 
-            // Item para abrir o BottomSheet de Predefinições
             item {
                 SettingsCardItem(
                     icon = Icons.Rounded.Palette,
                     title = stringResource(R.string.custom_theme_presets),
                     subtitle = stringResource(R.string.custom_theme_presets_subtitle),
-                    onClick = {
-                        showPresetsSheet = true
-                    }
+                    onClick = { showPresetsSheet = true }
                 )
             }
 
@@ -204,20 +135,33 @@ fun CustomThemeSettingsScreen(
                 )
             }
 
+            // Seção: Wallpaper (agora navega para tela separada)
+            item {
+                SettingsGroupHeader(
+                    title = stringResource(R.string.custom_theme_wallpaper_section)
+                )
+            }
+
             item {
                 SettingsCardItem(
                     icon = Icons.Rounded.Wallpaper,
                     title = stringResource(R.string.custom_theme_wallpaper),
-                    subtitle = stringResource(R.string.custom_theme_wallpaper_subtitle),
+                    subtitle = when (config.wallpaperType) {
+                        WallpaperType.SOLID -> stringResource(R.string.custom_theme_wallpaper_solid_subtitle)
+                        WallpaperType.GALLERY -> stringResource(R.string.custom_theme_wallpaper_gallery_subtitle)
+                        WallpaperType.SERVER -> stringResource(R.string.custom_theme_wallpaper_server_subtitle)
+                    },
                     onClick = {
-                        // Navegar para tela de wallpaper (se existir)
+                        navController.navigate(Screen.Wallpaper.route)
                     }
                 )
             }
 
             // Seção: Estilos
             item {
-                SettingsGroupHeader(title = stringResource(R.string.custom_theme_styles))
+                SettingsGroupHeader(
+                    title = stringResource(R.string.custom_theme_styles)
+                )
             }
 
             item {
@@ -244,7 +188,9 @@ fun CustomThemeSettingsScreen(
 
             // Seção: Avançado
             item {
-                SettingsGroupHeader(title = stringResource(R.string.custom_theme_advanced))
+                SettingsGroupHeader(
+                    title = stringResource(R.string.custom_theme_advanced)
+                )
             }
 
             item {
@@ -269,19 +215,98 @@ fun CustomThemeSettingsScreen(
                 )
             }
 
-            // Espaço final
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
 
-    // BottomSheet de Predefinições
     if (showPresetsSheet) {
         ThemePresetsBottomSheet(
             viewModel = viewModel,
             onDismiss = { showPresetsSheet = false }
         )
+    }
+}
+
+@Composable
+private fun ThemePreviewHeader(
+    config: CustomThemeConfig,
+    colorScheme: ColorScheme
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(20.dp)),
+        color = colorScheme.surface,
+        tonalElevation = 2.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Surface(
+                    modifier = Modifier.size(48.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = colorScheme.primary.copy(alpha = 0.15f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Rounded.Palette,
+                            contentDescription = null,
+                            tint = colorScheme.primary,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+
+                Column {
+                    Text(
+                        stringResource(R.string.custom_theme_current_theme),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        when (config.wallpaperType) {
+                            WallpaperType.SOLID -> stringResource(R.string.wallpaper_type_solid)
+                            WallpaperType.GALLERY -> stringResource(R.string.wallpaper_type_gallery)
+                            WallpaperType.SERVER -> stringResource(R.string.wallpaper_type_server)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // Mini preview das cores
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                listOf(
+                    config.primaryColor to "Primary",
+                    config.secondaryColor to "Secondary",
+                    config.backgroundColor to "Background",
+                    config.accentColor to "Accent"
+                ).forEach { (colorValue, _) ->
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(8.dp),
+                        shape = RoundedCornerShape(4.dp),
+                        color = Color(colorValue)
+                    ) {}
+                }
+            }
+        }
     }
 }
 
