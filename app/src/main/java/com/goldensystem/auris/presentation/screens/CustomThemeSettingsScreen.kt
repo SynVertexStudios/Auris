@@ -1,17 +1,9 @@
-// presentation/screens/CustomThemeSettingsScreen.kt
-
 package com.goldensystem.auris.presentation.screens
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -45,22 +37,19 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.goldensystem.auris.R
-import com.goldensystem.auris.data.preferences.CustomThemeConfig
 import com.goldensystem.auris.data.preferences.WallpaperType
 import com.goldensystem.auris.presentation.navigation.Screen
 import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
@@ -74,8 +63,6 @@ fun CustomThemeSettingsScreen(
 ) {
     val config by viewModel.customThemeConfig.collectAsStateWithLifecycle()
     val colorScheme = remember(config) { customColorScheme(config, true) }
-    
-    var isCustomThemeEnabled by remember { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
@@ -105,9 +92,6 @@ fun CustomThemeSettingsScreen(
             )
         }
     ) { paddingValues ->
-        val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-        val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -135,7 +119,6 @@ fun CustomThemeSettingsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            // Ícone de tema
                             Surface(
                                 modifier = Modifier.size(48.dp),
                                 shape = RoundedCornerShape(14.dp),
@@ -180,13 +163,13 @@ fun CustomThemeSettingsScreen(
                                 config.secondaryColor to "Secondary",
                                 config.backgroundColor to "Background",
                                 config.accentColor to "Accent"
-                            ).forEach { (color, _) ->
+                            ).forEach { (colorValue, _) ->
                                 Surface(
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(8.dp),
                                     shape = RoundedCornerShape(4.dp),
-                                    color = color(color)
+                                    color = Color(colorValue)
                                 ) {}
                             }
                         }
@@ -217,7 +200,6 @@ fun CustomThemeSettingsScreen(
                     subtitle = stringResource(R.string.custom_theme_wallpaper_subtitle),
                     onClick = {
                         // Navegar para tela de wallpaper (se existir)
-                        // navController.navigate(Screen.WallpaperSettings.route)
                     }
                 )
             }
@@ -318,7 +300,6 @@ private fun SettingsCardItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Ícone
             Surface(
                 modifier = Modifier.size(42.dp),
                 shape = RoundedCornerShape(12.dp),
@@ -334,7 +315,6 @@ private fun SettingsCardItem(
                 }
             }
 
-            // Título e subtítulo
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -351,7 +331,6 @@ private fun SettingsCardItem(
                 )
             }
 
-            // Chevron
             Icon(
                 Icons.Rounded.ChevronRight,
                 contentDescription = null,
