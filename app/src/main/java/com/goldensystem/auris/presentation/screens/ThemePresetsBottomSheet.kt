@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,10 +26,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.goldensystem.auris.R
 import com.goldensystem.auris.data.preferences.ColorPreset
 import com.goldensystem.auris.data.preferences.COLOR_PRESETS
 import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +42,7 @@ fun ThemePresetsBottomSheet(
 ) {
     val config by viewModel.customThemeConfig.collectAsStateWithLifecycle()
     var selectedPresetName by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -120,9 +125,11 @@ fun ThemePresetsBottomSheet(
                             viewModel.updateOnSurfaceColor(preset.onSurfaceColor)
                             viewModel.updateAccentColor(preset.accentColor)
                             
-                            // Pequeno delay antes de fechar para feedback visual
-                            kotlinx.coroutines.delay(300)
-                            onDismiss()
+                            // Fechar após selecionar com delay para feedback
+                            scope.launch {
+                                delay(300)
+                                onDismiss()
+                            }
                         }
                     )
                 }
@@ -133,15 +140,17 @@ fun ThemePresetsBottomSheet(
             // Botão de reset
             TextButton(
                 onClick = {
-                    viewModel.resetToDefault()
-                    onDismiss()
+                    scope.launch {
+                        viewModel.resetToDefault()
+                        onDismiss()
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
             ) {
                 Icon(
-                    Icons.Rounded.Close,
+                    Icons.Rounded.RestartAlt,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )

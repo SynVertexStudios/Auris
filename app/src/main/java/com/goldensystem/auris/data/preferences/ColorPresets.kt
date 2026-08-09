@@ -1,6 +1,6 @@
 // data/preferences/ColorPresets.kt
 
-package com.seuapp.data.preferences
+package com.goldensystem.auris.data.preferences
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
