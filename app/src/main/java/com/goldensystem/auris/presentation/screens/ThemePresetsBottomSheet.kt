@@ -9,6 +9,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -196,10 +197,7 @@ private fun PresetCard(
     Surface(
     modifier = Modifier
         .fillMaxWidth()
-        .graphicsLayer {
-            scaleX = cardScale
-            scaleY = cardScale
-        }
+        .scale(cardScale)
         .clip(RoundedCornerShape(20.dp))
             .clickable(
                 interactionSource = interactionSource,
