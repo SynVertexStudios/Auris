@@ -32,7 +32,6 @@ import com.goldensystem.auris.R
 import com.goldensystem.auris.data.preferences.ColorPreset
 import com.goldensystem.auris.data.preferences.COLOR_PRESETS
 import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -45,28 +44,15 @@ fun ThemePresetsBottomSheet(
     val config by viewModel.customThemeConfig.collectAsStateWithLifecycle()
     var selectedPresetName by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
-    
-    var saveJob by remember { mutableStateOf<Job?>(null) }
-
-    LaunchedEffect(config) {
-        saveJob?.cancel()
-        saveJob = scope.launch {
-            delay(800)
-            viewModel.saveCustomTheme()
-        }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            saveJob?.cancel()
-            scope.launch {
-                viewModel.saveCustomTheme()
-            }
-        }
-    }
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            // 🔥 SALVA AO FECHAR (garantia extra)
+            scope.launch {
+                viewModel.saveCustomTheme()
+                onDismiss()
+            }
+        },
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
         dragHandle = {
@@ -100,7 +86,13 @@ fun ThemePresetsBottomSheet(
                 )
                 
                 IconButton(
-                    onClick = onDismiss,
+                    onClick = {
+                        // 🔥 SALVA AO CLICAR NO X
+                        scope.launch {
+                            viewModel.saveCustomTheme()
+                            onDismiss()
+                        }
+                    },
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
@@ -136,6 +128,7 @@ fun ThemePresetsBottomSheet(
                         onClick = {
                             selectedPresetName = preset.name
                             
+                            // Aplica as cores
                             viewModel.updatePrimaryColor(preset.primaryColor)
                             viewModel.updateSecondaryColor(preset.secondaryColor)
                             viewModel.updateBackgroundColor(preset.backgroundColor)
@@ -143,8 +136,10 @@ fun ThemePresetsBottomSheet(
                             viewModel.updateOnSurfaceColor(preset.onSurfaceColor)
                             viewModel.updateAccentColor(preset.accentColor)
                             
+                            // 🔥 SALVA E DEPOIS FECHA
                             scope.launch {
-                                delay(300)
+                                viewModel.saveCustomTheme()
+                                delay(200)
                                 onDismiss()
                             }
                         }
@@ -156,10 +151,10 @@ fun ThemePresetsBottomSheet(
             
             TextButton(
                 onClick = {
-                    scope.launch {  // ← CORRIGIDO: envelopado em launch
-                        selectedPresetName = null
+                    scope.launch {
                         viewModel.resetToDefault()
-                        delay(300)
+                        viewModel.saveCustomTheme()
+                        delay(200)
                         onDismiss()
                     }
                 },
@@ -181,7 +176,7 @@ fun ThemePresetsBottomSheet(
 
 @Composable
 private fun PresetCard(
-    preset: ColorPreset,  // ← AGORA RECONHECE
+    preset: ColorPreset,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
@@ -287,7 +282,7 @@ private fun PresetCard(
                         preset.backgroundColor,
                         preset.accentColor
                     )
-                    colors.forEach { color: Int ->  // ← TIPADO EXPLICITAMENTE
+                    colors.forEach { color: Int ->
                         Surface(
                             modifier = Modifier
                                 .weight(1f)
