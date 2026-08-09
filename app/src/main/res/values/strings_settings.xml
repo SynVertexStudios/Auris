@@ -1,101 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   
-  
-<string name="save_theme_preset">Salvar Predefinição</string>
-<string name="theme_presets">Predefinições</string>
-<string name="no_presets">Nenhuma predefinição salva</string>
-<string name="apply_preset">Aplicar predefinição</string>
-<string name="delete_preset">Deletar predefinição</string>
-<string name="preset_name_hint">Nome da predefinição</string>
-<string name="extract_colors">Extrair cores do wallpaper</string>
-
-<!-- strings.xml -->
-<string name="custom_theme_settings_title">Tema Personalizado</string>
-<string name="custom_theme_current_theme">Tema Atual</string>
-<string name="custom_theme_personalization">Personalização</string>
-<string name="custom_theme_edit_colors">Editar Cores</string>
-<string name="custom_theme_edit_colors_subtitle">Personalize as cores do aplicativo</string>
-<string name="custom_theme_wallpaper_subtitle">Escolha uma imagem de fundo</string>
-<string name="custom_theme_styles">Estilos</string>
-<string name="custom_theme_font_style">Estilo de Fonte</string>
-<string name="custom_theme_font_style_subtitle">Altere a fonte do aplicativo</string>
-<string name="custom_theme_icon_style">Estilo de Ícones</string>
-<string name="custom_theme_icon_style_subtitle">Personalize os ícones do aplicativo</string>
-<string name="custom_theme_advanced">Avançado</string>
-<string name="custom_theme_export_theme">Exportar Tema</string>
-<string name="custom_theme_export_theme_subtitle">Compartilhe seu tema personalizado</string>
-<string name="custom_theme_import_theme">Importar Tema</string>
-<string name="custom_theme_import_theme_subtitle">Importe um tema de outro dispositivo</string>
-
-<!-- res/values/strings.xml - Adicione -->
-<string name="custom_theme_presets">Predefinições</string>
-<string name="custom_theme_preset_apply">Aplicar predefinição</string>
-<string name="custom_theme_preset_rosa">Rosa</string>
-<string name="custom_theme_preset_vermelho">Vermelho</string>
-<string name="custom_theme_preset_verde">Verde</string>
-<string name="custom_theme_preset_preto">Preto</string>
-<string name="custom_theme_preset_azul">Azul</string>
-<string name="custom_theme_preset_roxo">Roxo</string>
-<string name="custom_theme_preset_amarelo">Amarelo</string>
-<string name="custom_theme_preset_laranja">Laranja</string>
-<string name="custom_theme_preset_ciano">Ciano</string>
-<string name="custom_theme_preset_marrom">Marrom</string>
-<string name="custom_theme_preset_cinza">Cinza</string>
-<string name="custom_theme_preset_neon">Neon</string>
-<string name="custom_theme_preset_pastel">Pastel</string>
-<string name="custom_theme_preset_branco">Branco</string>
-
-
-<!-- Settings > Appearance > Custom Theme -->
-<string name="setcat_custom_theme_title">Custom Theme</string>
-<string name="setcat_custom_theme_subtitle">Customize colors, wallpapers and app style</string>
-<string name="setcat_theme_custom">Custom 🎨</string>
-<string name="custom_theme_container_color">Container Color</string>
-<string name="custom_theme_title">Custom Theme</string>
-<string name="custom_theme_colors">Colors</string>
-<string name="custom_theme_wallpaper">Wallpaper</string>
-<string name="custom_theme_colors_subtitle">Choose the apps main colors</string>
-<string name="custom_theme_primary_color">Primary Color</string>
-<string name="custom_theme_secondary_color">Secondary Color</string>
-<string name="custom_theme_background_color">Background Color</string>
-<string name="custom_theme_surface_color">Surface Color</string>
-<string name="custom_theme_custom_color">Custom color</string>
-<string name="custom_theme_wallpaper_subtitle">Choose app background</string>
-<string name="wallpaper_type_solid">Solid Color</string>
-<string name="wallpaper_type_gallery">Gallery</string>
-<string name="wallpaper_type_server">Server</string>
-<string name="wallpaper_color">Wallpaper Color</string>
-<string name="wallpaper_select_from_gallery">Select from Gallery</string>
-<string name="wallpaper_server_subtitle">Choose a wallpaper from the server</string>
-<string name="wallpaper_blur">Blur</string>
-<string name="wallpaper_dim">Dimming</string>
-<string name="action_apply">Apply</string>
-<!-- Custom Theme -->
-<string name="custom_theme_more_colors">Mais cores ▼</string>
-<string name="custom_theme_less_colors">Menos cores ▲</string>
-<string name="custom_theme_additional_colors">Cores Adicionais</string>
-<string name="custom_theme_custom_color_title">Escolher cor personalizada</string>
-<string name="custom_theme_apply_color">Aplicar cor</string>
-<string name="custom_theme_cancel">Cancelar</string>
-<string name="custom_theme_hue">Matiz</string>
-<string name="custom_theme_saturation">Saturação</string>
-<string name="custom_theme_brightness">Brilho</string>
-<string name="custom_theme_selected_wallpaper">Wallpaper selecionado</string>
-<string name="custom_theme_no_image_selected">Nenhuma imagem selecionada</string>
-<string name="custom_theme_wallpaper_preview">Pré-visualização do Wallpaper</string>
-
-
-
-<!-- res/values/strings_settings.xml -->
-<string name="setup_lyrics_title">Song lyrics</string>
-<string name="setup_lyrics_subtitle">Customize how lyrics are displayed during playback</string>
-<string name="setup_lyrics_source_label">Lyrics source</string>
-<string name="setup_lyrics_source_description">Prefer embedded lyrics or fetch online?</string>
-<string name="setup_lyrics_source_embedded">Embedded in file</string>
-<string name="setup_lyrics_source_online">Search online first</string>
-<string name="setup_animated_lyrics_label">Animated lyrics</string>
-<string name="setup_animated_lyrics_description">Smooth animations while displaying lyrics</string>
+    <!-- ============================================ -->
+    <!-- CUSTOM THEME - STRINGS                       -->
+    <!-- ============================================ -->
+    
+    <!-- Títulos e descrições -->
+    <string name="custom_theme_settings_title">Custom Theme</string>
+    <string name="custom_theme_title">Custom Theme</string>
+    <string name="custom_theme_current_theme">Current Theme</string>
+    <string name="custom_theme_personalization">Personalization</string>
+    <string name="custom_theme_colors">Colors</string>
+    <string name="custom_theme_colors_subtitle">Choose the apps main colors</string>
+    <string name="custom_theme_styles">Styles</string>
+    <string name="custom_theme_advanced">Advanced</string>
+    
+    <!-- Strings de cores -->
+    <string name="custom_theme_primary_color">Primary Color</string>
+    <string name="custom_theme_secondary_color">Secondary Color</string>
+    <string name="custom_theme_background_color">Background Color</string>
+    <string name="custom_theme_surface_color">Surface Color</string>
+    <string name="custom_theme_container_color">Container Color</string>
+    <string name="custom_theme_custom_color">Custom color</string>
+    <string name="custom_theme_edit_colors">Edit Colors</string>
+    <string name="custom_theme_edit_colors_subtitle">Customize app colors</string>
+    
+    <!-- Strings de wallpaper -->
+    <string name="custom_theme_wallpaper">Wallpaper</string>
+    <string name="custom_theme_wallpaper_subtitle">Choose a background image</string>
+    <string name="wallpaper_type_solid">Solid Color</string>
+    <string name="wallpaper_type_gallery">Gallery</string>
+    <string name="wallpaper_type_server">Server</string>
+    <string name="wallpaper_color">Wallpaper Color</string>
+    <string name="wallpaper_select_from_gallery">Select from Gallery</string>
+    <string name="wallpaper_server_subtitle">Choose a wallpaper from the server</string>
+    <string name="wallpaper_blur">Blur</string>
+    <string name="wallpaper_dim">Dimming</string>
+    <string name="custom_theme_selected_wallpaper">Selected wallpaper</string>
+    <string name="custom_theme_no_image_selected">No image selected</string>
+    <string name="custom_theme_wallpaper_preview">Wallpaper Preview</string>
+    
+    <!-- Strings de presets -->
+    <string name="custom_theme_presets">Presets</string>
+    <string name="save_theme_preset">Save Preset</string>
+    <string name="theme_presets">Presets</string>
+    <string name="no_presets">No saved presets</string>
+    <string name="apply_preset">Apply preset</string>
+    <string name="delete_preset">Delete preset</string>
+    <string name="preset_name_hint">Preset name</string>
+    <string name="extract_colors">Extract colors from wallpaper</string>
+    <string name="custom_theme_preset_apply">Apply preset</string>
+    
+    <!-- Nomes dos presets -->
+    <string name="custom_theme_preset_rosa">Pink</string>
+    <string name="custom_theme_preset_vermelho">Red</string>
+    <string name="custom_theme_preset_verde">Green</string>
+    <string name="custom_theme_preset_preto">Black</string>
+    <string name="custom_theme_preset_azul">Blue</string>
+    <string name="custom_theme_preset_roxo">Purple</string>
+    <string name="custom_theme_preset_amarelo">Yellow</string>
+    <string name="custom_theme_preset_laranja">Orange</string>
+    <string name="custom_theme_preset_ciano">Cyan</string>
+    <string name="custom_theme_preset_marrom">Brown</string>
+    <string name="custom_theme_preset_cinza">Gray</string>
+    <string name="custom_theme_preset_neon">Neon</string>
+    <string name="custom_theme_preset_pastel">Pastel</string>
+    <string name="custom_theme_preset_branco">White</string>
+    
+    <!-- Strings de estilo -->
+    <string name="custom_theme_font_style">Font Style</string>
+    <string name="custom_theme_font_style_subtitle">Change app font</string>
+    <string name="custom_theme_icon_style">Icon Style</string>
+    <string name="custom_theme_icon_style_subtitle">Customize app icons</string>
+    
+    <!-- Strings de import/export -->
+    <string name="custom_theme_export_theme">Export Theme</string>
+    <string name="custom_theme_export_theme_subtitle">Share your custom theme</string>
+    <string name="custom_theme_import_theme">Import Theme</string>
+    <string name="custom_theme_import_theme_subtitle">Import a theme from another device</string>
+    
+    <!-- Strings do color picker -->
+    <string name="custom_theme_more_colors">More colors ▼</string>
+    <string name="custom_theme_less_colors">Less colors ▲</string>
+    <string name="custom_theme_additional_colors">Additional Colors</string>
+    <string name="custom_theme_custom_color_title">Choose custom color</string>
+    <string name="custom_theme_apply_color">Apply color</string>
+    <string name="custom_theme_cancel">Cancel</string>
+    <string name="custom_theme_hue">Hue</string>
+    <string name="custom_theme_saturation">Saturation</string>
+    <string name="custom_theme_brightness">Brightness</string>
+    <string name="action_apply">Apply</string>
+    
+    <!-- Strings do Settings Category -->
+    <string name="setcat_custom_theme_title">Custom Theme</string>
+    <string name="setcat_custom_theme_subtitle">Customize colors, wallpapers and app style</string>
+    <string name="setcat_theme_custom">Custom 🎨</string>
+    
+    <!-- ============================================ -->
+    <!-- SETUP / SETTINGS                            -->
+    <!-- ============================================ -->
+    
+    <string name="setup_lyrics_title">Song lyrics</string>
+    <string name="setup_lyrics_subtitle">Customize how lyrics are displayed during playback</string>
+    <string name="setup_lyrics_source_label">Lyrics source</string>
+    <string name="setup_lyrics_source_description">Prefer embedded lyrics or fetch online?</string>
+    <string name="setup_lyrics_source_embedded">Embedded in file</string>
+    <string name="setup_lyrics_source_online">Search online first</string>
+    <string name="setup_animated_lyrics_label">Animated lyrics</string>
+    <string name="setup_animated_lyrics_description">Smooth animations while displaying lyrics</string>
+    
     <!-- Main settings screen -->
     <string name="settings_top_bar_title">Settings</string>
     <string name="settings_accounts_row_title">Accounts</string>
@@ -123,7 +136,7 @@
     <string name="settings_category_about_title">About</string>
     <string name="settings_category_about_subtitle">App info, version and credits</string>
 
-    <!-- Common toggles / labels used in ThemeSelectorItem maps -->
+    <!-- Common toggles / labels -->
     <string name="label_on">On</string>
     <string name="label_off">Off</string>
     <string name="label_enabled">Enabled</string>
@@ -132,6 +145,10 @@
     <string name="cd_select_all">Select all</string>
     <string name="cd_clear_selection">Clear selection</string>
     <string name="cd_close_notice">Close notice</string>
+    <string name="cd_show">Show</string>
+    <string name="cd_hide">Hide</string>
+    <string name="cd_remove_from_history">Remove from history</string>
+    <string name="cd_clear_search">Clear search</string>
 
     <!-- Library category -->
     <string name="setcat_library_structure">Library Structure</string>
@@ -294,6 +311,8 @@
     <string name="setcat_ai_usage_report">AI Usage Report</string>
     <string name="setcat_total_consumption_title">Total Consumption</string>
     <string name="setcat_ai_usage_tokens_subtitle">Tracking %1$s tokens\nPrompt: %2$s | Output: %3$s | Thinking: %4$s</string>
+    <string name="setcat_ai_clear_logs">Clear Logs</string>
+    <string name="setcat_ai_activity_log_title">AI Activity Log (%1$d)</string>
 
     <!-- Backup / developer / dialogs -->
     <string name="setcat_create_backup">Create Backup</string>
@@ -302,6 +321,8 @@
     <string name="setcat_restore_backup_section">Restore Backup</string>
     <string name="setcat_import_backup_title">Import Backup</string>
     <string name="setcat_import_backup_subtitle">Browse or choose from recent backups. Selected data will replace current data.</string>
+    <string name="setcat_select_export">Select &amp; Export</string>
+    <string name="setcat_select_restore">Select &amp; Restore</string>
     <string name="setcat_experiments">Experiments</string>
     <string name="setcat_experimental_title">Experimental</string>
     <string name="setcat_experimental_subtitle">Player UI loading experiments and toggles.</string>
@@ -310,9 +331,16 @@
     <string name="setcat_maintenance">Maintenance</string>
     <string name="setcat_force_daily_mix_title">Force Daily Mix Regeneration</string>
     <string name="setcat_force_daily_mix_subtitle">Recreates the daily mix playlist immediately.</string>
+    <string name="setcat_regenerate_daily_mix_action">Regenerate Daily Mix</string>
     <string name="setcat_force_stats_title">Force Stats Regeneration</string>
     <string name="setcat_force_stats_subtitle">Clears cache and recalculates playback statistics.</string>
+    <string name="setcat_regenerate_stats_action">Regenerate Stats</string>
     <string name="setcat_force_palette_title">Force Album Palette Regeneration</string>
+    <string name="setcat_force_palette_empty">No songs with album art found.</string>
+    <string name="setcat_force_palette_subtitle">Rebuild all cached palette variants for every album art, or pick a single one to refresh.</string>
+    <string name="setcat_regenerate_all">Regenerate All</string>
+    <string name="setcat_regenerating">Regenerating…</string>
+    <string name="setcat_choose_song">Choose Song</string>
     <string name="setcat_diagnostics">Diagnostics</string>
     <string name="setcat_trigger_crash_title">Trigger Test Crash</string>
     <string name="setcat_trigger_crash_subtitle">Simulate a crash to test the crash reporting system.</string>
@@ -320,6 +348,7 @@
     <string name="setcat_about_auris_title">About Auris</string>
     <string name="setcat_about_auris_subtitle">App version, credits and more.</string>
 
+    <!-- Backup dialogs -->
     <string name="backup_summary_none">No sections selected.</string>
     <string name="backup_summary_all">All sections selected.</string>
     <string name="backup_summary_partial">%1$d of %2$d sections selected.</string>
@@ -335,7 +364,26 @@
     <string name="backup_dialog_restoring">Restoring Backup</string>
     <string name="backup_step_format">Step %1$d of %2$d</string>
     <string name="backup_entries_will_replace">%1$d entries · Will replace current data</string>
+    <string name="backup_file_name_format">Auris_Backup_%1$d.gabk</string>
 
+    <!-- Import backup flow -->
+    <string name="import_backup_toolbar_title">Import Backup</string>
+    <string name="import_inspecting">Inspecting…</string>
+    <string name="import_browse_file">Browse file</string>
+    <string name="import_backup_hint">Select a .gabk backup file to inspect. You will choose which sections to restore in the next step.</string>
+    <string name="import_recent_backups">Recent Backups</string>
+    <string name="import_no_recent_title">No recent backups</string>
+    <string name="import_no_recent_subtitle">Previously imported backups will appear here.</string>
+    <string name="backup_history_modules_line">%1$d modules · v%2$s · schema v%3$d</string>
+
+    <!-- Palette regeneration -->
+    <string name="palette_force_regenerate_title">Force Album Palette Regeneration</string>
+    <string name="palette_force_regenerate_subtitle">Select a song to clear cached theme data and regenerate all palette styles from the album art.</string>
+    <string name="palette_regenerating_progress">Regenerating palette…</string>
+    <string name="search_songs_by_title_artist_album">Search by title, artist or album</string>
+    <string name="search_no_songs_match">No songs match your search.</string>
+
+    <!-- Dialog messages -->
     <string name="dialog_palette_regenerated">Palette regenerated for %1$s</string>
     <string name="dialog_palette_regenerate_failed">Could not regenerate palette for %1$s</string>
     <string name="dialog_regenerating_palettes_title">Regenerating album palettes…</string>
@@ -347,7 +395,6 @@
     <string name="dialog_regenerate">Regenerate</string>
     <string name="toast_regenerated_palettes_all">%1$d album art palettes regenerated</string>
     <string name="toast_regenerated_palettes_partial">%1$d of %2$d album art palettes regenerated</string>
-
     <string name="dialog_reset_lyrics_title">Reset imported lyrics?</string>
     <string name="dialog_cannot_undo">This action cannot be undone.</string>
     <string name="confirm">Confirm</string>
@@ -362,37 +409,5 @@
     <string name="dialog_regenerate_stats_title">Regenerate Stats?</string>
     <string name="dialog_regenerate_stats_body">This will clear the statistics cache and force a recalculation from the database history.</string>
     <string name="toast_stats_regeneration_started">Stats regeneration started</string>
-    <string name="backup_file_name_format">Auris_Backup_%1$d.gabk</string>
 
-    <string name="setcat_regenerate_daily_mix_action">Regenerate Daily Mix</string>
-    <string name="setcat_regenerate_stats_action">Regenerate Stats</string>
-    <string name="setcat_force_palette_empty">No songs with album art found.</string>
-    <string name="setcat_force_palette_subtitle">Rebuild all cached palette variants for every album art, or pick a single one to refresh.</string>
-    <string name="setcat_regenerate_all">Regenerate All</string>
-    <string name="setcat_regenerating">Regenerating…</string>
-    <string name="setcat_choose_song">Choose Song</string>
-
-    <string name="setcat_ai_clear_logs">Clear Logs</string>
-    <string name="setcat_ai_activity_log_title">AI Activity Log (%1$d)</string>
-    <string name="cd_show">Show</string>
-    <string name="cd_hide">Hide</string>
-    <string name="setcat_select_export">Select &amp; Export</string>
-    <string name="setcat_select_restore">Select &amp; Restore</string>
-
-    <!-- Import backup flow (SettingsCategoryScreen) -->
-    <string name="import_backup_toolbar_title">Import Backup</string>
-    <string name="import_inspecting">Inspecting…</string>
-    <string name="import_browse_file">Browse file</string>
-    <string name="import_backup_hint">Select a .gabk backup file to inspect. You will choose which sections to restore in the next step.</string>
-    <string name="import_recent_backups">Recent Backups</string>
-    <string name="import_no_recent_title">No recent backups</string>
-    <string name="import_no_recent_subtitle">Previously imported backups will appear here.</string>
-    <string name="palette_force_regenerate_title">Force Album Palette Regeneration</string>
-    <string name="palette_force_regenerate_subtitle">Select a song to clear cached theme data and regenerate all palette styles from the album art.</string>
-    <string name="search_songs_by_title_artist_album">Search by title, artist or album</string>
-    <string name="palette_regenerating_progress">Regenerating palette…</string>
-    <string name="search_no_songs_match">No songs match your search.</string>
-    <string name="cd_remove_from_history">Remove from history</string>
-    <string name="cd_clear_search">Clear search</string>
-    <string name="backup_history_modules_line">%1$d modules · v%2$s · schema v%3$d</string>
 </resources>
