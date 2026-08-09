@@ -27,7 +27,7 @@ val COLOR_PRESETS = listOf(
         primaryColor = 0xFFE91E63.toInt(),
         secondaryColor = 0xFFE91E63.toInt(),
         backgroundColor = 0xFF2A000E.toInt(),
-        onPrimaryColor = 0xFFFF88B0.toInt(),
+        onPrimaryColor = 0xFFFFFFFF.toInt(),
         onSurfaceColor = 0xFFE91E63.toInt(),
         accentColor = 0xFFFF4081.toInt()
     ),
@@ -36,25 +36,25 @@ val COLOR_PRESETS = listOf(
         icon = Icons.Rounded.Whatshot,
         primaryColor = 0xFFD32F2F.toInt(),
         secondaryColor = 0xFFF44336.toInt(),
-        backgroundColor = 0xFFFFEBEE.toInt(),
+        backgroundColor = 0xFF0E0000.toInt(),
         onPrimaryColor = 0xFFFFFFFF.toInt(),
-        onSurfaceColor = 0xFF1A1A1A.toInt(),
+        onSurfaceColor = 0xFFD32F2F.toInt(),
         accentColor = 0xFFFF1744.toInt()
     ),
     ColorPreset(
         name = "Verde",
         icon = Icons.Rounded.Park,
-        primaryColor = 0xFF2E7D32.toInt(),
+        primaryColor = 0xFF2E7D61.toInt(),
         secondaryColor = 0xFF43A047.toInt(),
-        backgroundColor = 0xFFE8F5E9.toInt(),
+        backgroundColor = 0xFF000E00.toInt(),
         onPrimaryColor = 0xFFFFFFFF.toInt(),
-        onSurfaceColor = 0xFF1A1A1A.toInt(),
+        onSurfaceColor = 0xFF2E7D49.toInt(),
         accentColor = 0xFF00E676.toInt()
     ),
     ColorPreset(
         name = "Preto",
         icon = Icons.Rounded.DarkMode,
-        primaryColor = 0xFF1A1A1A.toInt(),
+        primaryColor = 0xFF4D4D4D.toInt(),
         secondaryColor = 0xFF424242.toInt(),
         backgroundColor = 0xFF000000.toInt(),
         onPrimaryColor = 0xFFFFFFFF.toInt(),
@@ -64,11 +64,11 @@ val COLOR_PRESETS = listOf(
     ColorPreset(
         name = "Azul",
         icon = Icons.Rounded.WaterDrop,
-        primaryColor = 0xFF0D47A1.toInt(),
+        primaryColor = 0xFF0D5AA1.toInt(),
         secondaryColor = 0xFF1E88E5.toInt(),
-        backgroundColor = 0xFFE3F2FD.toInt(),
+        backgroundColor = 0xFF00101C.toInt(),
         onPrimaryColor = 0xFFFFFFFF.toInt(),
-        onSurfaceColor = 0xFF1A1A1A.toInt(),
+        onSurfaceColor = 0xFF1B1EDA.toInt(),
         accentColor = 0xFF2979FF.toInt()
     ),
     ColorPreset(
@@ -76,9 +76,9 @@ val COLOR_PRESETS = listOf(
         icon = Icons.Rounded.AutoAwesome,
         primaryColor = 0xFF7B1FA2.toInt(),
         secondaryColor = 0xFFAB47BC.toInt(),
-        backgroundColor = 0xFFF3E5F5.toInt(),
+        backgroundColor = 0xFF150018.toInt(),
         onPrimaryColor = 0xFFFFFFFF.toInt(),
-        onSurfaceColor = 0xFF1A1A1A.toInt(),
+        onSurfaceColor = 0xFF7B1FA2.toInt(),
         accentColor = 0xFFD500F9.toInt()
     ),
     ColorPreset(
@@ -86,9 +86,9 @@ val COLOR_PRESETS = listOf(
         icon = Icons.Rounded.WbSunny,
         primaryColor = 0xFFF9A825.toInt(),
         secondaryColor = 0xFFFFD54F.toInt(),
-        backgroundColor = 0xFFFFFDE7.toInt(),
-        onPrimaryColor = 0xFF1A1A1A.toInt(),
-        onSurfaceColor = 0xFF1A1A1A.toInt(),
+        backgroundColor = 0xFF090900.toInt(),
+        onPrimaryColor = 0xFFFFFEBF.toInt(),
+        onSurfaceColor = 0xFFF9A825.toInt(),
         accentColor = 0xFFFFAB00.toInt()
     ),
     ColorPreset(
@@ -96,69 +96,39 @@ val COLOR_PRESETS = listOf(
         icon = Icons.Rounded.Whatshot,
         primaryColor = 0xFFE65100.toInt(),
         secondaryColor = 0xFFFF9800.toInt(),
-        backgroundColor = 0xFFFFF3E0.toInt(),
-        onPrimaryColor = 0xFFFFFFFF.toInt(),
-        onSurfaceColor = 0xFF1A1A1A.toInt(),
+        backgroundColor = 0xFF0F0A00.toInt(),
+        onPrimaryColor = 0xFFFFDDB3.toInt(),
+        onSurfaceColor = 0xFFE65100.toInt(),
         accentColor = 0xFFFF6E40.toInt()
     ),
     ColorPreset(
         name = "Ciano",
         icon = Icons.Rounded.Waves,
-        primaryColor = 0xFF006064.toInt(),
+        primaryColor = 0xFF00F5FF.toInt(),
         secondaryColor = 0xFF00BCD4.toInt(),
-        backgroundColor = 0xFFE0F7FA.toInt(),
-        onPrimaryColor = 0xFFFFFFFF.toInt(),
-        onSurfaceColor = 0xFF1A1A1A.toInt(),
+        backgroundColor = 0xFF00090A.toInt(),
+        onPrimaryColor = 0xFFD5FBFF.toInt(),
+        onSurfaceColor = 0xFF00F5FF.toInt(),
         accentColor = 0xFF00E5FF.toInt()
-    ),
-    ColorPreset(
-        name = "Marrom",
-        icon = Icons.Rounded.Coffee,
-        primaryColor = 0xFF4E342E.toInt(),
-        secondaryColor = 0xFF795548.toInt(),
-        backgroundColor = 0xFFEFEBE9.toInt(),
-        onPrimaryColor = 0xFFFFFFFF.toInt(),
-        onSurfaceColor = 0xFF1A1A1A.toInt(),
-        accentColor = 0xFF8D6E63.toInt()
     ),
     ColorPreset(
         name = "Cinza",
         icon = Icons.Rounded.GraphicEq,
-        primaryColor = 0xFF616161.toInt(),
-        secondaryColor = 0xFF9E9E9E.toInt(),
-        backgroundColor = 0xFFF5F5F5.toInt(),
-        onPrimaryColor = 0xFFFFFFFF.toInt(),
-        onSurfaceColor = 0xFF1A1A1A.toInt(),
+        primaryColor = 0xFF626262.toInt(),
+        secondaryColor = 0xFFD3D3D3.toInt(),
+        backgroundColor = 0xFF4C4C4C.toInt(),
+        onPrimaryColor = 0xFFC6C6C6.toInt(),
+        onSurfaceColor = 0xFFCDCDCD.toInt(),
         accentColor = 0xFF757575.toInt()
     ),
     ColorPreset(
         name = "Neon",
         icon = Icons.Rounded.Bolt,
-        primaryColor = 0xFF00E676.toInt(),
-        secondaryColor = 0xFF00BCD4.toInt(),
+        primaryColor = 0xFF00FF84.toInt(),
+        secondaryColor = 0xFF00E2FF.toInt(),
         backgroundColor = 0xFF1A1A1A.toInt(),
-        onPrimaryColor = 0xFF1A1A1A.toInt(),
-        onSurfaceColor = 0xFF00E676.toInt(),
+        onPrimaryColor = 0xFFFFF7FF.toInt(),
+        onSurfaceColor = 0xFF00FFE2.toInt(),
         accentColor = 0xFFFF4081.toInt()
     ),
-    ColorPreset(
-        name = "Pastel",
-        icon = Icons.Rounded.Palette,
-        primaryColor = 0xFFF8BBD0.toInt(),
-        secondaryColor = 0xFFB3E5FC.toInt(),
-        backgroundColor = 0xFFFFF8E1.toInt(),
-        onPrimaryColor = 0xFF1A1A1A.toInt(),
-        onSurfaceColor = 0xFF1A1A1A.toInt(),
-        accentColor = 0xFFCE93D8.toInt()
-    ),
-    ColorPreset(
-        name = "Branco",
-        icon = Icons.Rounded.LightMode,
-        primaryColor = 0xFFFFFFFF.toInt(),
-        secondaryColor = 0xFFF5F5F5.toInt(),
-        backgroundColor = 0xFFFFFFFF.toInt(),
-        onPrimaryColor = 0xFF1A1A1A.toInt(),
-        onSurfaceColor = 0xFF1A1A1A.toInt(),
-        accentColor = 0xFFE0E0E0.toInt()
-    )
 )
