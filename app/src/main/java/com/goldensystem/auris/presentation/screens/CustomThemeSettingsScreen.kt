@@ -63,6 +63,7 @@ fun CustomThemeSettingsScreen(
 ) {
     val config by viewModel.customThemeConfig.collectAsStateWithLifecycle()
     val colorScheme = remember(config) { customColorScheme(config, true) }
+    var showPresetsSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -182,6 +183,18 @@ fun CustomThemeSettingsScreen(
                 SettingsGroupHeader(title = stringResource(R.string.custom_theme_personalization))
             }
 
+            // NOVO: Item para abrir o BottomSheet de Predefinições
+            item {
+                SettingsCardItem(
+                    icon = Icons.Rounded.Palette,
+                    title = stringResource(R.string.custom_theme_presets),
+                    subtitle = stringResource(R.string.custom_theme_presets_subtitle),
+                    onClick = {
+                        showPresetsSheet = true
+                    }
+                )
+            }
+
             item {
                 SettingsCardItem(
                     icon = Icons.Rounded.ColorLens,
@@ -263,6 +276,14 @@ fun CustomThemeSettingsScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+    }
+
+    // BottomSheet de Predefinições
+    if (showPresetsSheet) {
+        ThemePresetsBottomSheet(
+            viewModel = viewModel,
+            onDismiss = { showPresetsSheet = false }
+        )
     }
 }
 

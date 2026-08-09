@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   
+  <!-- Custom Theme -->
+<string name="custom_theme_presets_subtitle">Escolha um tema pré-configurado</string>
+<string name="custom_theme_presets_title">🎨 Predefinições</string>
+<string name="custom_theme_reset_to_default">Redefinir para padrão</string>
+<string name="auth_cd_close">Fechar</string>
+  
     <!-- ============================================ -->
     <!-- CUSTOM THEME - STRINGS                       -->
     <!-- ============================================ -->
