@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.goldensystem.auris.R
+import com.goldensystem.auris.data.preferences.ColorPreset
 import com.goldensystem.auris.data.preferences.COLOR_PRESETS
 import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
 import kotlinx.coroutines.Job
@@ -45,10 +46,8 @@ fun ThemePresetsBottomSheet(
     var selectedPresetName by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     
-    // 🔥 DEBOUNCE IGUAL AO DA CustomThemeScreen
     var saveJob by remember { mutableStateOf<Job?>(null) }
 
-    // 🔥 SALVAR COM DEBOUNCE (MESMO MECANISMO)
     LaunchedEffect(config) {
         saveJob?.cancel()
         saveJob = scope.launch {
@@ -57,7 +56,6 @@ fun ThemePresetsBottomSheet(
         }
     }
 
-    // 🔥 SALVAR AO SAIR (MESMO MECANISMO)
     DisposableEffect(Unit) {
         onDispose {
             saveJob?.cancel()
@@ -87,7 +85,6 @@ fun ThemePresetsBottomSheet(
                 .fillMaxWidth()
                 .padding(bottom = 24.dp)
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -114,7 +111,6 @@ fun ThemePresetsBottomSheet(
                 }
             }
             
-            // Subtitle
             Text(
                 text = stringResource(R.string.custom_theme_presets_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
@@ -124,7 +120,6 @@ fun ThemePresetsBottomSheet(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Lista de predefinições
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -141,7 +136,6 @@ fun ThemePresetsBottomSheet(
                         onClick = {
                             selectedPresetName = preset.name
                             
-                            // 🔥 APLICA AS CORES (MESMO MODO)
                             viewModel.updatePrimaryColor(preset.primaryColor)
                             viewModel.updateSecondaryColor(preset.secondaryColor)
                             viewModel.updateBackgroundColor(preset.backgroundColor)
@@ -149,10 +143,6 @@ fun ThemePresetsBottomSheet(
                             viewModel.updateOnSurfaceColor(preset.onSurfaceColor)
                             viewModel.updateAccentColor(preset.accentColor)
                             
-                            // 🔥 NÃO CHAMA saveCustomTheme() AQUI!
-                            // O LaunchedEffect vai salvar automaticamente com debounce
-                            
-                            // Fecha com delay pequeno
                             scope.launch {
                                 delay(300)
                                 onDismiss()
@@ -164,13 +154,11 @@ fun ThemePresetsBottomSheet(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Botão de reset (MESMO MODO)
             TextButton(
                 onClick = {
-                    selectedPresetName = null
-                    viewModel.resetToDefault()
-                    // O LaunchedEffect vai salvar automaticamente
-                    scope.launch {
+                    scope.launch {  // ← CORRIGIDO: envelopado em launch
+                        selectedPresetName = null
+                        viewModel.resetToDefault()
                         delay(300)
                         onDismiss()
                     }
@@ -193,7 +181,7 @@ fun ThemePresetsBottomSheet(
 
 @Composable
 private fun PresetCard(
-    preset: ColorPreset,
+    preset: ColorPreset,  // ← AGORA RECONHECE
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
@@ -299,7 +287,7 @@ private fun PresetCard(
                         preset.backgroundColor,
                         preset.accentColor
                     )
-                    colors.forEach { color: Int ->
+                    colors.forEach { color: Int ->  // ← TIPADO EXPLICITAMENTE
                         Surface(
                             modifier = Modifier
                                 .weight(1f)
