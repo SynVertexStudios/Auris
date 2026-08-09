@@ -194,10 +194,13 @@ private fun PresetCard(
     )
 
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(cardScale)
-            .clip(RoundedCornerShape(20.dp))
+    modifier = Modifier
+        .fillMaxWidth()
+        .graphicsLayer {
+            scaleX = cardScale
+            scaleY = cardScale
+        }
+        .clip(RoundedCornerShape(20.dp))
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
