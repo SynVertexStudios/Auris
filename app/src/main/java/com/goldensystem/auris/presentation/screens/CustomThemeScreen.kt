@@ -6,8 +6,8 @@ package com.goldensystem.auris.presentation.screens
 
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.RenderEffect
-import com.seuapp.data.preferences.ColorPreset
-import com.seuapp.data.preferences.COLOR_PRESETS
+import com.goldensystem.auris.data.preferences.ColorPreset
+import com.goldensystem.auris.data.preferences.COLOR_PRESETS
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.unit.dp
 import android.graphics.Shader
