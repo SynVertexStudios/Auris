@@ -10,6 +10,25 @@
 <string name="preset_name_hint">Nome da predefinição</string>
 <string name="extract_colors">Extrair cores do wallpaper</string>
 
+<!-- strings.xml -->
+<string name="custom_theme_settings_title">Tema Personalizado</string>
+<string name="custom_theme_current_theme">Tema Atual</string>
+<string name="custom_theme_personalization">Personalização</string>
+<string name="custom_theme_edit_colors">Editar Cores</string>
+<string name="custom_theme_edit_colors_subtitle">Personalize as cores do aplicativo</string>
+<string name="custom_theme_wallpaper">Papel de Parede</string>
+<string name="custom_theme_wallpaper_subtitle">Escolha uma imagem de fundo</string>
+<string name="custom_theme_styles">Estilos</string>
+<string name="custom_theme_font_style">Estilo de Fonte</string>
+<string name="custom_theme_font_style_subtitle">Altere a fonte do aplicativo</string>
+<string name="custom_theme_icon_style">Estilo de Ícones</string>
+<string name="custom_theme_icon_style_subtitle">Personalize os ícones do aplicativo</string>
+<string name="custom_theme_advanced">Avançado</string>
+<string name="custom_theme_export_theme">Exportar Tema</string>
+<string name="custom_theme_export_theme_subtitle">Compartilhe seu tema personalizado</string>
+<string name="custom_theme_import_theme">Importar Tema</string>
+<string name="custom_theme_import_theme_subtitle">Importe um tema de outro dispositivo</string>
+
 <!-- res/values/strings.xml - Adicione -->
 <string name="custom_theme_presets">Predefinições</string>
 <string name="custom_theme_preset_apply">Aplicar predefinição</string>

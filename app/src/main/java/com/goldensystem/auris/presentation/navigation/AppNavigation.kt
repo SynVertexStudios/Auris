@@ -2,6 +2,7 @@ package com.goldensystem.auris.presentation.navigation
 
 import com.goldensystem.auris.presentation.screens.WordDelimiterConfigScreen
 import com.goldensystem.auris.presentation.screens.CustomThemeScreen
+import com.goldensystem.auris.presentation.screens.CustomThemeSettingsScreen
 import com.goldensystem.auris.presentation.screens.DelimiterConfigScreen
 import android.annotation.SuppressLint
 import androidx.annotation.OptIn
@@ -408,6 +409,9 @@ fun AppNavigation(
             }
             composable(Screen.CustomTheme.route) {
                   CustomThemeScreen(navController = navController)
+                        }
+            composable(Screen.CustomThemeSettings.route) {
+                  CustomThemeSettingsScreen(navController = navController)
                         }
             composable(
                 route = Screen.ArtistDetail.route,

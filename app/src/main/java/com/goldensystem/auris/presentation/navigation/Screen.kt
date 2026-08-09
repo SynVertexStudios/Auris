@@ -1,12 +1,12 @@
+// presentation/navigation/Screen.kt
+
 package com.goldensystem.auris.presentation.navigation
 
 import androidx.compose.runtime.Immutable
 
-
 @Immutable
 sealed class Screen(val route: String) {
     object Home : Screen("home")
-    object CustomTheme : Screen("custom_theme")
     object Search : Screen("search")
     object Library : Screen("library")
     object Settings : Screen("settings")
@@ -20,32 +20,25 @@ sealed class Screen(val route: String) {
     object PlaylistDetail : Screen("playlist_detail/{playlistId}") {
         fun createRoute(playlistId: String) = "playlist_detail/$playlistId"
     }
-
-    object  DailyMixScreen : Screen("daily_mix")
+    object DailyMixScreen : Screen("daily_mix")
     object RecentlyPlayed : Screen("recently_played")
     object Stats : Screen("stats")
-    object GenreDetail : Screen("genre_detail/{genreId}") { // New screen
+    object GenreDetail : Screen("genre_detail/{genreId}") {
         fun createRoute(genreId: String) = "genre_detail/$genreId"
     }
     object DJSpace : Screen("dj_space")
-    // La ruta base es "album_detail". La ruta completa con el argumento se define en AppNavigation.
     object AlbumDetail : Screen("album_detail/{albumId}") {
-        // Función de ayuda para construir la ruta de navegación con el ID del álbum.
         fun createRoute(albumId: Long) = "album_detail/$albumId"
     }
-
     object ArtistDetail : Screen("artist_detail/{artistId}") {
         fun createRoute(artistId: Long) = "artist_detail/$artistId"
     }
-
     object EditTransition : Screen("edit_transition?playlistId={playlistId}") {
         fun createRoute(playlistId: String?) =
             if (playlistId != null) "edit_transition?playlistId=$playlistId" else "edit_transition"
     }
-
     object About : Screen("about")
     object EasterEgg : Screen("easter_egg")
-
     object ArtistSettings : Screen("artist_settings")
     object DelimiterConfig : Screen("delimiter_config")
     object WordDelimiterConfig : Screen("word_delimiter_config")
@@ -57,5 +50,8 @@ sealed class Screen(val route: String) {
     object JellyfinDashboard : Screen("jellyfin_dashboard")
     object GDriveDashboard : Screen("gdrive_dashboard")
     object VideoGallery : Screen("video_gallery")
-
+    
+    // ✅ NOVAS ROTAS CORRIGIDAS
+    object CustomThemeSettings : Screen("custom_theme_settings")
+    object CustomTheme : Screen("custom_theme")
 }

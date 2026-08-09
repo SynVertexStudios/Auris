@@ -593,7 +593,7 @@ fun SettingsCategoryScreen(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
-                onClick = { navController.navigateSafely(Screen.CustomTheme.route) }
+                onClick = { navController.navigateSafely(Screen.CustomThemeSettings.route) }
             )
         }
                                 SwitchSettingItem(
