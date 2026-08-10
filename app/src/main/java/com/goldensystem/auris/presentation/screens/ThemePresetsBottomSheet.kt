@@ -44,11 +44,13 @@ fun ThemePresetsBottomSheet(
     val config by viewModel.customThemeConfig.collectAsStateWithLifecycle()
     var selectedPresetName by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
+    var isVisible by remember { mutableStateOf(true) }
 
     ModalBottomSheet(
         onDismissRequest = {
-            // 🔥 SALVA AO FECHAR (garantia extra)
             scope.launch {
+                isVisible = false
+                delay(300)
                 viewModel.saveCustomTheme()
                 onDismiss()
             }
@@ -66,109 +68,122 @@ fun ThemePresetsBottomSheet(
             )
         }
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 24.dp)
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = fadeIn() + slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+            ),
+            exit = fadeOut() + slideOutVertically(
+                targetOffsetY = { it },
+                animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+            )
         ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(bottom = 24.dp)
             ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.custom_theme_presets_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                isVisible = false
+                                delay(300)
+                                viewModel.saveCustomTheme()
+                                onDismiss()
+                            }
+                        },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            Icons.Rounded.Close,
+                            contentDescription = stringResource(R.string.auth_cd_close),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                
                 Text(
-                    text = stringResource(R.string.custom_theme_presets_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = stringResource(R.string.custom_theme_presets_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
                 )
                 
-                IconButton(
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 450.dp)
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(COLOR_PRESETS) { preset ->
+                        val isSelected = selectedPresetName == preset.name
+                        
+                        PresetCard(
+                            preset = preset,
+                            isSelected = isSelected,
+                            onClick = {
+                                selectedPresetName = preset.name
+                                
+                                viewModel.updatePrimaryColor(preset.primaryColor)
+                                viewModel.updateSecondaryColor(preset.secondaryColor)
+                                viewModel.updateBackgroundColor(preset.backgroundColor)
+                                viewModel.updateOnPrimaryColor(preset.onPrimaryColor)
+                                viewModel.updateOnSurfaceColor(preset.onSurfaceColor)
+                                viewModel.updateAccentColor(preset.accentColor)
+                                
+                                scope.launch {
+                                    isVisible = false
+                                    delay(300)
+                                    viewModel.saveCustomTheme()
+                                    onDismiss()
+                                }
+                            }
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                TextButton(
                     onClick = {
-                        // 🔥 SALVA AO CLICAR NO X
                         scope.launch {
+                            isVisible = false
+                            delay(300)
+                            viewModel.resetToDefault()
                             viewModel.saveCustomTheme()
                             onDismiss()
                         }
                     },
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
                 ) {
                     Icon(
-                        Icons.Rounded.Close,
-                        contentDescription = stringResource(R.string.auth_cd_close),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        Icons.Rounded.RestartAlt,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.custom_theme_reset_to_default))
                 }
-            }
-            
-            Text(
-                text = stringResource(R.string.custom_theme_presets_subtitle),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 450.dp)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(COLOR_PRESETS) { preset ->
-                    val isSelected = selectedPresetName == preset.name
-                    
-                    PresetCard(
-                        preset = preset,
-                        isSelected = isSelected,
-                        onClick = {
-                            selectedPresetName = preset.name
-                            
-                            // Aplica as cores
-                            viewModel.updatePrimaryColor(preset.primaryColor)
-                            viewModel.updateSecondaryColor(preset.secondaryColor)
-                            viewModel.updateBackgroundColor(preset.backgroundColor)
-                            viewModel.updateOnPrimaryColor(preset.onPrimaryColor)
-                            viewModel.updateOnSurfaceColor(preset.onSurfaceColor)
-                            viewModel.updateAccentColor(preset.accentColor)
-                            
-                            // 🔥 SALVA E DEPOIS FECHA
-                            scope.launch {
-                                viewModel.saveCustomTheme()
-                                delay(200)
-                                onDismiss()
-                            }
-                        }
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            TextButton(
-                onClick = {
-                    scope.launch {
-                        viewModel.resetToDefault()
-                        viewModel.saveCustomTheme()
-                        delay(200)
-                        onDismiss()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-            ) {
-                Icon(
-                    Icons.Rounded.RestartAlt,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(R.string.custom_theme_reset_to_default))
             }
         }
     }

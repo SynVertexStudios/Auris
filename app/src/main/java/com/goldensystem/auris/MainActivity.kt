@@ -5,6 +5,8 @@ import com.goldensystem.auris.presentation.screens.PiracyDialog
 import androidx.compose.runtime.collectAsState
 import com.goldensystem.auris.presentation.screens.SplashScreen
 import com.goldensystem.auris.data.gdrive.GDriveRepository
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.navigation.NavHostController
 import com.goldensystem.auris.presentation.viewmodel.PiracyUiState
 import com.goldensystem.auris.presentation.viewmodel.PiracyViewModel
 import androidx.compose.material3.CircularProgressIndicator
