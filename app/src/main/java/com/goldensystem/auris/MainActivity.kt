@@ -524,9 +524,7 @@ fun AppContent(
     @Composable
     private fun MainAppContent(playerViewModel: PlayerViewModel, mainViewModel: MainViewModel) {
         Trace.beginSection("MainActivity.MainAppContent")
-        val navController = rememberSaveable { 
-    NavHostController(this@MainActivity) 
-}
+        val navController = rememberNavController()
         val isSyncing by mainViewModel.isSyncing.collectAsStateWithLifecycle()
         val isLibraryEmpty by mainViewModel.isLibraryEmpty.collectAsStateWithLifecycle()
         val hasCompletedInitialSync by mainViewModel.hasCompletedInitialSync.collectAsStateWithLifecycle()
