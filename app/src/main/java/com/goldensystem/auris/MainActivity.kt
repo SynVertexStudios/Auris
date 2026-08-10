@@ -523,7 +523,7 @@ fun AppContent(
     @Composable
     private fun MainAppContent(playerViewModel: PlayerViewModel, mainViewModel: MainViewModel) {
         Trace.beginSection("MainActivity.MainAppContent")
-        val navController = rememberNavController()
+        val navController = rememberSaveable { NavHostController(LocalContext.current) }
         val isSyncing by mainViewModel.isSyncing.collectAsStateWithLifecycle()
         val isLibraryEmpty by mainViewModel.isLibraryEmpty.collectAsStateWithLifecycle()
         val hasCompletedInitialSync by mainViewModel.hasCompletedInitialSync.collectAsStateWithLifecycle()
@@ -693,7 +693,9 @@ Trace.endSection()
                 Screen.WordDelimiterConfig.route,
                 "video_gallery",
                 "video_player",
-                Screen.CustomTheme.route
+                Screen.CustomTheme.route,
+                Screen.CustomThemeSettings.route,
+                Screen.Wallpaper.route
             )
         }
         val shouldHideNavigationBar by remember(currentRoute, isSearchBarActive) {
