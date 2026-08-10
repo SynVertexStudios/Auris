@@ -509,7 +509,7 @@ private fun PlayerPreviewContent(colorScheme: ColorScheme) {
 }
 
 // ==================== COLOR PICKER ROW ====================
-
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun ColorPickerRow(
     label: String,
@@ -555,7 +555,7 @@ private fun ColorPickerRow(
                 TextButton(
                     onClick = { showAdditional = true },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = TextButtonDefaults.textButtonColors(
+                    colors = ButtonDefaults.textButtonColors(
                         contentColor = colorScheme.primary
                     )
                 ) {
@@ -586,7 +586,7 @@ private fun ColorPickerRow(
                     TextButton(
                         onClick = { showAdditional = false },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = TextButtonDefaults.textButtonColors(
+                        colors = ButtonDefaults.textButtonColors(
                             contentColor = colorScheme.primary
                         )
                     ) {
@@ -600,7 +600,7 @@ private fun ColorPickerRow(
         TextButton(
             onClick = onCustomColorClick,
             modifier = Modifier.fillMaxWidth(),
-            colors = TextButtonDefaults.textButtonColors(
+            colors = ButtonDefaults.textButtonColors(
                 contentColor = colorScheme.primary
             )
         ) {

@@ -430,7 +430,7 @@ private fun EmptyWallpaperPlaceholder(colorScheme: ColorScheme) {
 }
 
 // ==================== SOLID WALLPAPER CONTENT ====================
-
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun SolidWallpaperContent(
     config: CustomThemeConfig,

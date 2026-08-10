@@ -6,6 +6,37 @@
 <string name="custom_theme_presets_title">🎨 Predefinições</string>
 <string name="custom_theme_reset_to_default">Redefinir para padrão</string>
 <string name="auth_cd_close">Fechar</string>
+
+    <!-- Strings existentes... -->
+    
+    <!-- Strings do Tema Personalizado -->
+    <string name="custom_theme_custom_colors">Cores Personalizadas</string>
+    <string name="custom_theme_primary">Primária</string>
+    <string name="custom_theme_secondary">Secundária</string>
+    <string name="custom_theme_background">Fundo</string>
+    <string name="custom_theme_on_primary">Sobre Primária</string>
+    <string name="custom_theme_on_surface">Sobre Superfície</string>
+    <string name="custom_theme_accent">Destaque</string>
+    
+    <!-- Strings do Papel de Parede -->
+    <string name="custom_theme_wallpaper_section">Papel de Parede</string>
+    <string name="custom_theme_wallpaper_solid_subtitle">Cor sólida</string>
+    <string name="custom_theme_wallpaper_gallery_subtitle">Escolher da galeria</string>
+    <string name="custom_theme_wallpaper_server_subtitle">Do servidor</string>
+    <string name="custom_theme_wallpaper_title">Papel de Parede</string>
+    <string name="custom_theme_wallpaper_source">Fonte</string>
+    <string name="custom_theme_solid_color_wallpaper">Cor Sólida</string>
+    <string name="custom_theme_remove_wallpaper">Remover Papel de Parede</string>
+    
+    <!-- Categorias de Papel de Parede -->
+    <string name="wallpaper_effects">Efeitos</string>
+    <string name="wallpaper_category_all">Todos</string>
+    <string name="wallpaper_category_cars">Carros</string>
+    <string name="wallpaper_category_anime">Anime</string>
+    <string name="wallpaper_category_space">Espaço</string>
+    <string name="wallpaper_category_neon">Neon</string>
+    <string name="wallpaper_category_others">Outros</string>
+    <string name="wallpaper_no_wallpapers">Nenhum papel de parede disponível</string>
   
     <!-- ============================================ -->
     <!-- CUSTOM THEME - STRINGS                       -->
