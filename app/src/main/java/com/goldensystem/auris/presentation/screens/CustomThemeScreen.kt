@@ -3,6 +3,7 @@
 package com.goldensystem.auris.presentation.screens
 
 import androidx.compose.animation.*
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.graphicsLayer
