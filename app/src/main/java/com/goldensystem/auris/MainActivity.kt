@@ -173,6 +173,7 @@ private data class DismissUndoBarSlice(
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    private var lastRoute: String? = null
     private val playerViewModel: PlayerViewModel by viewModels()
     private val mainViewModel: MainViewModel by viewModels()
     private var isUIVisiblyReady = false
@@ -195,6 +196,14 @@ class MainActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(AppLocaleManager.wrapContext(newBase))
     }
+    
+    override fun onSaveInstanceState(outState: Bundle) {
+    super.onSaveInstanceState(outState)
+    // Salva a rota atual antes do app ser destruído
+    lastRoute?.let {
+        outState.putString("saved_route", it)
+        }
+    }
 
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -214,6 +223,9 @@ class MainActivity : ComponentActivity() {
             window.isNavigationBarContrastEnforced = false
         }
         super.onCreate(savedInstanceState)
+        if (savedInstanceState != null) {
+        lastRoute = savedInstanceState.getString("saved_route")
+        }
         gDriveRepository.restoreSessionFromStorage()
 
         // MD3 Optimization: Release Splash Screen immediately to render UI skeleton.
@@ -525,6 +537,13 @@ fun AppContent(
     private fun MainAppContent(playerViewModel: PlayerViewModel, mainViewModel: MainViewModel) {
         Trace.beginSection("MainActivity.MainAppContent")
         val navController = rememberNavController()
+        LaunchedEffect(Unit) {
+        val savedRoute = lastRoute
+        if (savedRoute != null && savedRoute != Screen.Home.route) {
+            delay(300)  // Espera o navController carregar
+            navController.navigateSafely(savedRoute)
+        }
+    }
         val isSyncing by mainViewModel.isSyncing.collectAsStateWithLifecycle()
         val isLibraryEmpty by mainViewModel.isLibraryEmpty.collectAsStateWithLifecycle()
         val hasCompletedInitialSync by mainViewModel.hasCompletedInitialSync.collectAsStateWithLifecycle()
@@ -665,6 +684,9 @@ Trace.endSection()
   )
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
+        LaunchedEffect(currentRoute) {
+        lastRoute = currentRoute
+    }
         var isSearchBarActive by remember { mutableStateOf(false) }
 
         val routesWithHiddenNavigationBar = remember {
