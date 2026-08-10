@@ -6,7 +6,6 @@ import androidx.compose.runtime.collectAsState
 import com.goldensystem.auris.presentation.screens.SplashScreen
 import com.goldensystem.auris.data.gdrive.GDriveRepository
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.navigation.NavHostController
 import com.goldensystem.auris.presentation.viewmodel.PiracyUiState
 import com.goldensystem.auris.presentation.viewmodel.PiracyViewModel
 import androidx.compose.material3.CircularProgressIndicator
@@ -525,7 +524,9 @@ fun AppContent(
     @Composable
     private fun MainAppContent(playerViewModel: PlayerViewModel, mainViewModel: MainViewModel) {
         Trace.beginSection("MainActivity.MainAppContent")
-        val navController = rememberSaveable { NavHostController(LocalContext.current) }
+        val navController = rememberSaveable { 
+    NavHostController(this@MainActivity) 
+}
         val isSyncing by mainViewModel.isSyncing.collectAsStateWithLifecycle()
         val isLibraryEmpty by mainViewModel.isLibraryEmpty.collectAsStateWithLifecycle()
         val hasCompletedInitialSync by mainViewModel.hasCompletedInitialSync.collectAsStateWithLifecycle()
