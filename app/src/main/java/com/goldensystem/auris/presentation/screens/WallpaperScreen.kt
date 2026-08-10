@@ -5,6 +5,7 @@ package com.goldensystem.auris.presentation.screens
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.goldensystem.auris.data.preferences.CustomThemeConfig
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -554,16 +555,16 @@ private fun GalleryWallpaperContent(
             
             // Botão para remover
             TextButton(
-                onClick = { viewModel.clearWallpaper() },
-                modifier = Modifier.fillMaxWidth(),
-                colors = TextButtonDefaults.textButtonColors(
-                    contentColor = colorScheme.error
-                )
-            ) {
-                Icon(Icons.Rounded.Delete, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.custom_theme_remove_wallpaper))
-            }
+    onClick = { viewModel.resetWallpaper() },
+    modifier = Modifier.fillMaxWidth(),
+    colors = ButtonDefaults.textButtonColors(
+        contentColor = colorScheme.error
+    )
+) {
+    Icon(Icons.Rounded.Delete, contentDescription = null)
+    Spacer(Modifier.width(8.dp))
+    Text(stringResource(R.string.custom_theme_remove_wallpaper))
+}
         }
     }
 }
@@ -854,25 +855,3 @@ private fun ShimmerLoading(
             )
     )
 }
-
-// ==================== UTILITY FUNCTIONS ====================
-
-fun Color.contrastTextColor(): Color {
-    val luminance = (0.299 * red + 0.587 * green + 0.114 * blue)
-    return if (luminance > 0.5) Color.Black else Color.White
-}
-
-// Cores principais e adicionais (copiadas do arquivo original)
-val MAIN_COLORS = listOf(
-    0xFF000000.toInt(), 0xFF795548.toInt(), 0xFFE53935.toInt(),
-    0xFFFF9800.toInt(), 0xFFFFEB3B.toInt(), 0xFF8BC34A.toInt(),
-    0xFF2E7D32.toInt(), 0xFF42A5F5.toInt(), 0xFF0D47A1.toInt(),
-    0xFF7B1FA2.toInt(), 0xFFE91E63.toInt(), 0xFFFFFFFF.toInt()
-)
-
-val ADDITIONAL_COLORS = listOf(
-    0xFFFF6F00.toInt(), 0xFF00BCD4.toInt(), 0xFF00E676.toInt(),
-    0xFFFF4081.toInt(), 0xFF651FFF.toInt(), 0xFF2979FF.toInt(),
-    0xFFFF6E40.toInt(), 0xFFF50057.toInt(), 0xFF00E5FF.toInt(),
-    0xFF76FF03.toInt(), 0xFFD500F9.toInt(), 0xFFFFAB00.toInt()
-)

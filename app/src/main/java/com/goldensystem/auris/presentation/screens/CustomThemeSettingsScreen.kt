@@ -3,6 +3,8 @@
 package com.goldensystem.auris.presentation.screens
 
 import androidx.compose.foundation.background
+import com.goldensystem.auris.data.preferences.CustomThemeConfig
+import androidx.compose.material3.ColorScheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
