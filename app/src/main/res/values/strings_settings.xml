@@ -52,6 +52,12 @@
     <string name="custom_theme_styles">Styles</string>
     <string name="custom_theme_advanced">Advanced</string>
     
+    <!-- Custom Theme Warning -->
+<string name="custom_theme_warning_title">Warning</string>
+<string name="custom_theme_warning_message">When using a function on this screen for the first time when activating the custom theme, the app will recompose and may return to the home screen or close the app. After restarting, you can freely customize the theme without issues.</string>
+<string name="custom_theme_expand">Expand</string>
+<string name="custom_theme_collapse">Collapse</string>
+    
     <!-- Strings de cores -->
     <string name="custom_theme_primary_color">Primary Color</string>
     <string name="custom_theme_secondary_color">Secondary Color</string>
