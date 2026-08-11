@@ -373,8 +373,6 @@ private fun CustomThemePreviewCard(config: CustomThemeConfig) {
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = config.wallpaperDim * 0.5f))
             )
-
-            PlayerPreviewContent(colorScheme = colorScheme)
         }
     }
 }
