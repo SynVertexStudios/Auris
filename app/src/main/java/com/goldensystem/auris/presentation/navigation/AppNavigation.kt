@@ -3,6 +3,8 @@
 package com.goldensystem.auris.presentation.navigation
 
 import com.goldensystem.auris.di.AiEntryPoint
+import com.goldensystem.auris.data.ai.AiPlaylistGenerator
+import com.goldensystem.auris.data.repository.MusicRepository
 import dagger.hilt.android.EntryPointAccessors
 import com.goldensystem.auris.presentation.screens.WordDelimiterConfigScreen
 import com.goldensystem.auris.presentation.screens.CustomThemeScreen
@@ -271,18 +273,23 @@ composable(
     ScreenWrapper(navController = navController, playerViewModel = playerViewModel) { 
         val categoryId = backStackEntry.arguments?.getString("categoryId")
         if (categoryId != null) {
-            // 👇 ADICIONE ESTA LINHA PARA PEGAR O AiOrchestrator
             val context = LocalContext.current
-            val aiOrchestrator = EntryPointAccessors.fromApplication(
+            val entryPoint = EntryPointAccessors.fromApplication(
                 context.applicationContext,
                 AiEntryPoint::class.java
-            ).aiOrchestrator()
+            )
+            
+            val aiOrchestrator = entryPoint.aiOrchestrator()
+            val aiPlaylistGenerator = entryPoint.aiPlaylistGenerator()  // 👈 NOVO
+            val musicRepository = entryPoint.musicRepository()           // 👈 NOVO
             
             SettingsCategoryScreen(
                 categoryId = categoryId,
                 navController = navController,
                 playerViewModel = playerViewModel,
-                aiOrchestrator = aiOrchestrator,  // 👈 PASSA A INSTÂNCIA
+                aiOrchestrator = aiOrchestrator,
+                aiPlaylistGenerator = aiPlaylistGenerator,  // 👈 NOVO
+                musicRepository = musicRepository,           // 👈 NOVO
                 onBackClick = { navController.popBackStack() }
             )
         }

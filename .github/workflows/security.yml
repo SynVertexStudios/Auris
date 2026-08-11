@@ -1,0 +1,327 @@
+name: Auris Security
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+      - beta
+
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+      - beta
+
+  schedule:
+    # Executa toda segunda-feira às 03:00 UTC
+    - cron: "0 3 * * 1"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # ============================================================
+  # 1. CODEQL
+  # ============================================================
+
+  codeql:
+    name: CodeQL Security Scan
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java-kotlin
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:java-kotlin"
+
+
+  # ============================================================
+  # 2. GITLEAKS
+  # Detecta API Keys, Tokens, Senhas e Secrets
+  # ============================================================
+
+  gitleaks:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+  # ============================================================
+  # 3. ANDROID LINT
+  # ============================================================
+
+  android-lint:
+    name: Android Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission
+        run: chmod +x ./gradlew
+
+      - name: Run Android Lint
+        run: ./gradlew lint
+
+
+  # ============================================================
+  # 4. DEPENDENCY SECURITY
+  # ============================================================
+
+  dependency-check:
+    name: Dependency Security
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission
+        run: chmod +x ./gradlew
+
+      - name: Check dependencies
+        run: ./gradlew dependencies
+
+      - name: Dependency updates
+        run: |
+          ./gradlew dependencyInsight \
+            --dependency androidx \
+            --configuration releaseRuntimeClasspath || true
+
+
+  # ============================================================
+  # 5. GRADLE SECURITY
+  # ============================================================
+
+  gradle-security:
+    name: Gradle Security
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission
+        run: chmod +x ./gradlew
+
+      - name: Verify Gradle configuration
+        run: ./gradlew tasks --all
+
+
+  # ============================================================
+  # 6. ANDROID MANIFEST SECURITY
+  # ============================================================
+
+  manifest-security:
+    name: Android Manifest Security
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Search dangerous permissions
+        shell: bash
+        run: |
+          echo "Checking Android permissions..."
+
+          if grep -Rni \
+            -E 'android.permission.(READ_SMS|SEND_SMS|RECEIVE_SMS|CALL_PHONE|READ_CALL_LOG|WRITE_CALL_LOG|READ_CONTACTS|WRITE_CONTACTS)' \
+            app/src/main/AndroidManifest.xml 2>/dev/null; then
+
+            echo "::warning::Potentially sensitive Android permissions detected."
+
+          else
+
+            echo "No obviously sensitive permissions detected."
+
+          fi
+
+      - name: Search exported components
+        shell: bash
+        run: |
+          echo "Checking exported Android components..."
+
+          if grep -Rni \
+            -E 'android:exported="true"' \
+            app/src/main/AndroidManifest.xml 2>/dev/null; then
+
+            echo "::notice::Exported Android components detected. Verify that each one is intentional."
+
+          else
+
+            echo "No exported components detected."
+
+          fi
+
+
+  # ============================================================
+  # 7. SEARCH FOR INSECURE CODE
+  # ============================================================
+
+  insecure-code:
+    name: Insecure Code Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Search dangerous WebView configuration
+        shell: bash
+        run: |
+          echo "Checking WebView configuration..."
+
+          if grep -Rni \
+            -E 'setJavaScriptEnabled\(true\)|addJavascriptInterface' \
+            app/src/main 2>/dev/null; then
+
+            echo "::warning::Potentially dangerous WebView configuration detected."
+          fi
+
+      - name: Search cleartext traffic
+        shell: bash
+        run: |
+          echo "Checking cleartext traffic..."
+
+          if grep -Rni \
+            -E 'usesCleartextTraffic="true"|http://' \
+            app/src/main 2>/dev/null; then
+
+            echo "::warning::Cleartext HTTP configuration detected."
+          fi
+
+      - name: Search hardcoded secrets
+        shell: bash
+        run: |
+          echo "Checking for possible hardcoded secrets..."
+
+          if grep -RniE \
+            '(api[_-]?key|secret[_-]?key|access[_-]?token|client[_-]?secret|password)[[:space:]]*=[[:space:]]*["'\''][^"'\'']{8,}' \
+            app/src/main \
+            --include='*.kt' \
+            --include='*.java' \
+            --include='*.xml' \
+            2>/dev/null; then
+
+            echo "::warning::Possible hardcoded secret detected."
+          fi
+
+
+  # ============================================================
+  # 8. SECURITY SUMMARY
+  # ============================================================
+
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs:
+      - codeql
+      - gitleaks
+      - android-lint
+      - dependency-check
+      - gradle-security
+      - manifest-security
+      - insecure-code
+
+    if: always()
+
+    steps:
+      - name: Security report
+        shell: bash
+        run: |
+          echo "========================================"
+          echo "        AURIS SECURITY REPORT"
+          echo "========================================"
+          echo ""
+          echo "CodeQL:              ${{ needs.codeql.result }}"
+          echo "Gitleaks:            ${{ needs.gitleaks.result }}"
+          echo "Android Lint:        ${{ needs.android-lint.result }}"
+          echo "Dependencies:        ${{ needs.dependency-check.result }}"
+          echo "Gradle Security:     ${{ needs.gradle-security.result }}"
+          echo "Manifest Security:   ${{ needs.manifest-security.result }}"
+          echo "Insecure Code:       ${{ needs.insecure-code.result }}"
+          echo ""
+          echo "========================================"
+
+          if [[ \
+            "${{ needs.codeql.result }}" == "failure" ||
+            "${{ needs.gitleaks.result }}" == "failure" ||
+            "${{ needs.android-lint.result }}" == "failure" ||
+            "${{ needs.dependency-check.result }}" == "failure" ||
+            "${{ needs.gradle-security.result }}" == "failure"
+          ]]; then
+            echo "::error::One or more critical security jobs failed."
+            exit 1
+          fi
+
+          echo "Security workflow completed successfully."

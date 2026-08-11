@@ -9,4 +9,6 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 interface AiEntryPoint {
     fun aiOrchestrator(): AiOrchestrator
+    fun aiPlaylistGenerator(): AiPlaylistGenerator  // 👈 NOVO
+    fun musicRepository(): MusicRepository           // 👈 NOVO
 }

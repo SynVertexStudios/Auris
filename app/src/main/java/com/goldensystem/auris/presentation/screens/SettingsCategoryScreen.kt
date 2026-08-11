@@ -3,6 +3,8 @@ package com.goldensystem.auris.presentation.screens
 import android.content.ClipData
 import android.content.ClipboardManager
 import androidx.compose.foundation.horizontalScroll
+import com.goldensystem.auris.data.ai.AiPlaylistGenerator
+import com.goldensystem.auris.data.repository.MusicRepository
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.outlined.ClearAll
 import androidx.compose.material.icons.outlined.ContentCopy
@@ -195,8 +197,10 @@ fun SettingsCategoryScreen(
     navController: NavController,
     playerViewModel: PlayerViewModel,
     settingsViewModel: SettingsViewModel = hiltViewModel(),
-    statsViewModel: com.goldensystem.auris.presentation.viewmodel.StatsViewModel = hiltViewModel(),
-    aiOrchestrator: com.goldensystem.auris.data.ai.AiOrchestrator,
+    statsViewModel: StatsViewModel = hiltViewModel(),
+    aiOrchestrator: AiOrchestrator,
+    aiPlaylistGenerator: AiPlaylistGenerator,  // 👈 NOVO
+    musicRepository: MusicRepository,           // 👈 NOVO
     onBackClick: () -> Unit
 ) {
     val category = SettingsCategory.fromId(categoryId) ?: return
@@ -1254,48 +1258,74 @@ fun SettingsCategoryScreen(
                     maxLines = 5,
                     trailingIcon = {
                         FilledIconButton(
-                            onClick = {
-                                if (userPrompt.isNotBlank() && !isGenerating) {
-                                    isGenerating = true
-                                    aiResponse = ""
-                                    
-                                    coroutineScope.launch {
-                                        try {
-                                            val response = aiOrchestrator.generateContent(
-                                                prompt = userPrompt,
-                                                type = selectedType,
-                                                temperature = 0.7f
-                                            )
-                                            
-                                            aiResponse = response
-                                        } catch (e: Exception) {
-                                            aiResponse = "❌ Erro: ${e.message ?: "Falha ao gerar"}"
-                                        } finally {
-                                            isGenerating = false
-                                        }
-                                    }
-                                }
+    onClick = {
+        if (userPrompt.isNotBlank() && !isGenerating) {
+            isGenerating = true
+            aiResponse = ""
+            
+            coroutineScope.launch {
+                try {
+                    if (selectedType == AiSystemPromptType.PLAYLIST) {
+                        // 👇 CRIA PLAYLIST USANDO O AiPlaylistGenerator
+                        val allSongs = musicRepository.getAllSongsOnce()
+                        val result = aiPlaylistGenerator.generate(
+                            userPrompt = userPrompt,
+                            allSongs = allSongs,
+                            minLength = 5,
+                            maxLength = 20,
+                            type = AiSystemPromptType.PLAYLIST
+                        )
+                        
+                        result.fold(
+                            onSuccess = { songs ->
+                                // CRIA A PLAYLIST NO PLAYER
+                                playerViewModel.createPlaylist(
+                                    name = "Playlist IA - ${System.currentTimeMillis()}",
+                                    songIds = songs.map { it.id }
+                                )
+                                aiResponse = "✅ Playlist criada com ${songs.size} músicas!"
                             },
-                            enabled = userPrompt.isNotBlank() && !isGenerating,
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer
-                            ),
-                            modifier = Modifier.size(48.dp)
-                        ) {
-                            if (isGenerating) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Rounded.Send,
-                                    contentDescription = "Enviar",
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
+                            onFailure = { error ->
+                                aiResponse = "❌ Erro: ${error.message}"
                             }
-                        }
+                        )
+                    } else {
+                        // Para outros tipos (Geral, Metadados, etc) usa o orchestrator normal
+                        val response = aiOrchestrator.generateContent(
+                            prompt = userPrompt,
+                            type = selectedType,
+                            temperature = 0.7f
+                        )
+                        aiResponse = response
+                    }
+                } catch (e: Exception) {
+                    aiResponse = "❌ Erro: ${e.message ?: "Falha ao gerar"}"
+                } finally {
+                    isGenerating = false
+                }
+            }
+        }
+    },
+    enabled = userPrompt.isNotBlank() && !isGenerating,
+    colors = IconButtonDefaults.filledIconButtonColors(
+        containerColor = MaterialTheme.colorScheme.primaryContainer
+    ),
+    modifier = Modifier.size(48.dp)
+) {
+    if (isGenerating) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(20.dp),
+            strokeWidth = 2.dp,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+    } else {
+        Icon(
+            Icons.Rounded.Send,
+            contentDescription = "Enviar",
+            tint = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+    }
+}
                     },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,

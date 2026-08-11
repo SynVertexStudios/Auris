@@ -4650,3 +4650,23 @@ internal fun areEquivalentArtworkUrisForSong(
     val secondSongId = resolveUriSongId(secondUri)
     return firstSongId == targetSongId && secondSongId == targetSongId
 }
+
+fun createPlaylist(name: String, songIds: List<String>) {
+    viewModelScope.launch {
+        try {
+            val songs = musicRepository.getSongsByIds(songIds).first()
+            
+            if (songs.isEmpty()) {
+                sendToast("Nenhuma música encontrada para criar a playlist")
+                return@launch
+            }
+            
+            // Toca as músicas (já que não tem repositório de playlists)
+            playSongs(songs, songs.first(), name)
+            
+            sendToast("✅ Playlist '$name' criada com ${songs.size} músicas!")
+        } catch (e: Exception) {
+            sendToast("❌ Erro ao criar playlist: ${e.message}")
+        }
+    }
+}
