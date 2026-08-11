@@ -268,7 +268,7 @@ fun WallpaperScreen(
 // ============================================================
 // TOP BAR
 // ============================================================
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WallpaperTopBar(
     colorScheme: ColorScheme,
@@ -330,6 +330,7 @@ private fun SectionTitle(
 // WALLPAPER TYPE SELECTOR
 // ============================================================
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WallpaperTypeSelector(
     config: CustomThemeConfig,
@@ -910,7 +911,7 @@ private fun GalleryWallpaperContent(
 // ============================================================
 // SERVER WALLPAPER
 // ============================================================
-
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun ServerWallpaperContent(
     config: CustomThemeConfig,
