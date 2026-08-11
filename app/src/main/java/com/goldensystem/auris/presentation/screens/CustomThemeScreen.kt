@@ -168,7 +168,10 @@ fun CustomThemeScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Preview do Player
-            CustomThemePreviewCard(config = config)
+            ThemePreviewCustom(
+        config = config,
+        colorScheme = colorScheme
+            )
 
             Text(
                 stringResource(R.string.custom_theme_colors_subtitle),
@@ -377,133 +380,81 @@ private fun CustomThemePreviewCard(config: CustomThemeConfig) {
 }
 
 @Composable
-private fun PlayerPreviewContent(colorScheme: ColorScheme) {
-    Column(
+private fun ThemePreviewCustom(
+    config: CustomThemeConfig,
+    colorScheme: ColorScheme
+) {
+    Surface(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.SpaceBetween
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(20.dp)),
+        color = colorScheme.surface,
+        tonalElevation = 2.dp
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                colorScheme.primary,
-                                colorScheme.secondary
-                            )
-                        )
-                    )
-            ) {
-                Icon(
-                    Icons.Rounded.MusicNote,
-                    contentDescription = null,
-                    tint = colorScheme.onPrimary,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(12.dp)
-                )
-            }
-
-            Column(Modifier.weight(1f)) {
-                Text(
-                    "♪ Blinding Lights",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1
-                )
-                Text(
-                    "The Weeknd",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colorScheme.onSurfaceVariant,
-                    maxLines = 1
-                )
-            }
-        }
-
-        // Barra de progresso
         Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(colorScheme.primary.copy(alpha = 0.2f))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.45f)
-                        .fillMaxSize()
-                        .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(
-                                    colorScheme.primary,
-                                    colorScheme.secondary
-                                )
-                            )
-                        )
-                        .clip(RoundedCornerShape(2.dp))
-                )
-            }
-            
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    "1:30",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = colorScheme.onSurfaceVariant
-                )
-                Text(
-                    "3:20",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            listOf(
-                Icons.Rounded.SkipPrevious,
-                Icons.Rounded.PlayArrow,
-                Icons.Rounded.SkipNext
-            ).forEachIndexed { index, icon ->
                 Surface(
-                    shape = CircleShape,
-                    color = colorScheme.primary.copy(
-                        alpha = when (index) {
-                            0 -> 0.15f
-                            1 -> 0.25f
-                            else -> 0.15f
-                        }
-                    ),
-                    modifier = Modifier
-                        .size(if (index == 1) 48.dp else 36.dp)
+                    modifier = Modifier.size(48.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = colorScheme.primary.copy(alpha = 0.15f)
                 ) {
-                    Icon(
-                        if (index == 1) Icons.Rounded.PlayArrow else icon,
-                        contentDescription = null,
-                        tint = colorScheme.primary,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(if (index == 1) 12.dp else 8.dp)
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Rounded.Palette,
+                            contentDescription = null,
+                            tint = colorScheme.primary,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+
+                Column {
+                    Text(
+                        stringResource(R.string.custom_theme_current_theme),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        when (config.wallpaperType) {
+                            WallpaperType.SOLID -> stringResource(R.string.wallpaper_type_solid)
+                            WallpaperType.GALLERY -> stringResource(R.string.wallpaper_type_gallery)
+                            WallpaperType.SERVER -> stringResource(R.string.wallpaper_type_server)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colorScheme.onSurfaceVariant
                     )
                 }
-                Spacer(Modifier.width(if (index == 1) 16.dp else 8.dp))
+            }
+
+            // Mini preview das cores
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                listOf(
+                    config.primaryColor to "Primary",
+                    config.secondaryColor to "Secondary",
+                    config.backgroundColor to "Background",
+                    config.accentColor to "Accent"
+                ).forEach { (colorValue, _) ->
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(8.dp),
+                        shape = RoundedCornerShape(4.dp),
+                        color = Color(colorValue)
+                    ) {}
+                }
             }
         }
     }

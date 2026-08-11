@@ -48,7 +48,7 @@
     <string name="custom_theme_advanced">Avançado</string>
     <!-- Custom Theme Warning -->
 <string name="custom_theme_warning_title">Aviso</string>
-<string name="custom_theme_warning_message">Ao usar uma função dessa tela pela primeira vez ao ativar o tema personalizado o aplicativo vai se recompor e pode voltar a tela inicial ou fechar o aplicativo. Após a reinicialização você pode personalizar o tema livremente sem problemas.</string>
+<string name="custom_theme_warning_message">Ao usar uma função desta tela pela primeira vez após ativar o tema personalizado, a tela pode ser recomposta e, em alguns casos, voltar para a tela inicial. Basta abrir esta tela novamente para continuar personalizando o tema normalmente.</string>
 <string name="custom_theme_expand">Expandir</string>
 <string name="custom_theme_collapse">Recolher</string>
     
