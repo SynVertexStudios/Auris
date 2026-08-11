@@ -196,6 +196,7 @@ fun SettingsCategoryScreen(
     playerViewModel: PlayerViewModel,
     settingsViewModel: SettingsViewModel = hiltViewModel(),
     statsViewModel: com.goldensystem.auris.presentation.viewmodel.StatsViewModel = hiltViewModel(),
+    aiOrchestrator: com.goldensystem.auris.data.ai.AiOrchestrator,
     onBackClick: () -> Unit
 ) {
     val category = SettingsCategory.fromId(categoryId) ?: return
@@ -1174,9 +1175,6 @@ fun SettingsCategoryScreen(
         var isGenerating by remember { mutableStateOf(false) }
         var selectedType by remember { mutableStateOf(AiSystemPromptType.GENERAL) }
         val coroutineScope = rememberCoroutineScope()
-        
-        // Obtém o orchestrator via hilt
-        val aiOrchestrator: com.goldensystem.auris.data.ai.AiOrchestrator = hiltViewModel()
         
         Surface(
             color = MaterialTheme.colorScheme.surfaceContainer,

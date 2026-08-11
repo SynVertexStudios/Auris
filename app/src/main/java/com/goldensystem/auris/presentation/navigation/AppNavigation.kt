@@ -258,25 +258,26 @@ fun AppNavigation(
             }
 
             composable(
-                route = Screen.SettingsCategory.route,
-                arguments = listOf(navArgument("categoryId") { type = NavType.StringType }),
-                enterTransition = { enterTransition() },
-                exitTransition = { exitTransition() },
-                popEnterTransition = { popEnterTransition() },
-                popExitTransition = { popExitTransition() },
-            ) { backStackEntry ->
-                ScreenWrapper(navController = navController, playerViewModel = playerViewModel) {
-                    val categoryId = backStackEntry.arguments?.getString("categoryId")
-                    if (categoryId != null) {
-                        SettingsCategoryScreen(
-                            categoryId = categoryId,
-                            navController = navController,
-                            playerViewModel = playerViewModel,
-                            onBackClick = { navController.popBackStack() }
-                        )
-                    }
-                }
-            }
+    route = Screen.SettingsCategory.route,
+    arguments = listOf(navArgument("categoryId") { type = NavType.StringType }),
+    enterTransition = { enterTransition() },
+    exitTransition = { exitTransition() },
+    popEnterTransition = { popEnterTransition() },
+    popExitTransition = { popExitTransition() },
+) { backStackEntry ->
+    ScreenWrapper(navController = navController, playerViewModel = playerViewModel) {
+        val categoryId = backStackEntry.arguments?.getString("categoryId")
+        if (categoryId != null) {
+            SettingsCategoryScreen(
+                categoryId = categoryId,
+                navController = navController,
+                playerViewModel = playerViewModel,
+                aiOrchestrator = hiltViewModel(),  // 👈 SÓ ISSO
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+    }
+}
 
             composable(
                 Screen.PaletteStyle.route,
