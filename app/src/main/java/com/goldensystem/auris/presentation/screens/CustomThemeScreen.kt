@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -169,8 +168,8 @@ fun CustomThemeScreen(
         ) {
             // Preview do Player
             ThemePreviewCustom(
-        config = config,
-        colorScheme = colorScheme
+                config = config,
+                colorScheme = colorScheme
             )
 
             Text(
@@ -202,8 +201,7 @@ fun CustomThemeScreen(
                     ColorPickerRow(
                         label = stringResource(R.string.custom_theme_primary),
                         currentColor = config.primaryColor,
-                        mainColors = MAIN_COLORS,
-                        additionalColors = ADDITIONAL_COLORS,
+                        colors = MAIN_COLORS,
                         onColorSelected = { viewModel.updatePrimaryColor(it) },
                         onCustomColorClick = { 
                             colorPickerTarget = viewModel::updatePrimaryColor
@@ -215,8 +213,7 @@ fun CustomThemeScreen(
                     ColorPickerRow(
                         label = stringResource(R.string.custom_theme_secondary),
                         currentColor = config.secondaryColor,
-                        mainColors = MAIN_COLORS,
-                        additionalColors = ADDITIONAL_COLORS,
+                        colors = MAIN_COLORS,
                         onColorSelected = { viewModel.updateSecondaryColor(it) },
                         onCustomColorClick = { 
                             colorPickerTarget = viewModel::updateSecondaryColor
@@ -228,8 +225,7 @@ fun CustomThemeScreen(
                     ColorPickerRow(
                         label = stringResource(R.string.custom_theme_background),
                         currentColor = config.backgroundColor,
-                        mainColors = MAIN_COLORS,
-                        additionalColors = ADDITIONAL_COLORS,
+                        colors = MAIN_COLORS,
                         onColorSelected = { viewModel.updateBackgroundColor(it) },
                         onCustomColorClick = { 
                             colorPickerTarget = viewModel::updateBackgroundColor
@@ -241,8 +237,7 @@ fun CustomThemeScreen(
                     ColorPickerRow(
                         label = stringResource(R.string.custom_theme_on_primary),
                         currentColor = config.onPrimaryColor,
-                        mainColors = listOf(0xFFFFFFFF.toInt(), 0xFF000000.toInt()),
-                        additionalColors = ADDITIONAL_COLORS,
+                        colors = listOf(0xFFFFFFFF.toInt(), 0xFF000000.toInt()),
                         onColorSelected = { viewModel.updateOnPrimaryColor(it) },
                         onCustomColorClick = { 
                             colorPickerTarget = viewModel::updateOnPrimaryColor
@@ -254,8 +249,7 @@ fun CustomThemeScreen(
                     ColorPickerRow(
                         label = stringResource(R.string.custom_theme_on_surface),
                         currentColor = config.onSurfaceColor,
-                        mainColors = listOf(0xFFFFFFFF.toInt(), 0xFF000000.toInt()),
-                        additionalColors = ADDITIONAL_COLORS,
+                        colors = listOf(0xFFFFFFFF.toInt(), 0xFF000000.toInt()),
                         onColorSelected = { viewModel.updateOnSurfaceColor(it) },
                         onCustomColorClick = { 
                             colorPickerTarget = viewModel::updateOnSurfaceColor
@@ -267,8 +261,7 @@ fun CustomThemeScreen(
                     ColorPickerRow(
                         label = stringResource(R.string.custom_theme_accent),
                         currentColor = config.accentColor,
-                        mainColors = MAIN_COLORS,
-                        additionalColors = ADDITIONAL_COLORS,
+                        colors = MAIN_COLORS,
                         onColorSelected = { viewModel.updateAccentColor(it) },
                         onCustomColorClick = { 
                             colorPickerTarget = viewModel::updateAccentColor
@@ -317,7 +310,14 @@ private fun CustomThemePreviewCard(config: CustomThemeConfig) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(colorScheme.surface)
-        ) {
+        )
+        
+            // Overlay de escurecimento
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = config.wallpaperDim * 0.5f))
+            ){
             // Preview do wallpaper simplificado
             when (config.wallpaperType) {
                 WallpaperType.SOLID -> {
@@ -366,13 +366,6 @@ private fun CustomThemePreviewCard(config: CustomThemeConfig) {
                     } ?: Box(modifier = Modifier.fillMaxSize().background(colorScheme.surface))
                 }
             }
-
-            // Overlay de escurecimento
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = config.wallpaperDim * 0.5f))
-            )
         }
     }
 }
@@ -459,19 +452,16 @@ private fun ThemePreviewCustom(
 }
 
 // ==================== COLOR PICKER ROW ====================
-@OptIn(ExperimentalAnimationApi::class)
+
 @Composable
 private fun ColorPickerRow(
     label: String,
     currentColor: Int,
-    mainColors: List<Int>,
-    additionalColors: List<Int>,
+    colors: List<Int>,
     onColorSelected: (Int) -> Unit,
     onCustomColorClick: () -> Unit,
     colorScheme: ColorScheme
 ) {
-    var showAdditional by remember { mutableStateOf(false) }
-
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -485,7 +475,8 @@ private fun ColorPickerRow(
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(mainColors) { color ->
+            // Itens de cores
+            items(colors) { color ->
                 ColorItem(
                     color = color,
                     isSelected = color == currentColor,
@@ -493,69 +484,14 @@ private fun ColorPickerRow(
                     colorScheme = colorScheme
                 )
             }
-        }
-
-        AnimatedContent(
-            targetState = showAdditional,
-            transitionSpec = {
-                fadeIn(animationSpec = tween(300)) with fadeOut(animationSpec = tween(200))
+            
+            // Botão "+" para abrir o seletor personalizado
+            item {
+                CustomColorButton(
+                    onClick = onCustomColorClick,
+                    colorScheme = colorScheme
+                )
             }
-        ) { show ->
-            if (!show) {
-                TextButton(
-                    onClick = { showAdditional = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = colorScheme.primary
-                    )
-                ) {
-                    Icon(Icons.Rounded.ExpandMore, contentDescription = null)
-                    Text(stringResource(R.string.custom_theme_more_colors))
-                }
-            } else {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        stringResource(R.string.custom_theme_additional_colors),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = colorScheme.onSurfaceVariant
-                    )
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(additionalColors) { color ->
-                            ColorItem(
-                                color = color,
-                                isSelected = color == currentColor,
-                                onColorSelected = onColorSelected,
-                                colorScheme = colorScheme
-                            )
-                        }
-                    }
-                    TextButton(
-                        onClick = { showAdditional = false },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = colorScheme.primary
-                        )
-                    ) {
-                        Icon(Icons.Rounded.ExpandLess, contentDescription = null)
-                        Text(stringResource(R.string.custom_theme_less_colors))
-                    }
-                }
-            }
-        }
-
-        TextButton(
-            onClick = onCustomColorClick,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.textButtonColors(
-                contentColor = colorScheme.primary
-            )
-        ) {
-            Icon(Icons.Rounded.ColorLens, contentDescription = null)
-            Text(stringResource(R.string.custom_theme_custom_color))
         }
     }
 }
@@ -577,12 +513,12 @@ private fun ColorItem(
         label = "color_item_scale"
     )
     val borderWidth by animateDpAsState(
-        targetValue = if (isSelected) 3.dp else 0.dp,
+        targetValue = if (isSelected) 2.dp else 0.dp,
         animationSpec = tween(durationMillis = 200),
         label = "color_item_border"
     )
     val size by animateDpAsState(
-        targetValue = if (isSelected) 44.dp else 36.dp,
+        targetValue = if (isSelected) 44.dp else 38.dp,
         animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy),
         label = "color_item_size"
     )
@@ -591,7 +527,7 @@ private fun ColorItem(
         modifier = Modifier
             .size(size)
             .scale(itemScale)
-            .clip(CircleShape)
+            .clip(RoundedCornerShape(8.dp)) // Mudança: quadrado com bordas arredondadas
             .background(Color(color))
             .clickable(
                 interactionSource = interactionSource,
@@ -599,7 +535,7 @@ private fun ColorItem(
             ) { onColorSelected(color) }
             .then(
                 if (isSelected) {
-                    Modifier.border(borderWidth, Color.White, CircleShape)
+                    Modifier.border(borderWidth, Color.White, RoundedCornerShape(8.dp))
                 } else Modifier
             ),
         contentAlignment = Alignment.Center
@@ -620,6 +556,50 @@ private fun ColorItem(
                 )
             }
         }
+    }
+}
+
+// ==================== CUSTOM COLOR BUTTON ====================
+
+@Composable
+private fun CustomColorButton(
+    onClick: () -> Unit,
+    colorScheme: ColorScheme
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.90f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy),
+        label = "custom_color_button_scale"
+    )
+
+    Box(
+        modifier = Modifier
+            .size(38.dp)
+            .scale(scale)
+            .clip(RoundedCornerShape(8.dp))
+            .background(
+                colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                RoundedCornerShape(8.dp)
+            )
+            .border(
+                1.dp,
+                colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                RoundedCornerShape(8.dp)
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            Icons.Rounded.Add,
+            contentDescription = stringResource(R.string.custom_theme_custom_color),
+            tint = colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp)
+        )
     }
 }
 
@@ -866,11 +846,4 @@ val MAIN_COLORS = listOf(
     0xFFFF9800.toInt(), 0xFFFFEB3B.toInt(), 0xFF8BC34A.toInt(),
     0xFF2E7D32.toInt(), 0xFF42A5F5.toInt(), 0xFF0D47A1.toInt(),
     0xFF7B1FA2.toInt(), 0xFFE91E63.toInt(), 0xFFFFFFFF.toInt()
-)
-
-val ADDITIONAL_COLORS = listOf(
-    0xFFFF6F00.toInt(), 0xFF00BCD4.toInt(), 0xFF00E676.toInt(),
-    0xFFFF4081.toInt(), 0xFF651FFF.toInt(), 0xFF2979FF.toInt(),
-    0xFFFF6E40.toInt(), 0xFFF50057.toInt(), 0xFF00E5FF.toInt(),
-    0xFF76FF03.toInt(), 0xFFD500F9.toInt(), 0xFFFFAB00.toInt()
 )
