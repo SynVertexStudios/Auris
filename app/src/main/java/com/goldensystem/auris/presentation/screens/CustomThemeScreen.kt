@@ -847,3 +847,10 @@ val MAIN_COLORS = listOf(
     0xFF2E7D32.toInt(), 0xFF42A5F5.toInt(), 0xFF0D47A1.toInt(),
     0xFF7B1FA2.toInt(), 0xFFE91E63.toInt(), 0xFFFFFFFF.toInt()
 )
+
+val ADDITIONAL_COLORS = listOf(
+    0xFFFF6F00.toInt(), 0xFF00BCD4.toInt(), 0xFF00E676.toInt(),
+    0xFFFF4081.toInt(), 0xFF651FFF.toInt(), 0xFF2979FF.toInt(),
+    0xFFFF6E40.toInt(), 0xFFF50057.toInt(), 0xFF00E5FF.toInt(),
+    0xFF76FF03.toInt(), 0xFFD500F9.toInt(), 0xFFFFAB00.toInt()
+)
