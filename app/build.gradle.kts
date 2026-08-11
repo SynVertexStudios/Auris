@@ -68,17 +68,36 @@ android {
     }
 
     signingConfigs {
-        create("fixedDebug") {
-            storeFile = file("debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
+        // 🔥 CONFIGURAÇÃO DE DEBUG AGORA USA O MESMO KEYSTORE DO RELEASE EM CI
+        create("debug") {
+            if (System.getenv("CI") == "true") {
+                // No CI (GitHub Actions), usa release keystore
+                storeFile = file("my-release-key.keystore")
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "Saymonsil098"
+                keyAlias = System.getenv("KEY_ALIAS") ?: "auris"
+                keyPassword = System.getenv("KEY_PASSWORD") ?: "Saymonsil098"
+            } else {
+                // Localmente, usa debug keystore padrão
+                storeFile = file("debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
         }
+        
         create("release") {
             storeFile = file("my-release-key.keystore")
             storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "Saymonsil098"
             keyAlias = System.getenv("KEY_ALIAS") ?: "auris"
             keyPassword = System.getenv("KEY_PASSWORD") ?: "Saymonsil098"
+        }
+        
+        // Mantido para compatibilidade (opcional)
+        create("fixedDebug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
         }
     }
 
@@ -87,7 +106,8 @@ android {
             applicationIdSuffix = ".beta"
             // 🔥 TROCADO PARA INCLUIR O VERSION CODE
             versionNameSuffix = ".$appVersionCode-beta"
-            // signingConfig = signingConfigs.getByName("fixedDebug")
+            // 🔥 AGORA USA A ASSINATURA DE DEBUG (que em CI usa release keystore)
+            signingConfig = signingConfigs.getByName("debug")
         }
         release {
             isDebuggable = false

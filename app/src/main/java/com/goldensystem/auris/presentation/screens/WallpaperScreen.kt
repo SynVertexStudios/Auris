@@ -3,11 +3,18 @@
 package com.goldensystem.auris.presentation.screens
 
 import android.net.Uri
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import com.goldensystem.auris.data.preferences.CustomThemeConfig
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,6 +25,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -28,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -36,6 +45,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -44,42 +54,52 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.goldensystem.auris.R
+import com.goldensystem.auris.data.preferences.CustomThemeConfig
 import com.goldensystem.auris.data.preferences.WallpaperType
 import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
 import com.goldensystem.auris.ui.theme.customColorScheme
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 // ============================================================
-// 1. CONFIGURAÇÃO DAS CATEGORIAS
+// CONFIGURAÇÃO DAS CATEGORIAS
 // ============================================================
+
 private val CATEGORY_CONFIG = mapOf(
     WallpaperCategory.ANIME to ("anime" to 7),
-    WallpaperCategory.CARR  to ("carr" to 12),
-    WallpaperCategory.NEON  to ("neon" to 7),
-    WallpaperCategory.OTRS  to ("otrs" to 7),
+    WallpaperCategory.CARR to ("carr" to 12),
+    WallpaperCategory.NEON to ("neon" to 7),
+    WallpaperCategory.OTRS to ("otrs" to 7),
     WallpaperCategory.SPACE to ("space" to 10)
 )
 
-private const val BASE_URL = "https://raw.githubusercontent.com/pereirasaymonsilva-a11y/Auris/main/assets/wallpaper"
+private const val BASE_URL =
+    "https://raw.githubusercontent.com/pereirasaymonsilva-a11y/Auris/main/assets/wallpaper"
 
 val WALLPAPER_CATEGORIES = mutableMapOf<WallpaperCategory, List<String>>().apply {
     CATEGORY_CONFIG.forEach { (category, config) ->
         val (folder, count) = config
-        val urls = (1..count).map { index ->
+
+        this[category] = (1..count).map { index ->
             "$BASE_URL/$folder/Wallpaper$index.jpg"
         }
-        this[category] = urls
     }
-    this[WallpaperCategory.ALL] = this.values.flatten()
+
+    this[WallpaperCategory.ALL] = values.flatten()
 }
 
 enum class WallpaperCategory {
-    ALL, SPACE, CARR, ANIME, NEON, OTRS
+    ALL,
+    SPACE,
+    CARR,
+    ANIME,
+    NEON,
+    OTRS
 }
 
-
+// ============================================================
+// TELA PRINCIPAL
+// ============================================================
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
@@ -88,16 +108,22 @@ fun WallpaperScreen(
     viewModel: CustomThemeViewModel = hiltViewModel()
 ) {
     val config by viewModel.customThemeConfig.collectAsStateWithLifecycle()
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var selectedCategory by remember { mutableStateOf(WallpaperCategory.ALL) }
-    
-    // Debounce para salvar automaticamente
-    var saveJob by remember { mutableStateOf<Job?>(null) }
-    
-    val colorScheme = remember(config) { customColorScheme(config, true) }
 
-    // Launcher para galeria
+    var selectedCategory by remember {
+        mutableStateOf(WallpaperCategory.ALL)
+    }
+
+    val colorScheme = remember(config) {
+        customColorScheme(config, true)
+    }
+
+    // --------------------------------------------------------
+    // Galeria
+    // --------------------------------------------------------
+
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -106,177 +132,290 @@ fun WallpaperScreen(
         }
     }
 
-    // Salvar com debounce
+    // --------------------------------------------------------
+    // Salvamento automático com debounce
+    // --------------------------------------------------------
+
     LaunchedEffect(config) {
-        saveJob?.cancel()
-        saveJob = scope.launch {
-            delay(800)
-            viewModel.saveCustomTheme()
-        }
+        delay(800)
+        viewModel.saveCustomTheme()
     }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            saveJob?.cancel()
-            saveJob = scope.launch {
-                viewModel.saveCustomTheme()
-            }
-        }
-    }
+    // ========================================================
+    // UI
+    // ========================================================
 
     Scaffold(
+        containerColor = colorScheme.background,
+
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.custom_theme_wallpaper_title),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = colorScheme.onSurface
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { 
-                            saveJob?.cancel()
-                            saveJob = scope.launch { viewModel.saveCustomTheme() }
-                            navController.popBackStack() 
-                        }
-                    ) {
-                        Icon(
-                            Icons.Rounded.Close,
-                            contentDescription = stringResource(R.string.auth_cd_back),
-                            tint = colorScheme.onSurface
-                        )
+            WallpaperTopBar(
+                colorScheme = colorScheme,
+                onBack = {
+                    scope.launch {
+                        viewModel.saveCustomTheme()
+                        navController.popBackStack()
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colorScheme.surface
-                )
+                }
             )
         }
     ) { paddingValues ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(colorScheme.background)
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 16.dp)
+                .padding(top = 12.dp, bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Preview do wallpaper atual
+
+            // ------------------------------------------------
+            // Preview
+            // ------------------------------------------------
+
             WallpaperPreviewCard(
                 config = config,
                 colorScheme = colorScheme
             )
 
-            // Tipo de Wallpaper
-            Text(
-                stringResource(R.string.custom_theme_wallpaper_source),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = colorScheme.onSurface
+            // ------------------------------------------------
+            // Fonte
+            // ------------------------------------------------
+
+            SectionTitle(
+                title = stringResource(R.string.custom_theme_wallpaper_source),
+                colorScheme = colorScheme
             )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            WallpaperTypeSelector(
+                config = config,
+                viewModel = viewModel,
+                colorScheme = colorScheme
+            )
+
+            // ------------------------------------------------
+            // Conteúdo
+            // ------------------------------------------------
+
+            AnimatedContent(
+                targetState = config.wallpaperType,
+                transitionSpec = {
+                    fadeIn(
+                        animationSpec = tween(220)
+                    ) with fadeOut(
+                        animationSpec = tween(150)
+                    )
+                },
+                label = "wallpaper_type_content"
+            ) { type ->
+
+                when (type) {
+
+                    WallpaperType.SOLID -> {
+                        SolidWallpaperContent(
+                            config = config,
+                            viewModel = viewModel,
+                            colorScheme = colorScheme
+                        )
+                    }
+
+                    WallpaperType.GALLERY -> {
+                        GalleryWallpaperContent(
+                            config = config,
+                            viewModel = viewModel,
+                            galleryLauncher = galleryLauncher,
+                            colorScheme = colorScheme
+                        )
+                    }
+
+                    WallpaperType.SERVER -> {
+                        ServerWallpaperContent(
+                            config = config,
+                            viewModel = viewModel,
+                            selectedCategory = selectedCategory,
+                            onCategoryChange = {
+                                selectedCategory = it
+                            },
+                            colorScheme = colorScheme
+                        )
+                    }
+                }
+            }
+
+            // ------------------------------------------------
+            // Efeitos
+            // ------------------------------------------------
+
+            AnimatedVisibility(
+                visible = config.wallpaperType != WallpaperType.SOLID,
+                enter = fadeIn() + scaleIn(initialScale = 0.98f),
+                exit = fadeOut()
             ) {
-                WallpaperType.entries.forEach { type ->
-                    val isSelected = config.wallpaperType == type
-                    val interactionSource = remember { MutableInteractionSource() }
-                    val isPressed by interactionSource.collectIsPressedAsState()
-                    val chipScale by animateFloatAsState(
-                        targetValue = if (isPressed) 0.96f else 1f,
-                        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy),
-                        label = "chip_scale_${type.name}"
-                    )
 
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = { viewModel.setWallpaperType(type) },
-                        label = {
-                            Text(
-                                when (type) {
-                                    WallpaperType.SOLID -> stringResource(R.string.wallpaper_type_solid)
-                                    WallpaperType.GALLERY -> stringResource(R.string.wallpaper_type_gallery)
-                                    WallpaperType.SERVER -> stringResource(R.string.wallpaper_type_server)
-                                }
-                            )
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .scale(chipScale),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = colorScheme.primary,
-                            selectedLabelColor = colorScheme.onPrimary,
-                            disabledSelectedContainerColor = colorScheme.primary.copy(alpha = 0.5f)
-                        ),
-                        interactionSource = interactionSource
-                    )
-                }
-            }
-
-            // Conteúdo baseado no tipo
-            when (config.wallpaperType) {
-                WallpaperType.SOLID -> SolidWallpaperContent(
+                WallpaperEffects(
                     config = config,
                     viewModel = viewModel,
                     colorScheme = colorScheme
                 )
-                WallpaperType.GALLERY -> GalleryWallpaperContent(
-                    config = config,
-                    viewModel = viewModel,
-                    galleryLauncher = galleryLauncher,
-                    colorScheme = colorScheme
-                )
-                WallpaperType.SERVER -> ServerWallpaperContent(
-                    config = config,
-                    viewModel = viewModel,
-                    selectedCategory = selectedCategory,
-                    onCategoryChange = { selectedCategory = it },
-                    colorScheme = colorScheme
-                )
             }
-
-            // Controles adicionais (blur e dim) - apenas para tipos com imagem
-            if (config.wallpaperType != WallpaperType.SOLID) {
-                Divider(color = colorScheme.surfaceVariant)
-                
-                Text(
-                    stringResource(R.string.wallpaper_effects),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = colorScheme.onSurface
-                )
-                
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    SliderWithLabel(
-                        label = stringResource(R.string.wallpaper_blur),
-                        value = config.wallpaperBlur,
-                        onValueChange = { viewModel.setWallpaperBlur(it) },
-                        valueRange = 0f..1f,
-                        colorScheme = colorScheme
-                    )
-                    SliderWithLabel(
-                        label = stringResource(R.string.wallpaper_dim),
-                        value = config.wallpaperDim,
-                        onValueChange = { viewModel.setWallpaperDim(it) },
-                        valueRange = 0f..0.8f,
-                        colorScheme = colorScheme
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }
 
-// ==================== WALLPAPER PREVIEW CARD ====================
+// ============================================================
+// TOP BAR
+// ============================================================
+
+@Composable
+private fun WallpaperTopBar(
+    colorScheme: ColorScheme,
+    onBack: () -> Unit
+) {
+    Surface(
+        color = colorScheme.surface,
+        tonalElevation = 2.dp
+    ) {
+        CenterAlignedTopAppBar(
+            title = {
+                Text(
+                    text = stringResource(
+                        R.string.custom_theme_wallpaper_title
+                    ),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = colorScheme.onSurface
+                )
+            },
+            navigationIcon = {
+                IconButton(
+                    onClick = onBack
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Close,
+                        contentDescription = stringResource(
+                            R.string.auth_cd_back
+                        ),
+                        tint = colorScheme.onSurface
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = Color.Transparent
+            )
+        )
+    }
+}
+
+// ============================================================
+// SECTION TITLE
+// ============================================================
+
+@Composable
+private fun SectionTitle(
+    title: String,
+    colorScheme: ColorScheme
+) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+        color = colorScheme.onSurface
+    )
+}
+
+// ============================================================
+// WALLPAPER TYPE SELECTOR
+// ============================================================
+
+@Composable
+private fun WallpaperTypeSelector(
+    config: CustomThemeConfig,
+    viewModel: CustomThemeViewModel,
+    colorScheme: ColorScheme
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+
+        WallpaperType.entries.forEach { type ->
+
+            val isSelected = config.wallpaperType == type
+
+            val interactionSource = remember {
+                MutableInteractionSource()
+            }
+
+            val isPressed by interactionSource
+                .collectIsPressedAsState()
+
+            val scale by animateFloatAsState(
+                targetValue = if (isPressed) 0.96f else 1f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium
+                ),
+                label = "type_scale_${type.name}"
+            )
+
+            FilterChip(
+                selected = isSelected,
+                onClick = {
+                    viewModel.setWallpaperType(type)
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .scale(scale),
+                label = {
+                    Text(
+                        when (type) {
+                            WallpaperType.SOLID ->
+                                stringResource(
+                                    R.string.wallpaper_type_solid
+                                )
+
+                            WallpaperType.GALLERY ->
+                                stringResource(
+                                    R.string.wallpaper_type_gallery
+                                )
+
+                            WallpaperType.SERVER ->
+                                stringResource(
+                                    R.string.wallpaper_type_server
+                                )
+                        },
+                        maxLines = 1
+                    )
+                },
+                leadingIcon = if (isSelected) {
+                    {
+                        Icon(
+                            Icons.Rounded.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                } else {
+                    null
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = colorScheme.primary,
+                    selectedLabelColor = colorScheme.onPrimary,
+                    selectedLeadingIconColor = colorScheme.onPrimary,
+                    labelColor = colorScheme.onSurfaceVariant
+                ),
+                interactionSource = interactionSource
+            )
+        }
+    }
+}
+
+// ============================================================
+// PREVIEW
+// ============================================================
 
 @Composable
 private fun WallpaperPreviewCard(
@@ -285,100 +424,128 @@ private fun WallpaperPreviewCard(
 ) {
     val context = LocalContext.current
 
+    val previewShape = RoundedCornerShape(28.dp)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            .height(215.dp),
+        shape = previewShape,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 5.dp
+        ),
         colors = CardDefaults.cardColors(
             containerColor = colorScheme.surface
         )
     ) {
+
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(colorScheme.surface)
+            modifier = Modifier.fillMaxSize()
         ) {
+
+            // ------------------------------------------------
+            // Background
+            // ------------------------------------------------
+
             when (config.wallpaperType) {
+
                 WallpaperType.SOLID -> {
+
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color(config.backgroundColor))
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.radialGradient(
-                                        colors = listOf(
-                                            Color.White.copy(alpha = 0.1f),
-                                            Color.Transparent
-                                        ),
-                                        radius = 1000f,
-                                        center = Offset(300f, 200f)
+                            .background(
+                                Color(config.backgroundColor)
+                            )
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.radialGradient(
+                                    colors = listOf(
+                                        Color.White.copy(alpha = 0.12f),
+                                        Color.Transparent
+                                    ),
+                                    radius = 900f,
+                                    center = Offset(
+                                        350f,
+                                        0f
                                     )
                                 )
+                            )
+                    )
+                }
+
+                WallpaperType.GALLERY -> {
+
+                    if (config.wallpaperUri != null) {
+
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(config.wallpaperUri)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = stringResource(
+                                R.string.custom_theme_selected_wallpaper
+                            ),
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
                         )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.radialGradient(
-                                        colors = listOf(
-                                            Color.Transparent,
-                                            Color.Black.copy(alpha = 0.2f)
-                                        ),
-                                        radius = 800f,
-                                        center = Offset(200f, 600f)
-                                    )
-                                )
-                        )
-                        Text(
-                            stringResource(R.string.custom_theme_solid_color_wallpaper),
-                            modifier = Modifier.align(Alignment.Center),
-                            color = Color(config.backgroundColor).contrastTextColor(),
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp
+
+                    } else {
+                        EmptyWallpaperPlaceholder(
+                            colorScheme = colorScheme
                         )
                     }
                 }
-                WallpaperType.GALLERY -> {
-                    config.wallpaperUri?.let { uri ->
-                        AsyncImage(
-                            model = ImageRequest.Builder(context)
-                                .data(uri)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = stringResource(R.string.custom_theme_selected_wallpaper),
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    } ?: EmptyWallpaperPlaceholder(colorScheme)
-                }
+
                 WallpaperType.SERVER -> {
-                    config.wallpaperUrl?.let { url ->
+
+                    if (config.wallpaperUrl != null) {
+
                         AsyncImage(
                             model = ImageRequest.Builder(context)
-                                .data(url)
+                                .data(config.wallpaperUrl)
                                 .crossfade(true)
                                 .build(),
-                            contentDescription = stringResource(R.string.custom_theme_selected_wallpaper),
+                            contentDescription = stringResource(
+                                R.string.custom_theme_selected_wallpaper
+                            ),
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
-                    } ?: EmptyWallpaperPlaceholder(colorScheme)
+
+                    } else {
+                        EmptyWallpaperPlaceholder(
+                            colorScheme = colorScheme
+                        )
+                    }
                 }
             }
 
-            // Overlay indicando preview
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.2f))
-            )
-            
+            // ------------------------------------------------
+            // Dim
+            // ------------------------------------------------
+
+            if (config.wallpaperType != WallpaperType.SOLID) {
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Color.Black.copy(
+                                alpha = config.wallpaperDim
+                            )
+                        )
+                )
+            }
+
+            // ------------------------------------------------
+            // Bottom gradient
+            // ------------------------------------------------
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -386,44 +553,106 @@ private fun WallpaperPreviewCard(
                         Brush.verticalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                Color.Black.copy(alpha = 0.3f)
+                                Color.Black.copy(alpha = 0.65f)
                             ),
-                            startY = 0.6f
+                            startY = 100f
                         )
                     )
             )
-            
-            Text(
-                stringResource(R.string.custom_theme_wallpaper_preview),
+
+            // ------------------------------------------------
+            // Preview label
+            // ------------------------------------------------
+
+            Surface(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(16.dp),
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
+                    .padding(14.dp),
+                shape = RoundedCornerShape(50),
+                color = Color.Black.copy(alpha = 0.45f)
+            ) {
+
+                Row(
+                    modifier = Modifier.padding(
+                        horizontal = 12.dp,
+                        vertical = 7.dp
+                    ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Icon(
+                        imageVector = Icons.Rounded.Visibility,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(17.dp)
+                    )
+
+                    Spacer(
+                        modifier = Modifier.width(7.dp)
+                    )
+
+                    Text(
+                        text = stringResource(
+                            R.string.custom_theme_wallpaper_preview
+                        ),
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp
+                    )
+                }
+            }
         }
     }
 }
 
+// ============================================================
+// EMPTY PREVIEW
+// ============================================================
+
 @Composable
-private fun EmptyWallpaperPlaceholder(colorScheme: ColorScheme) {
+private fun EmptyWallpaperPlaceholder(
+    colorScheme: ColorScheme
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(colorScheme.surfaceVariant),
+            .background(
+                colorScheme.surfaceVariant
+            ),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                Icons.Rounded.Image,
-                contentDescription = null,
-                tint = colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(48.dp)
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Surface(
+                modifier = Modifier.size(64.dp),
+                shape = CircleShape,
+                color = colorScheme.surface
+            ) {
+
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
+
+                    Icon(
+                        Icons.Rounded.Image,
+                        contentDescription = null,
+                        tint = colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+
+            Spacer(
+                modifier = Modifier.height(10.dp)
             )
-            Spacer(Modifier.height(8.dp))
+
             Text(
-                stringResource(R.string.custom_theme_no_image_selected),
+                text = stringResource(
+                    R.string.custom_theme_no_image_selected
+                ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = colorScheme.onSurfaceVariant
             )
@@ -431,147 +660,256 @@ private fun EmptyWallpaperPlaceholder(colorScheme: ColorScheme) {
     }
 }
 
-// ==================== SOLID WALLPAPER CONTENT ====================
-@OptIn(ExperimentalAnimationApi::class)
+// ============================================================
+// SOLID WALLPAPER
+// ============================================================
+
 @Composable
 private fun SolidWallpaperContent(
     config: CustomThemeConfig,
     viewModel: CustomThemeViewModel,
     colorScheme: ColorScheme
 ) {
+
+    var showAdditional by remember {
+        mutableStateOf(false)
+    }
+
     Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = Modifier.animateContentSize(),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+
         Text(
-            stringResource(R.string.custom_theme_background_color),
+            text = stringResource(
+                R.string.custom_theme_background_color
+            ),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Medium,
             color = colorScheme.onSurface
         )
 
-        // Cores principais
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            contentPadding = PaddingValues(
+                horizontal = 2.dp
+            )
         ) {
+
             items(MAIN_COLORS) { color ->
+
                 ColorItem(
                     color = color,
                     isSelected = color == config.backgroundColor,
-                    onColorSelected = { viewModel.updateBackgroundColor(it) },
-                    size = 44.dp
+                    onColorSelected = {
+                        viewModel.updateBackgroundColor(it)
+                    },
+                    size = 46.dp
                 )
             }
         }
 
-        // Cores adicionais
-        var showAdditional by remember { mutableStateOf(false) }
-        
-        AnimatedContent(
-            targetState = showAdditional,
-            transitionSpec = {
-                fadeIn(animationSpec = tween(300)) with fadeOut(animationSpec = tween(200))
-            }
-        ) { show ->
-            if (!show) {
-                TextButton(
-                    onClick = { showAdditional = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Rounded.ExpandMore, contentDescription = null)
-                    Text(stringResource(R.string.custom_theme_more_colors))
-                }
-            } else {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        stringResource(R.string.custom_theme_additional_colors),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = colorScheme.onSurfaceVariant
+        if (!showAdditional) {
+
+            OutlinedButton(
+                onClick = {
+                    showAdditional = true
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(15.dp)
+            ) {
+
+                Icon(
+                    Icons.Rounded.ExpandMore,
+                    contentDescription = null
+                )
+
+                Spacer(
+                    Modifier.width(7.dp)
+                )
+
+                Text(
+                    stringResource(
+                        R.string.custom_theme_more_colors
                     )
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(ADDITIONAL_COLORS) { color ->
-                            ColorItem(
-                                color = color,
-                                isSelected = color == config.backgroundColor,
-                                onColorSelected = { viewModel.updateBackgroundColor(it) },
-                                size = 40.dp
-                            )
-                        }
+                )
+            }
+
+        } else {
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+
+                Text(
+                    text = stringResource(
+                        R.string.custom_theme_additional_colors
+                    ),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colorScheme.onSurfaceVariant
+                )
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = PaddingValues(
+                        horizontal = 2.dp
+                    )
+                ) {
+
+                    items(ADDITIONAL_COLORS) { color ->
+
+                        ColorItem(
+                            color = color,
+                            isSelected =
+                                color == config.backgroundColor,
+                            onColorSelected = {
+                                viewModel.updateBackgroundColor(it)
+                            },
+                            size = 42.dp
+                        )
                     }
-                    TextButton(
-                        onClick = { showAdditional = false },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(Icons.Rounded.ExpandLess, contentDescription = null)
-                        Text(stringResource(R.string.custom_theme_less_colors))
-                    }
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        showAdditional = false
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(15.dp)
+                ) {
+
+                    Icon(
+                        Icons.Rounded.ExpandLess,
+                        contentDescription = null
+                    )
+
+                    Spacer(
+                        Modifier.width(7.dp)
+                    )
+
+                    Text(
+                        stringResource(
+                            R.string.custom_theme_less_colors
+                        )
+                    )
                 }
             }
         }
     }
 }
 
-// ==================== GALLERY WALLPAPER CONTENT ====================
+// ============================================================
+// GALLERY WALLPAPER
+// ============================================================
 
 @Composable
 private fun GalleryWallpaperContent(
     config: CustomThemeConfig,
     viewModel: CustomThemeViewModel,
-    galleryLauncher: androidx.activity.compose.ManagedActivityResultLauncher<String, Uri?>,
+    galleryLauncher: ManagedActivityResultLauncher<String, Uri?>,
     colorScheme: ColorScheme
 ) {
+
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+
         Button(
-            onClick = { galleryLauncher.launch("image/*") },
-            modifier = Modifier.fillMaxWidth(),
+            onClick = {
+                galleryLauncher.launch("image/*")
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorScheme.primary
+                containerColor = colorScheme.primary,
+                contentColor = colorScheme.onPrimary
             )
         ) {
-            Icon(Icons.Rounded.PhotoLibrary, contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.wallpaper_select_from_gallery))
+
+            Icon(
+                Icons.Rounded.PhotoLibrary,
+                contentDescription = null
+            )
+
+            Spacer(
+                Modifier.width(9.dp)
+            )
+
+            Text(
+                stringResource(
+                    R.string.wallpaper_select_from_gallery
+                ),
+                fontWeight = FontWeight.SemiBold
+            )
         }
 
-        if (config.wallpaperUri != null) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        AnimatedVisibility(
+            visible = config.wallpaperUri != null,
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut()
+        ) {
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                AsyncImage(
-                    model = Uri.parse(config.wallpaperUri),
-                    contentDescription = stringResource(R.string.custom_theme_selected_wallpaper),
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(210.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 3.dp
+                    )
+                ) {
+
+                    AsyncImage(
+                        model = Uri.parse(
+                            config.wallpaperUri
+                        ),
+                        contentDescription = stringResource(
+                            R.string.custom_theme_selected_wallpaper
+                        ),
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                TextButton(
+                    onClick = {
+                        viewModel.resetWallpaper()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = colorScheme.error
+                    )
+                ) {
+
+                    Icon(
+                        Icons.Rounded.Delete,
+                        contentDescription = null
+                    )
+
+                    Spacer(
+                        Modifier.width(7.dp)
+                    )
+
+                    Text(
+                        stringResource(
+                            R.string.custom_theme_remove_wallpaper
+                        )
+                    )
+                }
             }
-            
-            // Botão para remover
-            TextButton(
-    onClick = { viewModel.resetWallpaper() },
-    modifier = Modifier.fillMaxWidth(),
-    colors = ButtonDefaults.textButtonColors(
-        contentColor = colorScheme.error
-    )
-) {
-    Icon(Icons.Rounded.Delete, contentDescription = null)
-    Spacer(Modifier.width(8.dp))
-    Text(stringResource(R.string.custom_theme_remove_wallpaper))
-}
         }
     }
 }
 
-// ==================== SERVER WALLPAPER CONTENT ====================
+// ============================================================
+// SERVER WALLPAPER
+// ============================================================
 
 @Composable
 private fun ServerWallpaperContent(
@@ -581,83 +919,175 @@ private fun ServerWallpaperContent(
     onCategoryChange: (WallpaperCategory) -> Unit,
     colorScheme: ColorScheme
 ) {
+
     Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+
         Text(
-            stringResource(R.string.wallpaper_server_subtitle),
+            text = stringResource(
+                R.string.wallpaper_server_subtitle
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = colorScheme.onSurfaceVariant
         )
 
+        // ----------------------------------------------------
         // Categorias
+        // ----------------------------------------------------
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
+                .horizontalScroll(
+                    rememberScrollState()
+                ),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+
             WallpaperCategory.entries.forEach { category ->
-                val isSelected = selectedCategory == category
+
+                val isSelected =
+                    selectedCategory == category
+
                 FilterChip(
                     selected = isSelected,
-                    onClick = { onCategoryChange(category) },
+                    onClick = {
+                        onCategoryChange(category)
+                    },
                     label = {
+
                         Text(
                             when (category) {
-                                WallpaperCategory.ALL -> stringResource(R.string.wallpaper_category_all)
-                                WallpaperCategory.CARR -> stringResource(R.string.wallpaper_category_cars)
-                                WallpaperCategory.ANIME -> stringResource(R.string.wallpaper_category_anime)
-                                WallpaperCategory.SPACE -> stringResource(R.string.wallpaper_category_space)
-                                WallpaperCategory.NEON -> stringResource(R.string.wallpaper_category_neon)
-                                WallpaperCategory.OTRS -> stringResource(R.string.wallpaper_category_others)
+
+                                WallpaperCategory.ALL ->
+                                    stringResource(
+                                        R.string.wallpaper_category_all
+                                    )
+
+                                WallpaperCategory.CARR ->
+                                    stringResource(
+                                        R.string.wallpaper_category_cars
+                                    )
+
+                                WallpaperCategory.ANIME ->
+                                    stringResource(
+                                        R.string.wallpaper_category_anime
+                                    )
+
+                                WallpaperCategory.SPACE ->
+                                    stringResource(
+                                        R.string.wallpaper_category_space
+                                    )
+
+                                WallpaperCategory.NEON ->
+                                    stringResource(
+                                        R.string.wallpaper_category_neon
+                                    )
+
+                                WallpaperCategory.OTRS ->
+                                    stringResource(
+                                        R.string.wallpaper_category_others
+                                    )
                             }
                         )
                     },
+                    leadingIcon = if (isSelected) {
+
+                        {
+                            Icon(
+                                Icons.Rounded.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
+
+                    } else {
+                        null
+                    },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = colorScheme.primary,
-                        selectedLabelColor = colorScheme.onPrimary
+                        selectedContainerColor =
+                            colorScheme.primary,
+                        selectedLabelColor =
+                            colorScheme.onPrimary,
+                        selectedLeadingIconColor =
+                            colorScheme.onPrimary
                     )
                 )
             }
         }
 
+        // ----------------------------------------------------
         // Wallpapers
-        val wallpapers = WALLPAPER_CATEGORIES[selectedCategory] ?: emptyList()
-        
-        if (wallpapers.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    stringResource(R.string.wallpaper_no_wallpapers),
-                    color = colorScheme.onSurfaceVariant
-                )
-            }
-        } else {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-            ) {
-                items(wallpapers) { url ->
-                    ServerWallpaperItem(
-                        url = url,
-                        isSelected = config.wallpaperUrl == url,
-                        onSelect = { viewModel.setWallpaperFromServer(url) },
-                        colorScheme = colorScheme
+        // ----------------------------------------------------
+
+        val wallpapers =
+            WALLPAPER_CATEGORIES[selectedCategory]
+                ?: emptyList()
+
+        AnimatedContent(
+            targetState = wallpapers,
+            transitionSpec = {
+                fadeIn(tween(200)) with
+                        fadeOut(tween(120))
+            },
+            label = "wallpaper_list"
+        ) { currentWallpapers ->
+
+            if (currentWallpapers.isEmpty()) {
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+
+                    Text(
+                        text = stringResource(
+                            R.string.wallpaper_no_wallpapers
+                        ),
+                        color = colorScheme.onSurfaceVariant
                     )
+                }
+
+            } else {
+
+                LazyRow(
+                    horizontalArrangement =
+                        Arrangement.spacedBy(12.dp),
+                    contentPadding =
+                        PaddingValues(horizontal = 2.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(205.dp)
+                ) {
+
+                    items(
+                        items = currentWallpapers,
+                        key = { it }
+                    ) { url ->
+
+                        ServerWallpaperItem(
+                            url = url,
+                            isSelected =
+                                config.wallpaperUrl == url,
+                            onSelect = {
+                                viewModel
+                                    .setWallpaperFromServer(url)
+                            },
+                            colorScheme = colorScheme
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-// ==================== SERVER WALLPAPER ITEM ====================
+// ============================================================
+// SERVER WALLPAPER ITEM
+// ============================================================
 
 @Composable
 private fun ServerWallpaperItem(
@@ -666,128 +1096,356 @@ private fun ServerWallpaperItem(
     onSelect: () -> Unit,
     colorScheme: ColorScheme
 ) {
-    var isLoading by remember { mutableStateOf(true) }
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val itemScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy),
-        label = "server_item_scale"
+
+    var isLoading by remember {
+        mutableStateOf(true)
+    }
+
+    var hasError by remember {
+        mutableStateOf(false)
+    }
+
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    val isPressed by interactionSource
+        .collectIsPressedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = when {
+            isPressed -> 0.94f
+            isSelected -> 1.01f
+            else -> 1f
+        },
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "wallpaper_item_scale"
+    )
+
+    val borderWidth by animateDpAsState(
+        targetValue = if (isSelected) 3.dp else 0.dp,
+        animationSpec = tween(180),
+        label = "wallpaper_border"
     )
 
     Box(
         modifier = Modifier
-            .width(120.dp)
-            .height(180.dp)
-            .scale(itemScale)
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null
-            ) { onSelect() }
+            .width(130.dp)
+            .height(195.dp)
+            .scale(scale)
+            .clip(RoundedCornerShape(19.dp))
+            .background(colorScheme.surfaceVariant)
             .then(
                 if (isSelected) {
-                    Modifier.border(3.dp, colorScheme.primary, RoundedCornerShape(16.dp))
-                } else Modifier
+                    Modifier.border(
+                        width = borderWidth,
+                        color = colorScheme.primary,
+                        shape = RoundedCornerShape(19.dp)
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onSelect
             )
     ) {
+
         if (isLoading) {
+
             ShimmerLoading(
                 modifier = Modifier.fillMaxSize(),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(19.dp)
             )
         }
 
+        if (hasError) {
+
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+
+                Icon(
+                    Icons.Rounded.BrokenImage,
+                    contentDescription = null,
+                    tint = colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(35.dp)
+                )
+            }
+        }
+
         AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
+            model = ImageRequest.Builder(
+                LocalContext.current
+            )
                 .data(url)
-                .crossfade(true)
+                .crossfade(300)
                 .listener(
-                    onStart = { isLoading = true },
-                    onSuccess = { _, _ -> isLoading = false },
-                    onError = { _, _ -> isLoading = false }
+                    onStart = {
+                        isLoading = true
+                        hasError = false
+                    },
+                    onSuccess = { _, _ ->
+                        isLoading = false
+                        hasError = false
+                    },
+                    onError = { _, _ ->
+                        isLoading = false
+                        hasError = true
+                    }
                 )
                 .build(),
             contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(
+                    if (isLoading) 0f else 1f
+                ),
             contentScale = ContentScale.Crop
         )
 
-        if (isSelected) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.3f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Rounded.Check,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(32.dp)
+        // ----------------------------------------------------
+        // Gradiente
+        // ----------------------------------------------------
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.35f)
+                        )
+                    )
                 )
+        )
+
+        // ----------------------------------------------------
+        // Selecionado
+        // ----------------------------------------------------
+
+        AnimatedVisibility(
+            visible = isSelected,
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(
+                Alignment.Center
+            )
+        ) {
+
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = CircleShape,
+                color = colorScheme.primary
+            ) {
+
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
+
+                    Icon(
+                        Icons.Rounded.Check,
+                        contentDescription = null,
+                        tint = colorScheme.onPrimary,
+                        modifier = Modifier.size(27.dp)
+                    )
+                }
             }
         }
     }
 }
 
-// ==================== COMPONENTES REUTILIZÁVEIS ====================
+// ============================================================
+// EFEITOS
+// ============================================================
+
+@Composable
+private fun WallpaperEffects(
+    config: CustomThemeConfig,
+    viewModel: CustomThemeViewModel,
+    colorScheme: ColorScheme
+) {
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize()
+            .padding(top = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+
+        HorizontalDivider(
+            color = colorScheme.outlineVariant
+        )
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Surface(
+                modifier = Modifier.size(38.dp),
+                shape = CircleShape,
+                color = colorScheme.primaryContainer
+            ) {
+
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
+
+                    Icon(
+                        Icons.Rounded.Tune,
+                        contentDescription = null,
+                        tint = colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Spacer(
+                Modifier.width(10.dp)
+            )
+
+            Text(
+                text = stringResource(
+                    R.string.wallpaper_effects
+                ),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = colorScheme.onSurface
+            )
+        }
+
+        SliderWithLabel(
+            label = stringResource(
+                R.string.wallpaper_blur
+            ),
+            value = config.wallpaperBlur,
+            onValueChange = {
+                viewModel.setWallpaperBlur(it)
+            },
+            valueRange = 0f..1f,
+            colorScheme = colorScheme
+        )
+
+        SliderWithLabel(
+            label = stringResource(
+                R.string.wallpaper_dim
+            ),
+            value = config.wallpaperDim,
+            onValueChange = {
+                viewModel.setWallpaperDim(it)
+            },
+            valueRange = 0f..0.8f,
+            colorScheme = colorScheme
+        )
+    }
+}
+
+// ============================================================
+// COLOR ITEM
+// ============================================================
 
 @Composable
 private fun ColorItem(
     color: Int,
     isSelected: Boolean,
     onColorSelected: (Int) -> Unit,
-    size: androidx.compose.ui.unit.Dp = 36.dp
+    size: Dp = 36.dp
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val itemScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.90f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy),
-        label = "color_item_scale"
+
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    val isPressed by interactionSource
+        .collectIsPressedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.88f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy
+        ),
+        label = "color_scale"
     )
+
     val borderWidth by animateDpAsState(
         targetValue = if (isSelected) 3.dp else 0.dp,
-        animationSpec = tween(durationMillis = 200),
-        label = "color_item_border"
+        animationSpec = tween(180),
+        label = "color_border"
     )
 
     Box(
         modifier = Modifier
             .size(size)
-            .scale(itemScale)
-            .clip(RoundedCornerShape(8.dp))
+            .scale(scale)
+            .clip(RoundedCornerShape(10.dp))
             .background(Color(color))
+            .then(
+                if (isSelected) {
+                    Modifier.border(
+                        borderWidth,
+                        Color.White,
+                        RoundedCornerShape(10.dp)
+                    )
+                } else {
+                    Modifier
+                }
+            )
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
-            ) { onColorSelected(color) }
-            .then(
-                if (isSelected) {
-                    Modifier.border(borderWidth, Color.White, RoundedCornerShape(8.dp))
-                } else Modifier
-            ),
+            ) {
+                onColorSelected(color)
+            },
         contentAlignment = Alignment.Center
     ) {
-        if (isSelected) {
-            AnimatedVisibility(
-                visible = true,
-                enter = fadeIn(animationSpec = tween(150)) + scaleIn(
-                    initialScale = 0.5f,
-                    animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy)
-                )
+
+        AnimatedVisibility(
+            visible = isSelected,
+            enter = fadeIn(tween(150)) +
+                    scaleIn(
+                        initialScale = 0.5f,
+                        animationSpec = spring(
+                            dampingRatio =
+                                Spring.DampingRatioMediumBouncy
+                        )
+                    ),
+            exit = fadeOut(tween(100))
+        ) {
+
+            Surface(
+                modifier = Modifier.size(24.dp),
+                shape = CircleShape,
+                color = Color.Black.copy(alpha = 0.18f)
             ) {
-                Icon(
-                    Icons.Rounded.Check,
-                    contentDescription = null,
-                    tint = Color(color).contrastTextColor(),
-                    modifier = Modifier.size(16.dp)
-                )
+
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
+
+                    Icon(
+                        Icons.Rounded.Check,
+                        contentDescription = null,
+                        tint = Color(color)
+                            .contrastTextColor(),
+                        modifier = Modifier.size(15.dp)
+                    )
+                }
             }
         }
     }
 }
+
+// ============================================================
+// SLIDER
+// ============================================================
 
 @Composable
 private fun SliderWithLabel(
@@ -797,22 +1455,42 @@ private fun SliderWithLabel(
     valueRange: ClosedFloatingPointRange<Float>,
     colorScheme: ColorScheme
 ) {
-    Column {
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement =
+                Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
+
             Text(
-                label,
-                style = MaterialTheme.typography.labelMedium,
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
                 color = colorScheme.onSurfaceVariant
             )
-            Text(
-                "${(value * 100).toInt()}%",
-                style = MaterialTheme.typography.labelMedium,
-                color = colorScheme.onSurface
-            )
+
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = colorScheme.surfaceVariant
+            ) {
+
+                Text(
+                    text = "${(value * 100).toInt()}%",
+                    modifier = Modifier.padding(
+                        horizontal = 8.dp,
+                        vertical = 4.dp
+                    ),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colorScheme.onSurface
+                )
+            }
         }
+
         Slider(
             value = value,
             onValueChange = onValueChange,
@@ -820,25 +1498,39 @@ private fun SliderWithLabel(
             modifier = Modifier.fillMaxWidth(),
             colors = SliderDefaults.colors(
                 thumbColor = colorScheme.primary,
-                activeTrackColor = colorScheme.primary
+                activeTrackColor = colorScheme.primary,
+                inactiveTrackColor =
+                    colorScheme.surfaceVariant
             )
         )
     }
 }
+
+// ============================================================
+// SHIMMER
+// ============================================================
 
 @Composable
 private fun ShimmerLoading(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(8.dp)
 ) {
-    val transition = rememberInfiniteTransition()
+
+    val transition = rememberInfiniteTransition(
+        label = "shimmer_transition"
+    )
+
     val shimmerState by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
+        initialValue = -1f,
+        targetValue = 2f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = FastOutSlowInEasing),
+            animation = tween(
+                durationMillis = 1200,
+                easing = FastOutSlowInEasing
+            ),
             repeatMode = RepeatMode.Restart
-        )
+        ),
+        label = "shimmer"
     )
 
     Box(
@@ -847,12 +1539,12 @@ private fun ShimmerLoading(
             .background(
                 Brush.horizontalGradient(
                     colors = listOf(
-                        Color.Gray.copy(alpha = 0.2f),
-                        Color.Gray.copy(alpha = 0.5f),
-                        Color.Gray.copy(alpha = 0.2f)
+                        Color.Gray.copy(alpha = 0.16f),
+                        Color.Gray.copy(alpha = 0.38f),
+                        Color.Gray.copy(alpha = 0.16f)
                     ),
-                    startX = shimmerState * 2f - 1f,
-                    endX = shimmerState * 2f + 1f
+                    startX = shimmerState * 500f,
+                    endX = shimmerState * 500f + 300f
                 )
             )
     )
