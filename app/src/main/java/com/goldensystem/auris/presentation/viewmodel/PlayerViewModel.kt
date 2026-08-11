@@ -3,6 +3,8 @@ package com.goldensystem.auris.presentation.viewmodel
 import android.annotation.SuppressLint
 import com.goldensystem.auris.data.repository.AurisOnlineRepository
 import android.app.Activity
+import com.goldensystem.auris.data.model.Playlist
+import com.goldensystem.auris.data.preferences.PlaylistPreferencesRepository
 import android.content.ComponentName
 import android.net.Uri
 import com.goldensystem.auris.data.gdrive.GDriveStreamProxy
@@ -224,6 +226,7 @@ class PlayerViewModel @Inject constructor(
     private val gdriveStreamProxy: GDriveStreamProxy,
     private val aurisOnlineRepository: AurisOnlineRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val playlistPreferencesRepository: PlaylistPreferencesRepository, 
     private val aiPreferencesRepository: AiPreferencesRepository,
     private val themePreferencesRepository: ThemePreferencesRepository,
     private val albumArtThemeDao: AlbumArtThemeDao,
@@ -4654,17 +4657,40 @@ internal fun areEquivalentArtworkUrisForSong(
 fun createPlaylist(name: String, songIds: List<String>) {
     viewModelScope.launch {
         try {
-            val songs = musicRepository.getSongsByIds(songIds).first()
-            
-            if (songs.isEmpty()) {
-                sendToast("Nenhuma música encontrada para criar a playlist")
+            if (name.isBlank()) {
+                sendToast("Nome da playlist não pode estar vazio")
                 return@launch
             }
             
-            // Toca as músicas (já que não tem repositório de playlists)
-            playSongs(songs, songs.first(), name)
+            if (songIds.isEmpty()) {
+                sendToast("Nenhuma música para adicionar")
+                return@launch
+            }
+
+            val songs = musicRepository.getSongsByIds(songIds).first()
             
+            if (songs.isEmpty()) {
+                sendToast("Nenhuma música encontrada")
+                return@launch
+            }
+
+            val playlist = Playlist(
+                id = java.util.UUID.randomUUID().toString(),
+                name = name,
+                songIds = songIds,
+                createdAt = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
+                source = "AI"
+            )
+
+            playlistPreferencesRepository.replaceAllPlaylists(
+                playlistPreferencesRepository.getPlaylistsOnce() + playlist
+            )
+
+            playSongs(songs, songs.first(), name)
+
             sendToast("✅ Playlist '$name' criada com ${songs.size} músicas!")
+            
         } catch (e: Exception) {
             sendToast("❌ Erro ao criar playlist: ${e.message}")
         }
