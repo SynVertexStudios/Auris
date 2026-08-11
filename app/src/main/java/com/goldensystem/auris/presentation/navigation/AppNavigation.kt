@@ -2,6 +2,8 @@
 
 package com.goldensystem.auris.presentation.navigation
 
+import com.goldensystem.auris.di.AiEntryPoint
+import dagger.hilt.android.EntryPointAccessors
 import com.goldensystem.auris.presentation.screens.WordDelimiterConfigScreen
 import com.goldensystem.auris.presentation.screens.CustomThemeScreen
 import com.goldensystem.auris.presentation.screens.CustomThemeSettingsScreen
@@ -257,7 +259,7 @@ fun AppNavigation(
                 }
             }
 
-            composable(
+composable(
     route = Screen.SettingsCategory.route,
     arguments = listOf(navArgument("categoryId") { type = NavType.StringType }),
     enterTransition = { enterTransition() },
@@ -265,14 +267,21 @@ fun AppNavigation(
     popEnterTransition = { popEnterTransition() },
     popExitTransition = { popExitTransition() },
 ) { backStackEntry ->
-    ScreenWrapper(navController = navController, playerViewModel = playerViewModel) {
+    ScreenWrapper(navController = navController, playerViewModel = playerViewModel) { 
         val categoryId = backStackEntry.arguments?.getString("categoryId")
         if (categoryId != null) {
+            // 👇 ADICIONE ESTA LINHA PARA PEGAR O AiOrchestrator
+            val context = LocalContext.current
+            val aiOrchestrator = EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                AiEntryPoint::class.java
+            ).aiOrchestrator()
+            
             SettingsCategoryScreen(
                 categoryId = categoryId,
                 navController = navController,
                 playerViewModel = playerViewModel,
-                aiOrchestrator = hiltViewModel(),  // 👈 SÓ ISSO
+                aiOrchestrator = aiOrchestrator,  // 👈 PASSA A INSTÂNCIA
                 onBackClick = { navController.popBackStack() }
             )
         }
