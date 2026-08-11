@@ -1,5 +1,16 @@
 package com.goldensystem.auris.presentation.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.outlined.ClearAll
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.rounded.Send
+import androidx.compose.material3.TextFieldDefaults
+import com.goldensystem.auris.data.ai.AiSystemPromptType
 import com.goldensystem.auris.presentation.navigation.navigateSafely
 import com.goldensystem.auris.presentation.components.BackupModuleSelectionDialog
 import com.goldensystem.auris.data.preferences.AiPreferencesRepository
@@ -1033,227 +1044,469 @@ fun SettingsCategoryScreen(
                                 )
                             }
                         }
-                        SettingsCategory.AI_INTEGRATION -> {
-                            // AI Provider Selection
-                            SettingsSubsection(title = stringResource(R.string.setcat_ai_provider_section)) {
-                                ThemeSelectorItem(
-                                    label = stringResource(R.string.setcat_ai_provider_label),
-                                    description = stringResource(R.string.setcat_ai_provider_desc),
-                                    options = com.goldensystem.auris.data.ai.provider.AiProvider.entries.associate { it.name to it.displayName },
-                                    selectedKey = aiProvider,
-                                    onSelectionChanged = { settingsViewModel.onAiProviderChange(it) },
-                                    leadingIcon = { Icon(Icons.Rounded.Science, null, tint = MaterialTheme.colorScheme.secondary) }
-                                )
-                                SwitchSettingItem(
-                                    title = stringResource(R.string.setcat_safe_token_title),
-                                    subtitle = if (uiState.isSafeTokenLimitEnabled) {
-                                        stringResource(R.string.setcat_safe_token_on)
-                                    } else {
-                                        stringResource(R.string.setcat_safe_token_off)
-                                    },
-                                    checked = uiState.isSafeTokenLimitEnabled,
-                                    onCheckedChange = { settingsViewModel.setSafeTokenLimitEnabled(it) },
-                                    leadingIcon = {
-                                        Icon(
-                                            painterResource(R.drawable.rounded_monitoring_24),
-                                            null,
-                                            tint = if (uiState.isSafeTokenLimitEnabled) MaterialTheme.colorScheme.primary
-                                                   else MaterialTheme.colorScheme.tertiary,
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                    }
-                                )
-                            }
-                            
-                            // Consolidated API Key Section
-                            SettingsSubsection(title = stringResource(R.string.setcat_credentials)) {
-                                val provider = com.goldensystem.auris.data.ai.provider.AiProvider.fromString(aiProvider)
-                                val sourceLabel = when(provider) {
-                                    com.goldensystem.auris.data.ai.provider.AiProvider.GEMINI -> stringResource(R.string.setcat_ai_source_gemini)
-                                    com.goldensystem.auris.data.ai.provider.AiProvider.DEEPSEEK -> stringResource(R.string.setcat_ai_source_deepseek)
-                                    com.goldensystem.auris.data.ai.provider.AiProvider.GROQ -> stringResource(R.string.setcat_ai_source_groq)
-                                    com.goldensystem.auris.data.ai.provider.AiProvider.MISTRAL -> stringResource(R.string.setcat_ai_source_mistral)
-                                    com.goldensystem.auris.data.ai.provider.AiProvider.NVIDIA -> stringResource(R.string.setcat_ai_source_nvidia)
-                                    com.goldensystem.auris.data.ai.provider.AiProvider.KIMI -> stringResource(R.string.setcat_ai_source_kimi)
-                                    com.goldensystem.auris.data.ai.provider.AiProvider.GLM -> stringResource(R.string.setcat_ai_source_glm)
-                                    com.goldensystem.auris.data.ai.provider.AiProvider.OPENAI -> stringResource(R.string.setcat_ai_source_openai)
-                                    com.goldensystem.auris.data.ai.provider.AiProvider.OPENROUTER -> "OpenRouter (openrouter.ai)"
-                                }
-                                
-                                AiApiKeyItem(
-                                    apiKey = currentAiApiKey,
-                                    onApiKeySave = { settingsViewModel.onAiApiKeyChange(it) },
-                                    title = stringResource(R.string.setcat_ai_api_key_title, provider.displayName),
-                                    subtitle = stringResource(R.string.setcat_ai_api_key_subtitle, sourceLabel)
-                                )
-                            }
+                      SettingsCategory.AI_INTEGRATION -> {
+    // AI Provider Selection
+    SettingsSubsection(title = stringResource(R.string.setcat_ai_provider_section)) {
+        ThemeSelectorItem(
+            label = stringResource(R.string.setcat_ai_provider_label),
+            description = stringResource(R.string.setcat_ai_provider_desc),
+            options = com.goldensystem.auris.data.ai.provider.AiProvider.entries.associate { it.name to it.displayName },
+            selectedKey = aiProvider,
+            onSelectionChanged = { settingsViewModel.onAiProviderChange(it) },
+            leadingIcon = { Icon(Icons.Rounded.Science, null, tint = MaterialTheme.colorScheme.secondary) }
+        )
+        SwitchSettingItem(
+            title = stringResource(R.string.setcat_safe_token_title),
+            subtitle = if (uiState.isSafeTokenLimitEnabled) {
+                stringResource(R.string.setcat_safe_token_on)
+            } else {
+                stringResource(R.string.setcat_safe_token_off)
+            },
+            checked = uiState.isSafeTokenLimitEnabled,
+            onCheckedChange = { settingsViewModel.setSafeTokenLimitEnabled(it) },
+            leadingIcon = {
+                Icon(
+                    painterResource(R.drawable.rounded_monitoring_24),
+                    null,
+                    tint = if (uiState.isSafeTokenLimitEnabled) MaterialTheme.colorScheme.primary
+                           else MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        )
+    }
+    
+    // Consolidated API Key Section
+    SettingsSubsection(title = stringResource(R.string.setcat_credentials)) {
+        val provider = com.goldensystem.auris.data.ai.provider.AiProvider.fromString(aiProvider)
+        val sourceLabel = when(provider) {
+            com.goldensystem.auris.data.ai.provider.AiProvider.GEMINI -> stringResource(R.string.setcat_ai_source_gemini)
+            com.goldensystem.auris.data.ai.provider.AiProvider.DEEPSEEK -> stringResource(R.string.setcat_ai_source_deepseek)
+            com.goldensystem.auris.data.ai.provider.AiProvider.GROQ -> stringResource(R.string.setcat_ai_source_groq)
+            com.goldensystem.auris.data.ai.provider.AiProvider.MISTRAL -> stringResource(R.string.setcat_ai_source_mistral)
+            com.goldensystem.auris.data.ai.provider.AiProvider.NVIDIA -> stringResource(R.string.setcat_ai_source_nvidia)
+            com.goldensystem.auris.data.ai.provider.AiProvider.KIMI -> stringResource(R.string.setcat_ai_source_kimi)
+            com.goldensystem.auris.data.ai.provider.AiProvider.GLM -> stringResource(R.string.setcat_ai_source_glm)
+            com.goldensystem.auris.data.ai.provider.AiProvider.OPENAI -> stringResource(R.string.setcat_ai_source_openai)
+            com.goldensystem.auris.data.ai.provider.AiProvider.OPENROUTER -> "OpenRouter (openrouter.ai)"
+        }
+        
+        AiApiKeyItem(
+            apiKey = currentAiApiKey,
+            onApiKeySave = { settingsViewModel.onAiApiKeyChange(it) },
+            title = stringResource(R.string.setcat_ai_api_key_title, provider.displayName),
+            subtitle = stringResource(R.string.setcat_ai_api_key_subtitle, sourceLabel)
+        )
+    }
 
-                            // Model Selection Section
-                            if (currentAiApiKey.isNotBlank()) {
-                                SettingsSubsection(title = stringResource(R.string.setcat_model_selection)) {
-                                    if (uiState.isLoadingModels) {
-                                        Surface(
-                                            color = MaterialTheme.colorScheme.surfaceContainer,
-                                            shape = RoundedCornerShape(10.dp),
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.padding(16.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                            ) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier.size(24.dp),
-                                                    strokeWidth = 2.dp
-                                                )
-                                                Text(
-                                                    text = stringResource(R.string.setcat_loading_models),
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                        }
-                                    } else if (uiState.modelsFetchError != null) {
-                                        Surface(
-                                            color = MaterialTheme.colorScheme.errorContainer,
-                                            shape = RoundedCornerShape(10.dp),
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Text(
-                                                text = uiState.modelsFetchError ?: stringResource(R.string.models_fetch_failed),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.onErrorContainer,
-                                                modifier = Modifier.padding(16.dp)
-                                            )
-                                        }
-                                    } else if (uiState.availableModels.isNotEmpty()) {
-                                        ThemeSelectorItem(
-                                            label = stringResource(R.string.setcat_ai_model_label),
-                                            description = stringResource(R.string.setcat_ai_model_desc),
-                                            options = uiState.availableModels.associate { it.name to it.displayName },
-                                            selectedKey = currentAiModel.ifEmpty { uiState.availableModels.firstOrNull()?.name ?: "" },
-                                            onSelectionChanged = { settingsViewModel.onAiModelChange(it) },
-                                            leadingIcon = { Icon(Icons.Rounded.Science, null, tint = MaterialTheme.colorScheme.secondary) }
-                                        )
-                                    }
-                                }
-                            }
+    // Model Selection Section
+    if (currentAiApiKey.isNotBlank()) {
+        SettingsSubsection(title = stringResource(R.string.setcat_model_selection)) {
+            if (uiState.isLoadingModels) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Text(
+                            text = stringResource(R.string.setcat_loading_models),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else if (uiState.modelsFetchError != null) {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = uiState.modelsFetchError ?: stringResource(R.string.models_fetch_failed),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            } else if (uiState.availableModels.isNotEmpty()) {
+                ThemeSelectorItem(
+                    label = stringResource(R.string.setcat_ai_model_label),
+                    description = stringResource(R.string.setcat_ai_model_desc),
+                    options = uiState.availableModels.associate { it.name to it.displayName },
+                    selectedKey = currentAiModel.ifEmpty { uiState.availableModels.firstOrNull()?.name ?: "" },
+                    onSelectionChanged = { settingsViewModel.onAiModelChange(it) },
+                    leadingIcon = { Icon(Icons.Rounded.Science, null, tint = MaterialTheme.colorScheme.secondary) }
+                )
+            }
+        }
+    }
 
-                            // Prompt Behavior Section
-                            SettingsSubsection(
-                                title = stringResource(R.string.setcat_prompt_behavior),
-                                addBottomSpace = false
+    // Prompt Behavior Section
+    SettingsSubsection(
+        title = stringResource(R.string.setcat_prompt_behavior),
+        addBottomSpace = false
+    ) {
+        AiSystemPromptItem(
+            systemPrompt = currentAiSystemPrompt,
+            defaultPrompt = com.goldensystem.auris.data.preferences.AiPreferencesRepository.DEFAULT_SYSTEM_PROMPT,
+            onSystemPromptSave = { settingsViewModel.onAiSystemPromptChange(it) },
+            onReset = { settingsViewModel.resetAiSystemPrompt() },
+            title = stringResource(R.string.setcat_system_prompt_title),
+            subtitle = stringResource(R.string.setcat_system_prompt_subtitle)
+        )
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // ========== NOVA SEÇÃO: ASSISTENTE AI CHAT ==========
+    SettingsSubsection(
+        title = "💬 Assistente AI",
+        addBottomSpace = false
+    ) {
+        // Estados locais
+        var userPrompt by remember { mutableStateOf("") }
+        var aiResponse by remember { mutableStateOf("") }
+        var isGenerating by remember { mutableStateOf(false) }
+        var selectedType by remember { mutableStateOf(AiSystemPromptType.GENERAL) }
+        val coroutineScope = rememberCoroutineScope()
+        
+        // Obtém o orchestrator via hilt
+        val aiOrchestrator: com.goldensystem.auris.data.ai.AiOrchestrator = hiltViewModel()
+        
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Seletor de tipo de tarefa
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Tarefa:",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    // Chips de tipo
+                    val types = listOf(
+                        AiSystemPromptType.GENERAL to "Geral",
+                        AiSystemPromptType.PLAYLIST to "Playlist",
+                        AiSystemPromptType.METADATA to "Metadados",
+                        AiSystemPromptType.TAGGING to "Tags",
+                        AiSystemPromptType.MOOD_ANALYSIS to "Humor",
+                        AiSystemPromptType.PERSONA to "Persona"
+                    )
+                    
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        types.forEach { (type, label) ->
+                            val isSelected = selectedType == type
+                            Surface(
+                                onClick = { selectedType = type },
+                                shape = RoundedCornerShape(16.dp),
+                                color = if (isSelected) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceContainerHigh
+                                },
+                                modifier = Modifier.clickable { selectedType = type }
                             ) {
-                                AiSystemPromptItem(
-                                    systemPrompt = currentAiSystemPrompt,
-                                    defaultPrompt = com.goldensystem.auris.data.preferences.AiPreferencesRepository.DEFAULT_SYSTEM_PROMPT,
-                                    onSystemPromptSave = { settingsViewModel.onAiSystemPromptChange(it) },
-                                    onReset = { settingsViewModel.resetAiSystemPrompt() },
-                                    title = stringResource(R.string.setcat_system_prompt_title),
-                                    subtitle = stringResource(R.string.setcat_system_prompt_subtitle)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            SettingsSubsection(title = stringResource(R.string.setcat_ai_usage_report)) {
-                                val recentAiUsage by settingsViewModel.recentAiUsage.collectAsStateWithLifecycle()
-                                val totalPromptTokens by settingsViewModel.totalPromptTokens.collectAsStateWithLifecycle()
-                                val totalOutputTokens by settingsViewModel.totalOutputTokens.collectAsStateWithLifecycle()
-                                val totalThoughtTokens by settingsViewModel.totalThoughtTokens.collectAsStateWithLifecycle()
-
-                                val totalTokens = totalPromptTokens + totalOutputTokens + totalThoughtTokens
-                                val totalTokStr = String.format(Locale.US, "%,d", totalTokens)
-                                val promptTokStr = String.format(Locale.US, "%,d", totalPromptTokens)
-                                val outputTokStr = String.format(Locale.US, "%,d", totalOutputTokens)
-                                val thoughtTokStr = String.format(Locale.US, "%,d", totalThoughtTokens)
-
-                                ActionSettingsItem(
-                                    title = stringResource(R.string.setcat_total_consumption_title),
-                                    subtitle = stringResource(
-                                        R.string.setcat_ai_usage_tokens_subtitle,
-                                        totalTokStr,
-                                        promptTokStr,
-                                        outputTokStr,
-                                        thoughtTokStr
-                                    ),
-                                    icon = {
-                                        Icon(
-                                            painter = painterResource(R.drawable.rounded_monitoring_24),
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.tertiary
-                                        )
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (isSelected) {
+                                        MaterialTheme.colorScheme.onPrimaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
                                     },
-                                    primaryActionLabel = stringResource(R.string.setcat_ai_clear_logs),
-                                    onPrimaryAction = { settingsViewModel.clearAiUsageData() }
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                                 )
-
-                                if (recentAiUsage.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    var expanded by remember { mutableStateOf(false) }
-                                    val rotation by animateFloatAsState(targetValue = if (expanded) 180f else 0f)
-                                    
-                                    Surface(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable { expanded = !expanded },
-                                        color = Color.Transparent
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(vertical = 8.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.rounded_monitoring_24),
-                                                    contentDescription = null,
-                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    modifier = Modifier.size(20.dp)
-                                                )
-                                                Spacer(modifier = Modifier.width(12.dp))
-                                                Text(
-                                                    text = stringResource(R.string.setcat_ai_activity_log_title, recentAiUsage.size),
-                                                    style = MaterialTheme.typography.titleMedium.copy(fontFamily = GoogleSansRounded),
-                                                    color = MaterialTheme.colorScheme.onSurface
-                                                )
-                                            }
-                                            Icon(
-                                                imageVector = Icons.Rounded.ExpandMore,
-                                                contentDescription = if (expanded) stringResource(R.string.cd_hide) else stringResource(R.string.cd_show),
-                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                modifier = Modifier.rotate(rotation)
-                                            )
-                                        }
-                                    }
-
-                                    AnimatedVisibility(
-                                        visible = expanded,
-                                        enter = expandVertically() + fadeIn(),
-                                        exit = shrinkVertically() + fadeOut()
-                                    ) {
-                                        Column(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(top = 8.dp, bottom = 8.dp)
-                                        ) {
-                                            val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())
-                                            val groupedUsage = recentAiUsage.groupBy { 
-                                                dateFormat.format(Date(it.timestamp)) 
-                                            }
-
-                                            groupedUsage.forEach { (date, items) ->
-                                                AiUsageDateHeader(date = date)
-                                                items.forEach { usage ->
-                                                    AiUsageLogItem(usage = usage)
-                                                }
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                            }
-                                        }
-                                    }
-                                }
                             }
                         }
+                    }
+                }
+                
+                // Campo de input
+                OutlinedTextField(
+                    value = userPrompt,
+                    onValueChange = { userPrompt = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { 
+                        Text(
+                            "Digite seu prompt...",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    enabled = !isGenerating,
+                    minLines = 2,
+                    maxLines = 5,
+                    trailingIcon = {
+                        FilledIconButton(
+                            onClick = {
+                                if (userPrompt.isNotBlank() && !isGenerating) {
+                                    isGenerating = true
+                                    aiResponse = ""
+                                    
+                                    coroutineScope.launch {
+                                        try {
+                                            val response = aiOrchestrator.generateContent(
+                                                prompt = userPrompt,
+                                                type = selectedType,
+                                                temperature = 0.7f
+                                            )
+                                            
+                                            aiResponse = response
+                                        } catch (e: Exception) {
+                                            aiResponse = "❌ Erro: ${e.message ?: "Falha ao gerar"}"
+                                        } finally {
+                                            isGenerating = false
+                                        }
+                                    }
+                                }
+                            },
+                            enabled = userPrompt.isNotBlank() && !isGenerating,
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            ),
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            if (isGenerating) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Rounded.Send,
+                                    contentDescription = "Enviar",
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                        unfocusedIndicatorColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                )
+                
+                // Resposta da IA
+                if (aiResponse.isNotEmpty() || isGenerating) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "🤖 Resposta:",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                
+                                if (aiResponse.isNotEmpty() && !isGenerating) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        IconButton(
+                                            onClick = {
+                                                // Copiar resposta
+                                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                                val clip = ClipData.newPlainText("AI Response", aiResponse)
+                                                clipboard.setPrimaryClip(clip)
+                                                Toast.makeText(context, "Copiado!", Toast.LENGTH_SHORT).show()
+                                            },
+                                            modifier = Modifier.size(32.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Outlined.ContentCopy,
+                                                contentDescription = "Copiar",
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                        
+                                        IconButton(
+                                            onClick = {
+                                                // Limpar resposta
+                                                aiResponse = ""
+                                                userPrompt = ""
+                                            },
+                                            modifier = Modifier.size(32.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Outlined.ClearAll,
+                                                contentDescription = "Limpar",
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            if (isGenerating) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                    Text(
+                                        text = "Gerando resposta...",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            } else {
+                                Text(
+                                    text = aiResponse,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // ========== FIM NOVA SEÇÃO ==========
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    // Usage Report Section
+    SettingsSubsection(title = stringResource(R.string.setcat_ai_usage_report)) {
+        val recentAiUsage by settingsViewModel.recentAiUsage.collectAsStateWithLifecycle()
+        val totalPromptTokens by settingsViewModel.totalPromptTokens.collectAsStateWithLifecycle()
+        val totalOutputTokens by settingsViewModel.totalOutputTokens.collectAsStateWithLifecycle()
+        val totalThoughtTokens by settingsViewModel.totalThoughtTokens.collectAsStateWithLifecycle()
+
+        val totalTokens = totalPromptTokens + totalOutputTokens + totalThoughtTokens
+        val totalTokStr = String.format(Locale.US, "%,d", totalTokens)
+        val promptTokStr = String.format(Locale.US, "%,d", totalPromptTokens)
+        val outputTokStr = String.format(Locale.US, "%,d", totalOutputTokens)
+        val thoughtTokStr = String.format(Locale.US, "%,d", totalThoughtTokens)
+
+        ActionSettingsItem(
+            title = stringResource(R.string.setcat_total_consumption_title),
+            subtitle = stringResource(
+                R.string.setcat_ai_usage_tokens_subtitle,
+                totalTokStr,
+                promptTokStr,
+                outputTokStr,
+                thoughtTokStr
+            ),
+            icon = {
+                Icon(
+                    painter = painterResource(R.drawable.rounded_monitoring_24),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.tertiary
+                )
+            },
+            primaryActionLabel = stringResource(R.string.setcat_ai_clear_logs),
+            onPrimaryAction = { settingsViewModel.clearAiUsageData() }
+        )
+
+        if (recentAiUsage.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            var expanded by remember { mutableStateOf(false) }
+            val rotation by animateFloatAsState(targetValue = if (expanded) 180f else 0f)
+            
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded },
+                color = Color.Transparent
+            ) {
+                Row(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(R.drawable.rounded_monitoring_24),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = stringResource(R.string.setcat_ai_activity_log_title, recentAiUsage.size),
+                            style = MaterialTheme.typography.titleMedium.copy(fontFamily = GoogleSansRounded),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Rounded.ExpandMore,
+                        contentDescription = if (expanded) stringResource(R.string.cd_hide) else stringResource(R.string.cd_show),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.rotate(rotation)
+                    )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 8.dp)
+                ) {
+                    val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())
+                    val groupedUsage = recentAiUsage.groupBy { 
+                        dateFormat.format(Date(it.timestamp)) 
+                    }
+
+                    groupedUsage.forEach { (date, items) ->
+                        AiUsageDateHeader(date = date)
+                        items.forEach { usage ->
+                            AiUsageLogItem(usage = usage)
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+            }
+        }
+    }
+}
                         SettingsCategory.BACKUP_RESTORE -> {
                             if (!uiState.backupInfoDismissed) {
                                 BackupInfoNoticeCard(

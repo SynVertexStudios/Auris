@@ -271,23 +271,7 @@ class CastStateHolder @Inject constructor(
 
     private fun updateRoutes() {
     val allRoutes = mediaRouter.routes.distinctBy { it.id }
-    
-    // 👇 MOSTRA UM TOAST NA TELA
-    android.widget.Toast.makeText(
-        context, 
-        "Rotas encontradas: ${allRoutes.size}", 
-        android.widget.Toast.LENGTH_LONG
-    ).show()
-    
-    // 👇 MOSTRA O NOME DE CADA ROTA
-    allRoutes.forEach { route ->
-        android.widget.Toast.makeText(
-            context, 
-            "Rota: ${route.name}", 
-            android.widget.Toast.LENGTH_SHORT
-        ).show()
-    }
-    
+
     _castRoutes.value = allRoutes
 }
 

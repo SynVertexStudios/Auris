@@ -261,7 +261,7 @@ fun WallpaperScreen(
                     colorScheme = colorScheme
                 )
             }
-        Spacer(modifier = Modifier.height(80.dp))
+        Spacer(modifier = Modifier.height(50.dp))
         }
     }
 }
