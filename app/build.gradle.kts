@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.baselineprofile)
     id("kotlin-parcelize")
-    id("kotlin-kapt")          // necessário para outras libs (Room não, pq usa ksp, mas deixe)
+    id("kotlin-kapt")
     id("com.google.gms.google-services")
 }
 
@@ -21,7 +21,6 @@ val enableComposeCompilerReports = providers.gradleProperty("Auris.enableCompose
     .map(String::toBoolean)
     .get()
 
-// 🔥 NOVA VARIÁVEL ADICIONADA AQUI
 val appVersionCode = (project.findProperty("APP_VERSION_CODE") as String).toInt()
 
 android {
@@ -60,7 +59,6 @@ android {
         applicationId = "com.goldensystem.auris"
         minSdk = 29
         targetSdk = 35
-        // 🔥 TROCADO PARA USAR A VARIÁVEL
         versionCode = appVersionCode
         versionName = project.findProperty("APP_VERSION_NAME") as String
 
@@ -68,31 +66,31 @@ android {
     }
 
     signingConfigs {
-        // 🔥 CONFIGURAÇÃO DE DEBUG AGORA USA O MESMO KEYSTORE DO RELEASE EM CI
-        create("debug") {
+        // O AGP já cria o "debug" automaticamente.
+        // Aqui apenas reutilizamos essa configuração.
+        getByName("debug") {
             if (System.getenv("CI") == "true") {
-                // No CI (GitHub Actions), usa release keystore
                 storeFile = file("my-release-key.keystore")
-                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "Saymonsil098"
-                keyAlias = System.getenv("KEY_ALIAS") ?: "auris"
-                keyPassword = System.getenv("KEY_PASSWORD") ?: "Saymonsil098"
-            } else {
-                // Localmente, usa debug keystore padrão
-                storeFile = file("debug.keystore")
-                storePassword = "android"
-                keyAlias = "androiddebugkey"
-                keyPassword = "android"
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                    ?: error("KEYSTORE_PASSWORD não configurada")
+                keyAlias = System.getenv("KEY_ALIAS")
+                    ?: error("KEY_ALIAS não configurado")
+                keyPassword = System.getenv("KEY_PASSWORD")
+                    ?: error("KEY_PASSWORD não configurada")
             }
         }
-        
+
         create("release") {
             storeFile = file("my-release-key.keystore")
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "Saymonsil098"
-            keyAlias = System.getenv("KEY_ALIAS") ?: "auris"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: "Saymonsil098"
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+                ?: error("KEYSTORE_PASSWORD não configurada")
+            keyAlias = System.getenv("KEY_ALIAS")
+                ?: error("KEY_ALIAS não configurado")
+            keyPassword = System.getenv("KEY_PASSWORD")
+                ?: error("KEY_PASSWORD não configurada")
         }
-        
-        // Mantido para compatibilidade (opcional)
+
+        // Mantido para compatibilidade.
         create("fixedDebug") {
             storeFile = file("debug.keystore")
             storePassword = "android"
@@ -104,21 +102,23 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".beta"
-            // 🔥 TROCADO PARA INCLUIR O VERSION CODE
             versionNameSuffix = ".$appVersionCode-beta"
-            // 🔥 AGORA USA A ASSINATURA DE DEBUG (que em CI usa release keystore)
             signingConfig = signingConfigs.getByName("debug")
         }
+
         release {
             isDebuggable = false
             isMinifyEnabled = true
             isShrinkResources = true
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
             signingConfig = signingConfigs.getByName("release")
         }
+
         create("benchmark") {
             initWith(getByName("release"))
             signingConfig = signingConfigs.getByName("debug")
@@ -144,16 +144,19 @@ android {
 
     kotlinOptions {
         jvmTarget = "11"
+
         if (enableComposeCompilerReports) {
             freeCompilerArgs += listOf(
                 "-P",
                 "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=${project.layout.buildDirectory.get().asFile.absolutePath}/compose_compiler_reports"
             )
+
             freeCompilerArgs += listOf(
                 "-P",
                 "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=${project.layout.buildDirectory.get().asFile.absolutePath}/compose_compiler_metrics"
             )
         }
+
         freeCompilerArgs += listOf(
             "-P",
             "plugin:androidx.compose.compiler.plugins.kotlin:stabilityConfigurationPath=${project.rootDir.absolutePath}/app/compose_stability.conf"
@@ -162,6 +165,7 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
+
         unitTests.all {
             it.useJUnitPlatform()
         }
@@ -171,6 +175,7 @@ android {
         abi {
             isEnable = enableAbiSplits
             reset()
+
             if (enableAbiSplits) {
                 include("arm64-v8a", "armeabi-v7a")
                 isUniversalApk = true
@@ -182,9 +187,11 @@ android {
         abi {
             enableSplit = true
         }
+
         density {
             enableSplit = true
         }
+
         language {
             enableSplit = true
         }
@@ -193,6 +200,7 @@ android {
 
 composeCompiler {
     enableStrongSkippingMode = true
+
     featureFlags = setOf(
         org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag.OptimizeNonSkippingGroups
     )
@@ -208,13 +216,21 @@ kapt {
     correctErrorTypes = true
 }
 
+// O warning do Baseline Profile não impede o build.
+// Esta configuração apenas desativa o aviso sobre a versão do AGP.
+baselineProfile {
+    warnings {
+        maxAgpVersion = false
+    }
+}
+
 dependencies {
 
-    //google firebase
+    // Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.15.0"))
     implementation("com.google.firebase:firebase-analytics")
-    
-    //implementatinos
+
+    // Implementations
     implementation(libs.androidx.profileinstaller)
     implementation("com.google.zxing:core:3.5.3")
     implementation(libs.androidx.paging.common)
@@ -235,12 +251,12 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.generativeai)
     implementation(libs.androidx.navigation.runtime.ktx)
+
+    // Tests
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.junit.jupiter.params)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testImplementation(libs.junit)
-    testImplementation(libs.junit.jupiter.api)
-    testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.junit.vintage.engine)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.4")
     testImplementation(libs.kotlinx.coroutines.test)
@@ -251,6 +267,8 @@ dependencies {
     testImplementation(libs.androidx.junit)
     testImplementation(libs.androidx.room.testing)
     testImplementation(libs.kotlin.test.junit)
+
+    // Android Tests
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -260,22 +278,21 @@ dependencies {
     androidTestImplementation("androidx.work:work-testing:2.10.1")
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(libs.androidx.benchmark.macro.junit4)
+    androidTestImplementation(libs.androidx.uiautomator)
+
     debugImplementation(platform(libs.androidx.compose.bom))
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    androidTestImplementation(libs.androidx.benchmark.macro.junit4)
-    androidTestImplementation(libs.androidx.uiautomator)
-
-    // ==================== HILT (USANDO KSP, NÃO KAPT) ====================
+    // Hilt
     implementation(libs.hilt.android)
-    ksp(libs.hilt.android.compiler)          // <-- trocado de kapt para ksp
+    ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.hilt.work)
-    ksp(libs.androidx.hilt.compiler)          // <-- trocado de kapt para ksp
-    // ====================================================================
+    ksp(libs.androidx.hilt.compiler)
 
-    // Room (já usa ksp, ok)
+    // Room
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
@@ -299,7 +316,7 @@ dependencies {
     // Work
     implementation(libs.androidx.work.runtime.ktx)
 
-    // Smooth corners shape
+    // Smooth corners
     implementation(libs.smooth.corner.rect.android.compose)
     implementation(libs.androidx.graphics.shapes)
 
@@ -321,7 +338,7 @@ dependencies {
         exclude(group = "androidx.compose.ui")
     }
 
-    // Reorderable List/Drag and Drop
+    // Reorderable
     implementation(libs.reorderables)
 
     // CodeView
@@ -330,7 +347,7 @@ dependencies {
     // AppCompat
     implementation(libs.androidx.appcompat)
 
-    // Media3 ExoPlayer
+    // Media3 / ExoPlayer
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.media3.session)
@@ -338,10 +355,10 @@ dependencies {
     implementation(libs.google.play.services.cast.framework)
     implementation(libs.androidx.media3.exoplayer.ffmpeg)
 
-    // Palette API
+    // Palette
     implementation(libs.androidx.palette.ktx)
 
-    // Core Splashscreen
+    // Splashscreen
     implementation(libs.androidx.core.splashscreen)
 
     // ConstraintLayout
@@ -357,7 +374,7 @@ dependencies {
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.material.icons.extended)
 
-    // Material library
+    // Material
     implementation(libs.material)
 
     // Kotlin Collections
@@ -369,24 +386,24 @@ dependencies {
     // Audio editing
     implementation(libs.androidx.media3.transformer)
 
-    // Checker framework
+    // Checker
     implementation(libs.checker.qual)
 
     // Timber
     implementation(libs.timber)
 
-    // TagLib
+    // TagLib / Audio
     implementation(libs.taglib)
     implementation(libs.jaudiotagger)
     implementation(libs.vorbisjava.core)
 
-    // Retrofit & OkHttp
+    // Retrofit / OkHttp
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
 
-    // Ktor for HTTP Server
+    // Ktor
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.cio)
     implementation("io.ktor:ktor-server-cio:2.3.7")
@@ -399,7 +416,6 @@ dependencies {
     implementation("io.ktor:ktor-server-compression:2.3.7")
 
     implementation(libs.androidx.ui.text.google.fonts)
-
     implementation(libs.accompanist.drawablepainter)
     implementation(kotlin("test"))
 
@@ -434,10 +450,10 @@ dependencies {
     // Encrypted credentials storage
     implementation(libs.androidx.security.crypto)
 
-    // roku
+    // Roku
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    
-   // Para DataStore com JSON (kotlinx.serialization)
+
+    // DataStore
     implementation("androidx.datastore:datastore:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 }
