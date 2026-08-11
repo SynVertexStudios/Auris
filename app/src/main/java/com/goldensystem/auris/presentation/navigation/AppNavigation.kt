@@ -6,8 +6,9 @@ import com.goldensystem.auris.di.AiEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 import com.goldensystem.auris.presentation.screens.WordDelimiterConfigScreen
 import com.goldensystem.auris.presentation.screens.CustomThemeScreen
+import androidx.compose.ui.platform.LocalContext
 import com.goldensystem.auris.presentation.screens.CustomThemeSettingsScreen
-import com.goldensystem.auris.presentation.screens.WallpaperScreen  // ✅ ADICIONADO
+import com.goldensystem.auris.presentation.screens.WallpaperScreen
 import com.goldensystem.auris.presentation.screens.DelimiterConfigScreen
 import android.annotation.SuppressLint
 import androidx.annotation.OptIn
