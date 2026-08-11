@@ -2,14 +2,11 @@ package com.goldensystem.auris.presentation.screens
 
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.outlined.ClearAll
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.rounded.Send
-import androidx.compose.material3.TextFieldDefaults
 import com.goldensystem.auris.data.ai.AiSystemPromptType
 import com.goldensystem.auris.presentation.navigation.navigateSafely
 import com.goldensystem.auris.presentation.components.BackupModuleSelectionDialog
@@ -20,7 +17,6 @@ import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
 import java.util.Date
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.draw.rotate
-
 import android.content.Context
 import android.content.Intent
 import android.app.Activity
