@@ -648,118 +648,118 @@ private fun isIgnoringBatteryOptimizationsNow(context: Context): Boolean {
 @Composable
 fun WelcomePage() {
     Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(16.dp)
     ) {
-        // Título
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = 4.dp,
-                    top = 16.dp,
-                    end = 4.dp
-                ),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+                .padding(horizontal = 8.dp)
+                .padding(top = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
                 text = stringResource(R.string.setup_welcome_prefix),
                 style = ExpTitleTypography.displayLarge.copy(
-                    fontSize = 30.sp,
-                    lineHeight = 36.sp
-                )
+                    fontSize = 32.sp,
+                    lineHeight = 1.2.em
+                ),
             )
-
             Text(
                 text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.displayLarge.copy(
                     fontFamily = GoogleSansRounded,
-                    fontSize = 34.sp,
-                    lineHeight = 40.sp,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                    fontSize = 32.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                    lineHeight = 1.2.em
+                ),
             )
         }
-
-        Spacer(modifier = Modifier.height(28.dp))
-
-        // Ilustração
+        Spacer(modifier = Modifier.height(10.dp))
+    //botao "beta" removido
+        /*Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            tonalElevation = 2.dp,
+            shadowElevation = 0.dp
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.setup_beta_symbol),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Black
+                )
+                Text(
+                    text = stringResource(R.string.setup_beta_label),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }*/
+        Spacer(modifier = Modifier.height(16.dp))
+        // Placeholder for vector art
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(250.dp)
-                .clip(RoundedCornerShape(28.dp))
-        ) {
+                .height(240.dp)
+                //.background(color = Color.Red)
+                .clip(RoundedCornerShape(20.dp))
+        ){
             MaterialYouVectorDrawable(
                 modifier = Modifier.fillMaxSize(),
                 drawableResId = R.drawable.welcome_art
             )
-
-            // Onda de transição
             SineWaveLine(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .height(34.dp)
-                    .padding(horizontal = 8.dp),
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .height(32.dp)
+                .padding(horizontal = 8.dp)
+                .padding(bottom = 4.dp),
                 animate = true,
                 color = MaterialTheme.colorScheme.surface,
-                alpha = 0.98f,
-                strokeWidth = 18.dp,
+                alpha = 0.95f,
+                strokeWidth = 16.dp,
                 amplitude = 4.dp,
                 waves = 7.6f,
                 phase = 0f
             )
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
-                    .height(20.dp)
-                    .background(
-                        MaterialTheme.colorScheme.surface
-                    )
-            )
+                    .height(22.dp)
+                    .background(color = MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = 8.dp)
+                    .padding(bottom = 4.dp)
+            ){
 
+            }
             SineWaveLine(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .height(34.dp)
-                    .padding(horizontal = 8.dp),
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .height(32.dp)
+                .padding(horizontal = 8.dp)
+                .padding(bottom = 4.dp),
                 animate = true,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.primary, //Container.copy(alpha = 0.9f),
                 alpha = 0.95f,
-                strokeWidth = 3.dp,
+                strokeWidth = 4.dp,
                 amplitude = 4.dp,
                 waves = 7.6f,
                 phase = 0f
             )
         }
-
-        Spacer(modifier = Modifier.height(28.dp))
-
-        // Texto introdutório
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surfaceContainer,
-            tonalElevation = 1.dp
-        ) {
-            Text(
-                modifier = Modifier.padding(
-                    horizontal = 20.dp,
-                    vertical = 18.dp
-                ),
-                text = stringResource(R.string.setup_intro_body),
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    lineHeight = 24.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(text = stringResource(R.string.setup_intro_body), style = MaterialTheme.typography.bodyLarge)
     }
 }
 

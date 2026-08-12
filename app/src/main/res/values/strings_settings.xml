@@ -11,21 +11,21 @@
     
     <!-- Strings do Tema Personalizado -->
     <string name="custom_theme_custom_colors">Cores Personalizadas</string>
-    <string name="custom_theme_primary">Primária</string>
-    <string name="custom_theme_secondary">Secundária</string>
+    <string name="custom_theme_primary">Cor Principal</string>
+    <string name="custom_theme_secondary">Pequenos Detalhes</string>
     <string name="custom_theme_background">Fundo</string>
-    <string name="custom_theme_on_primary">Sobre Primária</string>
-    <string name="custom_theme_on_surface">Sobre Superfície</string>
+    <string name="custom_theme_on_primary">Textos de Fundo</string>
+    <string name="custom_theme_on_surface">Texto de Lergenda</string>
     <string name="custom_theme_accent">Destaque</string>
     
     <!-- Strings do Papel de Parede -->
     <string name="custom_theme_wallpaper_section">Papel de Parede</string>
-    <string name="custom_theme_wallpaper_solid_subtitle">Cor sólida</string>
+    <string name="custom_theme_wallpaper_solid_subtitle">Cores</string>
     <string name="custom_theme_wallpaper_gallery_subtitle">Escolher da galeria</string>
-    <string name="custom_theme_wallpaper_server_subtitle">Do servidor</string>
+    <string name="custom_theme_wallpaper_server_subtitle">Online</string>
     <string name="custom_theme_wallpaper_title">Papel de Parede</string>
     <string name="custom_theme_wallpaper_source">Fonte</string>
-    <string name="custom_theme_solid_color_wallpaper">Cor Sólida</string>
+    <string name="custom_theme_solid_color_wallpaper">Cores</string>
     <string name="custom_theme_remove_wallpaper">Remover Papel de Parede</string>
     
     <!-- Categorias de Papel de Parede -->

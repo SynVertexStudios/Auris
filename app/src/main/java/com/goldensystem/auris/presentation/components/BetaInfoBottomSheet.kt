@@ -70,7 +70,7 @@ fun BetaInfoBottomSheet(
         "https://github.com/pereirasaymonsilva-a11y/Auris/issues/new/choose" 
     }
     val officialWebsite = remember { 
-        "https://pereirasaymonsilva-a11y.github.io/Auris-website/data/home.html" 
+        "https://pereirasaymonsilva-a11y.github.io/Auris-website/home.html" 
     }
     val youtubeUrl = remember { 
         "https://www.youtube.com/@AurisMusicPlayer" 
@@ -153,7 +153,7 @@ fun BetaInfoBottomSheet(
                 subtitle = stringResource(R.string.aurissheet_custom_theme_subtitle),
                 buttonText = stringResource(R.string.aurissheet_open),
                 onClick = { 
-                    navController?.navigate(Screen.CustomTheme.route) 
+                    navController?.navigate(Screen.CustomThemeSettings.route) 
                 }
             )
             
