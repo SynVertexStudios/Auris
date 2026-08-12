@@ -32,7 +32,8 @@ class AiMusicResolver @Inject constructor(
         }
         
         if (similar.isNotEmpty()) {
-            val message = "Não encontrei '$target', mas encontrei '${similar.first().title}' - ${similar.first().displayArtist}"
+            // ✅ CORRIGIDO: first() → [0]
+            val message = "Não encontrei '$target', mas encontrei '${similar[0].title}' - ${similar[0].displayArtist}"
             return ResolveResult.Suggested(similar, message)
         }
         
@@ -43,7 +44,8 @@ class AiMusicResolver @Inject constructor(
         }
         
         if (byArtist.isNotEmpty()) {
-            val message = "Não encontrei a música '$target', mas encontrei músicas de ${byArtist.first().displayArtist}"
+            // ✅ CORRIGIDO: first() → [0]
+            val message = "Não encontrei a música '$target', mas encontrei músicas de ${byArtist[0].displayArtist}"
             return ResolveResult.Suggested(byArtist, message)
         }
         
@@ -71,7 +73,8 @@ class AiMusicResolver @Inject constructor(
         }
         
         if (similar.isNotEmpty()) {
-            val message = "Não encontrei '$target', mas encontrei '${similar.first().displayArtist}'"
+            // ✅ CORRIGIDO: first() → [0]
+            val message = "Não encontrei '$target', mas encontrei '${similar[0].displayArtist}'"
             return ResolveResult.Suggested(similar, message)
         }
         
@@ -94,7 +97,8 @@ class AiMusicResolver @Inject constructor(
         
         if (similar.isNotEmpty()) {
             val songs = playerViewModel.musicRepository.getSongsForAlbum(similar[0].id).first()
-            val message = "Não encontrei '$target', mas encontrei '${similar.first().title}'"
+            // ✅ CORRIGIDO: first() → [0]
+            val message = "Não encontrei '$target', mas encontrei '${similar[0].title}'"
             return ResolveResult.Suggested(songs, message)
         }
         
