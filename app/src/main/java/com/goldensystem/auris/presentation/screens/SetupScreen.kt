@@ -1,9 +1,6 @@
 package com.goldensystem.auris.presentation.screens
 
 import android.Manifest
-import androidx.compose.animation.core.animateDp
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Crop
@@ -650,288 +647,117 @@ private fun isIgnoringBatteryOptimizationsNow(context: Context): Boolean {
 
 @Composable
 fun WelcomePage() {
-    val colorScheme = MaterialTheme.colorScheme
-
-    val infiniteTransition = rememberInfiniteTransition(
-        label = "welcome_animation"
-    )
-
-    val floatingOffset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 8f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 2200,
-                easing = FastOutSlowInEasing
-            ),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "floating_offset"
-    )
-
-    var visible by remember {
-        mutableStateOf(false)
-    }
-
-    LaunchedEffect(Unit) {
-        visible = true
-    }
-
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn(
-            animationSpec = tween(700)
-        ) + slideInVertically(
-            initialOffsetY = { 30 },
-            animationSpec = tween(
-                700,
-                easing = FastOutSlowInEasing
-            )
-        )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Título
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(
-                    horizontal = 20.dp,
-                    vertical = 16.dp
+                    start = 4.dp,
+                    top = 16.dp,
+                    end = 4.dp
                 ),
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-
-            // ─────────────────────────────────────────
-            // HEADER
-            // ─────────────────────────────────────────
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 4.dp,
-                        top = 12.dp
-                    ),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-
-                Text(
-                    text = stringResource(
-                        R.string.setup_welcome_prefix
-                    ),
-                    style = ExpTitleTypography.displayLarge.copy(
-                        fontSize = 30.sp,
-                        lineHeight = 36.sp
-                    ),
-                    textAlign = TextAlign.Center
+            Text(
+                text = stringResource(R.string.setup_welcome_prefix),
+                style = ExpTitleTypography.displayLarge.copy(
+                    fontSize = 30.sp,
+                    lineHeight = 36.sp
                 )
-
-                Text(
-                    text = stringResource(
-                        R.string.app_name
-                    ),
-                    style = MaterialTheme
-                        .typography
-                        .displayLarge
-                        .copy(
-                            fontFamily = GoogleSansRounded,
-                            fontSize = 38.sp,
-                            lineHeight = 44.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = colorScheme.primary
-                        ),
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
             )
 
-            // ─────────────────────────────────────────
-            // SUBTLE DIVIDER
-            // ─────────────────────────────────────────
+            Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.displayLarge.copy(
+                    fontFamily = GoogleSansRounded,
+                    fontSize = 34.sp,
+                    lineHeight = 40.sp,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        // Ilustração
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(250.dp)
+                .clip(RoundedCornerShape(28.dp))
+        ) {
+            MaterialYouVectorDrawable(
+                modifier = Modifier.fillMaxSize(),
+                drawableResId = R.drawable.welcome_art
+            )
+
+            // Onda de transição
+            SineWaveLine(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .height(34.dp)
+                    .padding(horizontal = 8.dp),
+                animate = true,
+                color = MaterialTheme.colorScheme.surface,
+                alpha = 0.98f,
+                strokeWidth = 18.dp,
+                amplitude = 4.dp,
+                waves = 7.6f,
+                phase = 0f
+            )
 
             Box(
                 modifier = Modifier
-                    .width(42.dp)
-                    .height(4.dp)
-                    .clip(CircleShape)
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .height(20.dp)
                     .background(
-                        colorScheme.primary.copy(
-                            alpha = 0.7f
-                        )
+                        MaterialTheme.colorScheme.surface
                     )
             )
 
-            // ─────────────────────────────────────────
-            // ART
-            // ─────────────────────────────────────────
-
-            Box(
+            SineWaveLine(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .padding(
-                        vertical = 18.dp
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-
-                // Glow atrás da arte
-                Box(
-                    modifier = Modifier
-                        .size(230.dp)
-                        .offset(
-                            y = floatingOffset.dp
-                        )
-                        .clip(CircleShape)
-                        .background(
-                            colorScheme.primary.copy(
-                                alpha = 0.07f
-                            )
-                        )
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(280.dp)
-                        .offset(
-                            y = floatingOffset.dp
-                        )
-                        .clip(
-                            RoundedCornerShape(
-                                28.dp
-                            )
-                        )
-                ) {
-
-                    MaterialYouVectorDrawable(
-                        modifier = Modifier.fillMaxSize(),
-                        drawableResId = R.drawable.welcome_art
-                    )
-
-                    // Onda de transição
-                    SineWaveLine(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(
-                                Alignment.BottomCenter
-                            )
-                            .height(34.dp)
-                            .padding(
-                                horizontal = 6.dp,
-                                bottom = 2.dp
-                            ),
-                        animate = true,
-                        color = colorScheme.surface,
-                        alpha = 0.96f,
-                        strokeWidth = 18.dp,
-                        amplitude = 4.dp,
-                        waves = 7.6f,
-                        phase = 0f
-                    )
-
-                    // Onda principal
-                    SineWaveLine(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(
-                                Alignment.BottomCenter
-                            )
-                            .height(34.dp)
-                            .padding(
-                                horizontal = 6.dp,
-                                bottom = 2.dp
-                            ),
-                        animate = true,
-                        color = colorScheme.primary,
-                        alpha = 0.95f,
-                        strokeWidth = 4.dp,
-                        amplitude = 4.dp,
-                        waves = 7.6f,
-                        phase = 0f
-                    )
-                }
-            }
-
-            // ─────────────────────────────────────────
-            // DESCRIPTION
-            // ─────────────────────────────────────────
-
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(22.dp),
-                color = colorScheme.surfaceContainerLow
-            ) {
-                Column(
-                    modifier = Modifier.padding(
-                        horizontal = 20.dp,
-                        vertical = 18.dp
-                    ),
-                    horizontalAlignment =
-                        Alignment.CenterHorizontally
-                ) {
-
-                    Text(
-                        text = stringResource(
-                            R.string.setup_intro_body
-                        ),
-                        style = MaterialTheme
-                            .typography
-                            .bodyLarge
-                            .copy(
-                                lineHeight = 24.sp
-                            ),
-                        color = colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
+                    .align(Alignment.BottomCenter)
+                    .height(34.dp)
+                    .padding(horizontal = 8.dp),
+                animate = true,
+                color = MaterialTheme.colorScheme.primary,
+                alpha = 0.95f,
+                strokeWidth = 3.dp,
+                amplitude = 4.dp,
+                waves = 7.6f,
+                phase = 0f
             )
+        }
 
-            // ─────────────────────────────────────────
-            // INDICADOR
-            // ─────────────────────────────────────────
+        Spacer(modifier = Modifier.height(28.dp))
 
-            Row(
-                horizontalArrangement =
-                    Arrangement.spacedBy(6.dp),
-                verticalAlignment =
-                    Alignment.CenterVertically
-            ) {
-
-                repeat(3) { index ->
-
-                    val selected = index == 0
-
-                    Box(
-                        modifier = Modifier
-                            .height(6.dp)
-                            .width(
-                                if (selected) {
-                                    22.dp
-                                } else {
-                                    6.dp
-                                }
-                            )
-                            .clip(CircleShape)
-                            .background(
-                                if (selected) {
-                                    colorScheme.primary
-                                } else {
-                                    colorScheme.outlineVariant
-                                }
-                            )
-                    )
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.height(4.dp)
+        // Texto introdutório
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            tonalElevation = 1.dp
+        ) {
+            Text(
+                modifier = Modifier.padding(
+                    horizontal = 20.dp,
+                    vertical = 18.dp
+                ),
+                text = stringResource(R.string.setup_intro_body),
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    lineHeight = 24.sp
+                ),
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
