@@ -456,6 +456,9 @@ dependencies {
     // DataStore
     implementation("androidx.datastore:datastore:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    
+    //ADS-ainda em testes.
+   /*admob implementation("com.google.android.gms:play-services-ads:24.5.0")*/
 }
 
 tasks.withType<Test> {
