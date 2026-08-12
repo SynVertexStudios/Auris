@@ -2,6 +2,7 @@ package com.goldensystem.auris.data.ai
 
 import com.goldensystem.auris.data.model.Song
 import com.goldensystem.auris.presentation.viewmodel.PlayerViewModel
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 class AiMusicResolver @Inject constructor(
