@@ -9,7 +9,7 @@
     <string name="library_folders">Pastas</string>
     <string name="library_liked">Favoritas</string>
 
-        <!-- Título do diálogo de cópia não autorizada -->
+    <!-- Título do diálogo de cópia não autorizada -->
     <string name="piracy_dialog_title">⚠️ Cópia não autorizada</string>
     <string name="piracy_dialog_message">Parece que você está usando uma versão modificada do Auris.\n\nBaixe a versão original para garantir sua segurança.</string>
     <string name="piracy_button_download">📥 Baixar versão oficial</string>
@@ -22,17 +22,8 @@
     <string name="piracy_download_interrupted">Download interrompido</string>
     <string name="piracy_checking">Verificando integridade do app...</string>
     <string name="piracy_original_ok">App original verificado.</string>
-     <!-- Tela de letras no welcome -->
-    <string name="setup_lyrics_title">Letras das músicas</string>
-    <string name="setup_lyrics_subtitle">Personalize como as letras aparecem durante a reprodução</string>
-    <string name="setup_lyrics_source_label">Fonte das letras</string>
-    <string name="setup_lyrics_source_description">Prefere letras embutidas no arquivo ou buscar online?</string>
-    <string name="setup_lyrics_source_embedded">Embutidas no arquivo</string>
-    <string name="setup_lyrics_source_online">Buscar online primeiro</string>
-    <string name="setup_animated_lyrics_label">Letras animadas</string>
-    <string name="setup_animated_lyrics_description">Animações suaves durante a exibição das letras</string>
 
-<!-- Letras - linhas de exemplo para a pré-visualização na tela de configuração -->
+    <!-- Letras - linhas de exemplo para a pré-visualização na tela de configuração -->
     <string name="lyrics_preview_line_1">As letras ficam assim</string>
     <string name="lyrics_preview_line_2">Obrigado por utilizar o Auris</string>
     <string name="lyrics_preview_line_3"></string>
@@ -50,7 +41,7 @@
     <string name="word_delimiter_add_title">Adicionar Novo Delimitador de Palavra</string>
     <string name="word_delimiter_hint">ex., feat. ou ft.</string>
     <string name="word_delimiter_help_title">Como os Delimitadores de Palavra Funcionam</string>
-    <string name="word_delimiter_help_body">Os delimitadores de palavra são correspondidos sem diferenciar maiúsculas/minúsculas com espaços ao redor.\n\nDelimitadores de um único caractere (como \"x\") exigem espaços em ambos os lados para evitar correspondências falsas.\n\nExemplos:\n  \"Drake feat. Rihanna\" -&gt; Drake, Rihanna\n  \"Marshmello x Bastille\" -&gt; Marshmello, Bastille\n  \"A vs. B\" -&gt; A, B</string>
+    <string name="word_delimiter_help_body">Os delimitadores de palavra são correspondidos sem diferenciar maiúsculas/minúsculas com espaços ao redor.\n\nDelimitadores de um único caractere (como "x") exigem espaços em ambos os lados para evitar correspondências falsas.\n\nExemplos:\n  "Drake feat. Rihanna" -&gt; Drake, Rihanna\n  "Marshmello x Bastille" -&gt; Marshmello, Bastille\n  "A vs. B" -&gt; A, B</string>
     <string name="word_delimiters_screen_title">Delimitadores de Palavra</string>
     <string name="word_delimiter_reset_title">Redefinir Delimitadores de Palavra?</string>
     <string name="word_delimiter_reset_message">Isso limpará todos os seus delimitadores de palavra personalizados e restaurará as palavras-chave padrão. Esta ação não pode ser desfeita.</string>
@@ -79,7 +70,7 @@
     <string name="accounts_google_drive_soon">Google Drive em breve.</string>
     <string name="accounts_unable_open_screen">Não é possível abrir esta tela no momento.</string>
 
-    <!-- Setup (subset; more keys follow in same file) -->
+    <!-- Setup -->
     <string name="setup_welcome_prefix">Bem-vindo ao </string>
     <string name="setup_beta_symbol">β</string>
     <string name="setup_beta_label">Beta</string>
@@ -164,9 +155,9 @@
     <string name="setup_nav_floating_pill_description">Pílula flutuante com cantos arredondados</string>
     <string name="setup_nav_full_width_description">Barra padrão de largura total</string>
 
-    <!-- Delete song (Material dialog from ViewModel) -->
+    <!-- Delete song -->
     <string name="dialog_delete_song_title">Excluir música?</string>
-    <string name="dialog_delete_song_message">\"%1$s\" de %2$s\n\nEsta música será permanentemente excluída do seu dispositivo e não poderá ser recuperada.</string>
+    <string name="dialog_delete_song_message">"%1$s" de %2$s\n\nEsta música será permanentemente excluída do seu dispositivo e não poderá ser recuperada.</string>
 
     <!-- Home / detail shared -->
     <string name="home_your_mix_title">Seu\nMix</string>
@@ -205,7 +196,7 @@
     <string name="cd_search_history_icon">Histórico</string>
     <string name="cd_delete_search_history_item">Excluir item do histórico de pesquisa</string>
     <string name="cd_no_search_results">Sem resultados</string>
-    <string name="search_no_results_for_query">Sem resultados para \"%1$s\"</string>
+    <string name="search_no_results_for_query">Sem resultados para "%1$s"</string>
     <string name="search_nothing_found">Nada encontrado</string>
     <string name="search_try_different_or_filters">Tente um termo de pesquisa diferente ou verifique seus filtros.</string>
     <string name="search_no_results_found">Nenhum resultado encontrado.</string>
