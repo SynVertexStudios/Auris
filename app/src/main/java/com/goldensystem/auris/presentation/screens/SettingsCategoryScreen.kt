@@ -1,6 +1,9 @@
 package com.goldensystem.auris.presentation.screens
 
 import android.content.ClipData
+import com.goldensystem.auris.data.ai.AiCommandInterpreter
+import com.goldensystem.auris.data.ai.AiCommandExecutor
+import com.goldensystem.auris.data.ai.AiMusicResolver
 import com.goldensystem.auris.data.ai.AiOrchestrator
 import com.goldensystem.auris.presentation.viewmodel.StatsViewModel
 import android.content.ClipboardManager
@@ -1261,38 +1264,49 @@ fun SettingsCategoryScreen(
                     trailingIcon = {
                         FilledIconButton(
     onClick = {
-        if (userPrompt.isNotBlank() && !isGenerating) {
-            isGenerating = true
-            aiResponse = ""
-            
-            coroutineScope.launch {
-                try {
-                    if (selectedType == AiSystemPromptType.PLAYLIST) {
-                        // 👇 CRIA PLAYLIST USANDO O AiPlaylistGenerator
-                        val allSongs = musicRepository.getAllSongsOnce()
-                        val result = aiPlaylistGenerator.generate(
-                            userPrompt = userPrompt,
-                            allSongs = allSongs,
-                            minLength = 5,
-                            maxLength = 20,
-                            type = AiSystemPromptType.PLAYLIST
+    if (userPrompt.isNotBlank() && !isGenerating) {
+        isGenerating = true
+        aiResponse = ""
+        
+        coroutineScope.launch {
+            try {
+                if (selectedType == AiSystemPromptType.PLAYLIST) {
+                    // Gera playlist
+                    val allSongs = musicRepository.getAllSongsOnce()
+                    val result = aiPlaylistGenerator.generate(
+                        userPrompt = userPrompt,
+                        allSongs = allSongs,
+                        minLength = 5,
+                        maxLength = 20,
+                        type = AiSystemPromptType.PLAYLIST
+                    )
+                    
+                    result.fold(
+                        onSuccess = { songs ->
+                            playerViewModel.createPlaylist(
+                                name = "Playlist IA - ${System.currentTimeMillis()}",
+                                songIds = songs.map { it.id }
+                            )
+                            aiResponse = "✅ Playlist criada com ${songs.size} músicas!"
+                        },
+                        onFailure = { error ->
+                            aiResponse = "❌ Erro: ${error.message}"
+                        }
+                    )
+                } else {
+                    // INTERPRETA E EXECUTA COMANDOS
+                    val interpreter = AiCommandInterpreter(aiOrchestrator)
+                    val command = interpreter.interpret(userPrompt)
+                    
+                    if (command != null) {
+                        val executor = AiCommandExecutor(
+                            playerViewModel = playerViewModel,
+                            musicResolver = AiMusicResolver(playerViewModel, aiOrchestrator)
                         )
-                        
-                        result.fold(
-                            onSuccess = { songs ->
-                                // CRIA A PLAYLIST NO PLAYER
-                                playerViewModel.createPlaylist(
-                                    name = "Playlist IA - ${System.currentTimeMillis()}",
-                                    songIds = songs.map { it.id }
-                                )
-                                aiResponse = "✅ Playlist criada com ${songs.size} músicas!"
-                            },
-                            onFailure = { error ->
-                                aiResponse = "❌ Erro: ${error.message}"
-                            }
-                        )
+                        val result = executor.execute(command)
+                        aiResponse = result
                     } else {
-                        // Para outros tipos (Geral, Metadados, etc) usa o orchestrator normal
+                        // Se não for comando, gera resposta normal
                         val response = aiOrchestrator.generateContent(
                             prompt = userPrompt,
                             type = selectedType,
@@ -1300,14 +1314,15 @@ fun SettingsCategoryScreen(
                         )
                         aiResponse = response
                     }
-                } catch (e: Exception) {
-                    aiResponse = "❌ Erro: ${e.message ?: "Falha ao gerar"}"
-                } finally {
-                    isGenerating = false
                 }
+            } catch (e: Exception) {
+                aiResponse = "❌ Erro: ${e.message ?: "Falha ao gerar"}"
+            } finally {
+                isGenerating = false
             }
         }
-    },
+    }
+},
     enabled = userPrompt.isNotBlank() && !isGenerating,
     colors = IconButtonDefaults.filledIconButtonColors(
         containerColor = MaterialTheme.colorScheme.primaryContainer
