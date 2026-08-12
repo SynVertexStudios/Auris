@@ -1,6 +1,8 @@
 package com.goldensystem.auris.di
 
 import com.goldensystem.auris.data.ai.AiOrchestrator
+import com.goldensystem.auris.data.ai.AiPlaylistGenerator  // 👈 ADICIONE
+import com.goldensystem.auris.data.repository.MusicRepository  // 👈 ADICIONE
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -9,6 +11,6 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 interface AiEntryPoint {
     fun aiOrchestrator(): AiOrchestrator
-    fun aiPlaylistGenerator(): AiPlaylistGenerator  // 👈 NOVO
-    fun musicRepository(): MusicRepository           // 👈 NOVO
+    fun aiPlaylistGenerator(): AiPlaylistGenerator
+    fun musicRepository(): MusicRepository
 }

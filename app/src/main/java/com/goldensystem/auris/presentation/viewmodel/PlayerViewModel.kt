@@ -5,6 +5,8 @@ import com.goldensystem.auris.data.repository.AurisOnlineRepository
 import android.app.Activity
 import com.goldensystem.auris.data.model.Playlist
 import com.goldensystem.auris.data.preferences.PlaylistPreferencesRepository
+import com.goldensystem.auris.data.model.Playlist
+import com.goldensystem.auris.data.preferences.PlaylistPreferencesRepository
 import android.content.ComponentName
 import android.net.Uri
 import com.goldensystem.auris.data.gdrive.GDriveStreamProxy
@@ -4679,14 +4681,15 @@ fun createPlaylist(name: String, songIds: List<String>) {
                 name = name,
                 songIds = songIds,
                 createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
+                // REMOVA 'updatedAt' se não existir no modelo Playlist
                 source = "AI"
             )
 
-            playlistPreferencesRepository.replaceAllPlaylists(
-                playlistPreferencesRepository.getPlaylistsOnce() + playlist
-            )
+            // Salva a playlist - use o método correto
+            val currentPlaylists = playlistPreferencesRepository.getPlaylistsOnce()
+            playlistPreferencesRepository.replaceAllPlaylists(currentPlaylists + playlist)
 
+            // Toca as músicas
             playSongs(songs, songs.first(), name)
 
             sendToast("✅ Playlist '$name' criada com ${songs.size} músicas!")

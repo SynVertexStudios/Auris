@@ -1,6 +1,10 @@
 package com.goldensystem.auris.presentation.screens
 
 import android.content.ClipData
+import com.goldensystem.auris.data.ai.AiOrchestrator
+import com.goldensystem.auris.data.ai.AiPlaylistGenerator
+import com.goldensystem.auris.data.repository.MusicRepository
+import com.goldensystem.auris.presentation.viewmodel.StatsViewModel
 import android.content.ClipboardManager
 import androidx.compose.foundation.horizontalScroll
 import com.goldensystem.auris.data.ai.AiPlaylistGenerator
@@ -197,10 +201,10 @@ fun SettingsCategoryScreen(
     navController: NavController,
     playerViewModel: PlayerViewModel,
     settingsViewModel: SettingsViewModel = hiltViewModel(),
-    statsViewModel: StatsViewModel = hiltViewModel(),
-    aiOrchestrator: AiOrchestrator,
-    aiPlaylistGenerator: AiPlaylistGenerator,  // 👈 NOVO
-    musicRepository: MusicRepository,           // 👈 NOVO
+    statsViewModel: StatsViewModel = hiltViewModel(),  // 👈 JÁ ESTÁ
+    aiOrchestrator: AiOrchestrator,                    // 👈 ADICIONE
+    aiPlaylistGenerator: AiPlaylistGenerator,          // 👈 ADICIONE
+    musicRepository: MusicRepository,                  // 👈 ADICIONE
     onBackClick: () -> Unit
 ) {
     val category = SettingsCategory.fromId(categoryId) ?: return
