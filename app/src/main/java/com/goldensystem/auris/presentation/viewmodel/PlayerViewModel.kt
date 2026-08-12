@@ -221,13 +221,13 @@ private data class ResolvedAlbumSelection(
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val musicRepository: MusicRepository,
+    val musicRepository: MusicRepository,
     //conversor gdrive
     private val gdriveStreamProxy: GDriveStreamProxy,
     private val aurisOnlineRepository: AurisOnlineRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
-    private val playlistPreferencesRepository: PlaylistPreferencesRepository, 
-    private val aiPreferencesRepository: AiPreferencesRepository,
+    val playlistPreferencesRepository: PlaylistPreferencesRepository, 
+    val aiPreferencesRepository: AiPreferencesRepository,
     private val themePreferencesRepository: ThemePreferencesRepository,
     private val albumArtThemeDao: AlbumArtThemeDao,
     val syncManager: SyncManager,
