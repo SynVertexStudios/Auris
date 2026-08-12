@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="gallery_title">Auris Vídeos</string>
+    <string name="gallery_title">Vídeos</string>
     <string name="gallery_permission_title">Permissão necessária</string>
     <string name="gallery_permission_message">Para exibir seus vídeos, o Auris precisa acessar o armazenamento do dispositivo.</string>
     <string name="gallery_permission_button">Permitir acesso</string>
