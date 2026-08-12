@@ -2,8 +2,6 @@ package com.goldensystem.auris.presentation.screens
 
 import android.content.ClipData
 import com.goldensystem.auris.data.ai.AiOrchestrator
-import com.goldensystem.auris.data.ai.AiPlaylistGenerator
-import com.goldensystem.auris.data.repository.MusicRepository
 import com.goldensystem.auris.presentation.viewmodel.StatsViewModel
 import android.content.ClipboardManager
 import androidx.compose.foundation.horizontalScroll

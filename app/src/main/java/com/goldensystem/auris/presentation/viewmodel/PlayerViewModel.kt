@@ -5,8 +5,6 @@ import com.goldensystem.auris.data.repository.AurisOnlineRepository
 import android.app.Activity
 import com.goldensystem.auris.data.model.Playlist
 import com.goldensystem.auris.data.preferences.PlaylistPreferencesRepository
-import com.goldensystem.auris.data.model.Playlist
-import com.goldensystem.auris.data.preferences.PlaylistPreferencesRepository
 import android.content.ComponentName
 import android.net.Uri
 import com.goldensystem.auris.data.gdrive.GDriveStreamProxy
@@ -4601,6 +4599,50 @@ class PlayerViewModel @Inject constructor(
             userPreferencesRepository.addCustomGenre(genre, iconResId)
         }
     }
+    
+    fun createPlaylist(name: String, songIds: List<String>) {
+    viewModelScope.launch {
+        try {
+            if (name.isBlank()) {
+                sendToast("Nome da playlist não pode estar vazio")
+                return@launch
+            }
+            
+            if (songIds.isEmpty()) {
+                sendToast("Nenhuma música para adicionar")
+                return@launch
+            }
+
+            val songs = musicRepository.getSongsByIds(songIds).first()
+            
+            if (songs.isEmpty()) {
+                sendToast("Nenhuma música encontrada")
+                return@launch
+            }
+
+            val playlist = Playlist(
+                id = java.util.UUID.randomUUID().toString(),
+                name = name,
+                songIds = songIds,
+                createdAt = System.currentTimeMillis(),
+                // REMOVA 'updatedAt' se não existir no modelo Playlist
+                source = "AI"
+            )
+
+            // Salva a playlist - use o método correto
+            val currentPlaylists = playlistPreferencesRepository.getPlaylistsOnce()
+            playlistPreferencesRepository.replaceAllPlaylists(currentPlaylists + playlist)
+
+            // Toca as músicas
+            playSongs(songs, songs.first(), name)
+
+            sendToast("✅ Playlist '$name' criada com ${songs.size} músicas!")
+            
+        } catch (e: Exception) {
+            sendToast("❌ Erro ao criar playlist: ${e.message}")
+            }
+        }
+    }
 }
 
 internal fun Song.withRepositoryHydration(repositorySong: Song): Song {
@@ -4654,48 +4696,4 @@ internal fun areEquivalentArtworkUrisForSong(
     val firstSongId = resolveUriSongId(firstUri)
     val secondSongId = resolveUriSongId(secondUri)
     return firstSongId == targetSongId && secondSongId == targetSongId
-}
-
-fun createPlaylist(name: String, songIds: List<String>) {
-    viewModelScope.launch {
-        try {
-            if (name.isBlank()) {
-                sendToast("Nome da playlist não pode estar vazio")
-                return@launch
-            }
-            
-            if (songIds.isEmpty()) {
-                sendToast("Nenhuma música para adicionar")
-                return@launch
-            }
-
-            val songs = musicRepository.getSongsByIds(songIds).first()
-            
-            if (songs.isEmpty()) {
-                sendToast("Nenhuma música encontrada")
-                return@launch
-            }
-
-            val playlist = Playlist(
-                id = java.util.UUID.randomUUID().toString(),
-                name = name,
-                songIds = songIds,
-                createdAt = System.currentTimeMillis(),
-                // REMOVA 'updatedAt' se não existir no modelo Playlist
-                source = "AI"
-            )
-
-            // Salva a playlist - use o método correto
-            val currentPlaylists = playlistPreferencesRepository.getPlaylistsOnce()
-            playlistPreferencesRepository.replaceAllPlaylists(currentPlaylists + playlist)
-
-            // Toca as músicas
-            playSongs(songs, songs.first(), name)
-
-            sendToast("✅ Playlist '$name' criada com ${songs.size} músicas!")
-            
-        } catch (e: Exception) {
-            sendToast("❌ Erro ao criar playlist: ${e.message}")
-        }
-    }
 }
