@@ -93,7 +93,7 @@ class AiMusicResolver @Inject constructor(
         }
         
         if (similar.isNotEmpty()) {
-            val songs = playerViewModel.musicRepository.getSongsForAlbum(similar.first().id).first()
+            val songs = playerViewModel.musicRepository.getSongsForAlbum(similar.[0].id).first()
             val message = "Não encontrei '$target', mas encontrei '${similar.first().title}'"
             return ResolveResult.Suggested(songs, message)
         }
