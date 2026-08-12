@@ -42,65 +42,13 @@ import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GenreGradientTopBar(
-    title: String,
-    startColor: Color,
-    endColor: Color,
-    contentColor: Color,
-    scrollBehavior: TopAppBarScrollBehavior,
-    onNavigationIconClick: () -> Unit,
-) {
-    val gradientBrush = remember(startColor, endColor) {
-        Brush.verticalGradient(colors = listOf(startColor, endColor))
-    }
-
-    AurisStatusBarStyle(color = startColor)
-
-    LargeTopAppBar(
-        scrollBehavior = scrollBehavior,
-        title = {
-            Text(
-                modifier = Modifier.padding(start = 6.dp),
-                text = title,
-                color = contentColor,
-                fontFamily = GoogleSansRounded
-            )
-        },
-        expandedHeight = 160.dp,
-        modifier = Modifier.background(brush = gradientBrush),
-        navigationIcon = {
-            IconButton(
-                modifier = Modifier.padding(start = 10.dp),
-                onClick = onNavigationIconClick,
-                colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = contentColor
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                    contentDescription = stringResource(R.string.auth_cd_back),
-                    tint = startColor
-                )
-            }
-        },
-        colors = topAppBarColors(
-            containerColor = Color.Transparent,
-            scrolledContainerColor = Color.Transparent,
-            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-        )
-    )
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
 fun HomeGradientTopBar(
     onNavigationIconClick: () -> Unit,
     onBetaClick: () -> Unit,
     onTelegramClick: () -> Unit,
     onMenuClick: () -> Unit = {},
     onVideoGalleryClick: () -> Unit = {},
+    onCustomThemeClick: () -> Unit = {}, // NOVO: Callback para tema personalizado
 ) {
     val surfaceColor = MaterialTheme.colorScheme.surface
 
@@ -176,6 +124,19 @@ fun HomeGradientTopBar(
                     Icon(
                         painter = painterResource(R.drawable.rounded_play_arrow_24),
                         contentDescription = "Galeria de Vídeos"
+                    )
+                }
+                // NOVO: Botão para tema personalizado
+                FilledIconButton(
+                    onClick = onCustomThemeClick,
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.rounded_palette_24),
+                        contentDescription = stringResource(R.string.custom_theme_settings_title)
                     )
                 }
                 FilledIconButton(

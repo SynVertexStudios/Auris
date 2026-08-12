@@ -222,7 +222,8 @@ fun HomeScreen(
                     onBetaClick = { showBetaInfoBottomSheet = true },
                     onTelegramClick = { showStreamingProviderSheet = true },
                     onMenuClick = { },
-                    onVideoGalleryClick = { navController.navigate(Screen.VideoGallery.route) }
+                    onVideoGalleryClick = { navController.navigate(Screen.VideoGallery.route) },
+                    onCustomThemeClick = { navController.navigate(Screen.CustomThemeSettings.route) }
                 )
             }
         ) { innerPadding ->
