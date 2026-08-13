@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.goldensystem.auris.BuildConfig
+import com.goldensystem.auris.R
 import com.goldensystem.auris.data.model.AppVersionInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -105,7 +106,7 @@ fun UpdateScreen(
                 DownloadManager.STATUS_FAILED,
                 DownloadManager.STATUS_PAUSED -> {
                     isDownloading = false
-                    Toast.makeText(context, "Download interrompido", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, R.string.update_toast_download_failed, Toast.LENGTH_SHORT).show()
                     break
                 }
             }
@@ -124,17 +125,35 @@ fun UpdateScreen(
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Nova versão 🚀", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text(
+                    text = context.getString(R.string.update_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
                 Spacer(Modifier.height(12.dp))
-                Text("Atual: ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyMedium)
-                Text("Nova: ${updateInfo.version}", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = context.getString(R.string.update_current_version, BuildConfig.VERSION_NAME),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = context.getString(R.string.update_new_version, updateInfo.version),
+                    style = MaterialTheme.typography.bodyMedium
+                )
 
                 updateInfo.changelog?.let {
                     Spacer(Modifier.height(8.dp))
                     HorizontalDivider()
                     Spacer(Modifier.height(8.dp))
-                    Text("📋 Novidades", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                    Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = context.getString(R.string.update_changelog_title),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
 
                 Spacer(Modifier.height(20.dp))
@@ -145,7 +164,10 @@ fun UpdateScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(Modifier.height(8.dp))
-                    Text("$progress%", style = MaterialTheme.typography.labelMedium)
+                    Text(
+                        text = context.getString(R.string.update_download_progress, progress),
+                        style = MaterialTheme.typography.labelMedium
+                    )
                 } else {
                     Button(
                         onClick = {
@@ -161,26 +183,25 @@ fun UpdateScreen(
                         enabled = !isDownloading,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Atualizar agora")
+                        Text(context.getString(R.string.update_button_download))
                     }
 
                     Spacer(Modifier.height(12.dp))
 
-                    // Botão do site oficial na cor VERMELHA
-OutlinedButton(
-    onClick = {
-        val websiteUrl = "https://pereirasaymonsilva-a11y.github.io/Auris-website/"
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(websiteUrl))
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        context.startActivity(intent)
-    },
-    modifier = Modifier.fillMaxWidth(),
-    colors = ButtonDefaults.outlinedButtonColors(
-        contentColor = MaterialTheme.colorScheme.error
-    )
-) {
-    Text("Baixar do site oficial")
-}
+                    OutlinedButton(
+                        onClick = {
+                            val websiteUrl = "https://pereirasaymonsilva-a11y.github.io/Auris-website/"
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(websiteUrl))
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text(context.getString(R.string.update_button_website))
+                    }
 
                     Spacer(Modifier.height(12.dp))
 
@@ -189,8 +210,12 @@ OutlinedButton(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            TextButton(onClick = onRemindLaterClick) { Text("Lembrar depois") }
-                            TextButton(onClick = onCancelClick) { Text("Fechar") }
+                            TextButton(onClick = onRemindLaterClick) {
+                                Text(context.getString(R.string.update_button_remind_later))
+                            }
+                            TextButton(onClick = onCancelClick) {
+                                Text(context.getString(R.string.update_button_close))
+                            }
                         }
                     }
                 }
@@ -218,8 +243,8 @@ private fun startDownloadUnique(context: Context, updateInfo: AppVersionInfo, on
     } while (finalFile.exists())
     
     val request = DownloadManager.Request(Uri.parse(updateInfo.downloadUrl))
-        .setTitle("Atualizando Auris")
-        .setDescription("Baixando nova versão...")
+        .setTitle(context.getString(R.string.update_download_title))
+        .setDescription(context.getString(R.string.update_download_description))
         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
         .setAllowedOverMetered(true)
         .setDestinationUri(Uri.fromFile(finalFile))
@@ -231,7 +256,7 @@ private fun startDownloadUnique(context: Context, updateInfo: AppVersionInfo, on
 
 private fun installApk(context: Context, filePath: String) {
     try {
-        Toast.makeText(context, "Download concluído. Instalando...", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, R.string.update_toast_download_complete, Toast.LENGTH_SHORT).show()
 
         val uri = Uri.parse(filePath)
         val apkUri = if (uri.scheme == "content") {
@@ -262,9 +287,13 @@ private fun installApk(context: Context, filePath: String) {
         if (intent.resolveActivity(context.packageManager) != null) {
             context.startActivity(intent)
         } else {
-            Toast.makeText(context, "Nenhum app para instalar", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, R.string.update_toast_no_installer, Toast.LENGTH_SHORT).show()
         }
     } catch (e: Exception) {
-        Toast.makeText(context, "Erro ao instalar APK: ${e.message}", Toast.LENGTH_LONG).show()
+        Toast.makeText(
+            context,
+            context.getString(R.string.update_toast_install_error, e.message),
+            Toast.LENGTH_LONG
+        ).show()
     }
 }

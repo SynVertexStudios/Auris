@@ -99,9 +99,9 @@ Thank you for choosing Auris! ❤️
     <string name="about_donate_button">Make a donation</string>
     
         <!-- Site Oficial -->
-    <string name="about_official_website_title">Site Oficial</string>
-    <string name="about_official_website_subtitle">Conheça mais sobre o Auris em nosso site oficial.</string>
-    <string name="about_official_website_button">Visitar Site Oficial</string>
+    <string name="about_official_website_title">official website</string>
+    <string name="about_official_website_subtitle">Learn more about Auris on our official website.</string>
+    <string name="about_official_website_button">Go to the official website</string>
 
     <!-- YouTube -->
     <string name="about_youtube_title">YouTube</string>

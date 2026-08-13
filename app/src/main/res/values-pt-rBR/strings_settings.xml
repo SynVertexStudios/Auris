@@ -457,4 +457,25 @@
   <string name="dialog_regenerate_stats_body">Isso limpará o cache de estatísticas e forçará um recálculo a partir do histórico do banco de dados.</string>
   <string name="toast_stats_regeneration_started">Regeneração de estatísticas iniciada</string>
 
+  <!-- Update Screen -->
+<string name="update_title">Nova versão 🚀</string>
+<string name="update_current_version">Atual: %s</string>
+<string name="update_new_version">Nova: %s</string>
+<string name="update_changelog_title">📋 Novidades</string>
+<string name="update_download_progress">%d%%</string>
+<string name="update_button_download">Atualizar agora</string>
+<string name="update_button_website">Baixar do site oficial</string>
+<string name="update_button_remind_later">Lembrar depois</string>
+<string name="update_button_close">Fechar</string>
+
+<!-- Download Notifications -->
+<string name="update_download_title">Atualizando Auris</string>
+<string name="update_download_description">Baixando nova versão...</string>
+
+<!-- Toast Messages -->
+<string name="update_toast_download_failed">Download interrompido</string>
+<string name="update_toast_download_complete">Download concluído. Instalando...</string>
+<string name="update_toast_install_error">Erro ao instalar APK: %s</string>
+<string name="update_toast_no_installer">Nenhum app para instalar</string>
+
 </resources>
