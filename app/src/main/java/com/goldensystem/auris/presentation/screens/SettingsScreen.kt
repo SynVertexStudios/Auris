@@ -226,7 +226,6 @@ fun SettingsScreen(
                         val mainCategories = SettingsCategory.entries.filter {
                             it != SettingsCategory.ABOUT && 
                             it != SettingsCategory.DEVICE_CAPABILITIES
-                            it != SettingsCategory.DEVELOPER &&
                         }
 
                         val totalItems = mainCategories.size + 3 // Device + Accounts + About
