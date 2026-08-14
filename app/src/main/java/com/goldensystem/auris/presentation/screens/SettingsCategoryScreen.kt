@@ -1596,7 +1596,7 @@ fun SettingsCategoryScreen(
                                 )
                             }
                         }
-                        SettingsCategory.DEVELOPER -> {
+                        /*SettingsCategory.DEVELOPER -> {
                             SettingsSubsection(title = stringResource(R.string.setcat_experiments)) {
                                 SettingsItem(
                                     title = stringResource(R.string.setcat_experimental_title),
@@ -1657,7 +1657,7 @@ fun SettingsCategoryScreen(
                                     onClick = { settingsViewModel.triggerTestCrash() }
                                 )
                             }
-                        }
+                        }*/
                         SettingsCategory.ABOUT -> {
                             SettingsSubsection(
                                 title = stringResource(R.string.setcat_application),
