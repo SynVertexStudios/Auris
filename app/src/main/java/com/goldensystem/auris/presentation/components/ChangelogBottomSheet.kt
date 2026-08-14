@@ -3,6 +3,7 @@ package com.goldensystem.auris.presentation.components
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import com.goldensystem.auris.BuildConfig
 import androidx.annotation.ArrayRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
@@ -64,7 +65,7 @@ data class ChangelogVersion(
 @Composable
 private fun changelogVersions(): List<ChangelogVersion> = listOf(
     ChangelogVersion(
-        version = "1.0.0",
+        version = BuildConfig.VERSION_NAME,
         date = "2026-05-01",   // Atualize com a data que preferir
         sections = listOf(
             ChangelogSection(R.string.presentation_batch_g_changelog_sec_whats_new, R.array.presentation_batch_g_changelog_060_whats_new),

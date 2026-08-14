@@ -287,8 +287,8 @@ Barra invertida (\) pode ser usada para escapar delimitadores de caractere.</str
     <string name="presentation_batch_g_presets_cd_pin">Fixar</string>
     <string name="presentation_batch_g_presets_cd_rename">Renomear</string>
     <string name="presentation_batch_g_presets_cd_delete">Excluir</string>
-    <string name="presentation_batch_g_beta_sheet_version">1.0.0</string>
-    <string name="presentation_batch_g_beta_sheet_welcome_title">Bem-vindo ao Auris 1.0.0</string>
+    <string name="presentation_batch_g_beta_sheet_version">1.0.1</string>
+    <string name="presentation_batch_g_beta_sheet_welcome_title">Bem-vindo ao Auris 1.0.1</string>
     <string name="presentation_batch_g_beta_sheet_welcome_body">Esta é a versão beta inicial do Auris. Esta versão ainda está em desenvolvimento; portanto, você pode encontrar bugs indesejados. Caso os encontre, reporte-os para que possamos corrigi-los o mais rápido possível.</string>
     <string name="presentation_batch_g_beta_sheet_expect_title">O que esperar</string>
     <string name="presentation_batch_g_beta_sheet_expect_1">Uso diário mais rápido: inicialização, navegação e interações do player mais suaves em todo o aplicativo.</string>
@@ -299,7 +299,7 @@ Barra invertida (\) pode ser usada para escapar delimitadores de caractere.</str
     <string name="presentation_batch_g_beta_sheet_report_body">Compartilhe etapas para reproduzir, resultado esperado, resultado real e detalhes do seu dispositivo/SO. Uma breve gravação de tela é muito útil.</string>
     <string name="presentation_batch_g_beta_sheet_open_issues">Issues abertas no GitHub</string>
     <string name="presentation_batch_g_beta_sheet_report_bug">Reportar um bug</string>
-    <string name="presentation_batch_g_beta05_title">Atualização 1.0.0</string>
+    <string name="presentation_batch_g_beta05_title">Atualização 1.0.1</string>
     <string name="presentation_batch_g_beta05_clean_install_title">Instalação limpa recomendada</string>
     <string name="presentation_batch_g_beta05_clean_install_body">Se você está vindo de uma versão mais antiga do Auris, esta atualização pode precisar de dados de biblioteca novos em vez de estado antigo em cache.</string>
     <string name="presentation_batch_g_beta05_if_wrong_meta_title">Se metadados ou entradas da biblioteca parecerem errados</string>

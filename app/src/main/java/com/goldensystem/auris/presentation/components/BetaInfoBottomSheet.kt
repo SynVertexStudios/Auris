@@ -6,6 +6,7 @@ import androidx.compose.material.icons.rounded.Star
 import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import com.goldensystem.auris.BuildConfig
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -82,14 +83,7 @@ fun BetaInfoBottomSheet(
         "https://www.tiktok.com/@auris_music_player" 
     }
 
-    val versionName = remember {
-        try {
-            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            packageInfo.versionName ?: "1.0.0"
-        } catch (_: Exception) {
-            "1.0.0"
-        }
-    }
+    val versionName = BuildConfig.VERSION_NAME
 
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(

@@ -85,7 +85,7 @@ Thank you for choosing Auris! ❤️
         <!-- About screen (expanded)
     MUITA ATENCAO, ESSAS LINHAS NAO ESTAO MAIS SENDO ULTILIZADAS, AGORA E ULTILIZADO A STRING "about_changelog_title" -->
     <string name="about_changelog_title">What\'s new</string>
-    <string name="about_changelog_item_1">• Version 1.0.0: First stable Auris release</string>
+    <string name="about_changelog_item_1">• Version 1.0.1: First stable Auris release</string>
     <string name="about_changelog_item_2">• Custom light theme (golden yellow and black)</string>
     <string name="about_changelog_item_3">• Video gallery with built-in player</string>
     <string name="about_changelog_item_4">• Automatic update system via spreadsheet</string>

@@ -95,7 +95,7 @@ Obrigado por escolher o Auris! ❤️
     
         <!-- Tela Auris? (AboutScreen expandida) MUITA ATENCAO, ESSAS LINHAS NAO ESTAO MAIS SENDO ULTILIZADAS, AGORA E ULTILIZADO A STRING "about_changelog_title" -->
     <string name="about_changelog_title">Novidades da versão</string>
-    <string name="about_changelog_item_1">• Versão 1.0.0: Primeira versão estável do Auris</string>
+    <string name="about_changelog_item_1">• Versão 1.0.1: Primeira versão estável do Auris</string>
     <string name="about_changelog_item_2">• Tema claro personalizado (amarelo dourado e preto)</string>
     <string name="about_changelog_item_3">• Galeria de vídeos com player integrado</string>
     <string name="about_changelog_item_4">• Sistema de atualização automática via planilha</string>

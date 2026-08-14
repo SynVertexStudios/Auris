@@ -287,8 +287,8 @@ Backslash (\\) can be used to escape character delimiters.</string>
     <string name="presentation_batch_g_presets_cd_pin">Pin</string>
     <string name="presentation_batch_g_presets_cd_rename">Rename</string>
     <string name="presentation_batch_g_presets_cd_delete">Delete</string>
-    <string name="presentation_batch_g_beta_sheet_version">1.0.0</string>
-    <string name="presentation_batch_g_beta_sheet_welcome_title">Welcome to Auris 1.0.0</string>
+    <string name="presentation_batch_g_beta_sheet_version">1.0.1</string>
+    <string name="presentation_batch_g_beta_sheet_welcome_title">Welcome to Auris 1.0.1</string>
     <string name="presentation_batch_g_beta_sheet_welcome_body">This is the initial beta version of Auris. This version is still under development; therefore, you may encounter unwanted bugs. If you find them, report them so we can fix them as soon as possible.</string>
     <string name="presentation_batch_g_beta_sheet_expect_title">What to expect</string>
     <string name="presentation_batch_g_beta_sheet_expect_1">Faster daily use: smoother startup, navigation, and player interactions throughout the app.</string>
@@ -299,7 +299,7 @@ Backslash (\\) can be used to escape character delimiters.</string>
     <string name="presentation_batch_g_beta_sheet_report_body">Share steps to reproduce, expected result, actual result, and your device/OS details. A short screen recording is very helpful.</string>
     <string name="presentation_batch_g_beta_sheet_open_issues">Open GitHub issues</string>
     <string name="presentation_batch_g_beta_sheet_report_bug">Report a bug</string>
-    <string name="presentation_batch_g_beta05_title">Update 1.0.0</string>
+    <string name="presentation_batch_g_beta05_title">Update 1.0.1</string>
     <string name="presentation_batch_g_beta05_clean_install_title">Clean install recommended</string>
     <string name="presentation_batch_g_beta05_clean_install_body">If you are coming from an older version of Auris, this update may need fresh library data instead of old cached state.</string>
     <string name="presentation_batch_g_beta05_if_wrong_meta_title">If metadata or library entries look wrong</string>
