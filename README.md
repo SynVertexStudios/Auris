@@ -1,16 +1,16 @@
 Auris 🎵
 
-￼ 
+<p align="center"> <img src="assets/icon.auris" width="128"/> </p>
 
-A experiência completa para sua música e vídeos no Android. 
+<h3 align="center"> A experiência completa para sua música e vídeos no Android. </h3>
 
-Um player moderno, rápido e altamente personalizável, desenvolvido com Kotlin e Jetpack Compose pela Golden System Studios. 
+<p align="center"> Um player moderno, rápido e altamente personalizável, desenvolvido com Kotlin e Jetpack Compose pela Golden System Studios. </p>
 
 📸 Capturas de Tela
 
-￼ ￼ ￼ 
+<p align="center"> <img src="assets/screenshots/screenshot1.img" width="180"/> <img src="assets/screenshots/screenshot2.img" width="180"/> <img src="assets/screenshots/screenshot3.img" width="180"/> </p>
 
-￼ ￼ ￼ 
+<p align="center"> <img src="assets/screenshots/screenshot4.img" width="180"/> <img src="assets/screenshots/screenshot5.img" width="180"/> <img src="assets/screenshots/screenshot6.img" width="180"/> </p>
 
 ✨ O que é o Auris?
 
@@ -270,7 +270,7 @@ As versões Beta são distribuídas através do GitHub Releases.
 
 🧩 Arquitetura e Tecnologias
 
-TecnologiaUtilizaçãoKotlinDesenvolvimento principalJetpack ComposeInterfaceMaterial 3Design e componentesMedia3 / ExoPlayerReprodução de mídiaHiltInjeção de dependênciaRoomBanco de dados localRetrofitComunicação com APIsCoilCarregamento de imagensCoroutinesProcessamento assíncronoFlowFluxo de dados reativoWorkManagerProcessamentos em segundo plano 
+TecnologiaUtilizaçãoKotlinDesenvolvimento principalJetpack ComposeInterfaceMaterial 3Design e componentesMedia3 / ExoPlayerReprodução de mídiaHiltInjeção de dependênciaRoomBanco de dados localRetrofitComunicação com APIsCoilCarregamento de imagensCoroutinesProcessamento assíncronoFlowFluxo de dados reativoWorkManagerProcessamentos em segundo plano
 
 📱 Requisitos
 
@@ -386,7 +386,7 @@ Envie um Pull Request.
 
 📄 Licença
 
-O projeto é distribuído sob a LICENÇA PROPRIETÁRIA.
+O projeto é distribuído sob a licença PROPRIETÁRIA.
 
 🏢 Golden System Studios
 
@@ -396,7 +396,6 @@ Desenvolvedor: Saymon Silva Pereira
 
 O projeto permanece em desenvolvimento ativo, recebendo melhorias contínuas em interface, desempenho, reprodução de mídia, personalização e novos recursos.
 
-Auris 🎵
-Sua música. Seu estilo. Sua experiência. 
+<p align="center"> <strong>Auris 🎵</strong><br> Sua música. Seu estilo. Sua experiência. </p>
 
 
