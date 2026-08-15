@@ -13,32 +13,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Java 17
+      - name: Setup JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
           java-version: "17"
-          cache: gradle
+          distribution: "temurin"
 
-      - name: Fix Gradle Wrapper
-        run: |
-          chmod 777 gradlew
-          ls -la gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Restore release keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/my-release-key.keystore
 
       - name: Build Release APK
-        run: |
-          ./gradlew assembleRelease --stacktrace
+        run: ./gradlew assembleRelease
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: List generated APK
-        run: |
-          find . -type f -name "*.apk" -print
-
-      - name: Upload APK to Release
+      - name: Upload Release APK to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          files: |
-            app/build/outputs/apk/release/*.apk
+          name: Auris ${{ github.ref_name }}
+          files: app/build/outputs/apk/release/*.apk
+
+      - name: Upload Release APK as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: auris-release
+          path: app/build/outputs/apk/release/*.apk
