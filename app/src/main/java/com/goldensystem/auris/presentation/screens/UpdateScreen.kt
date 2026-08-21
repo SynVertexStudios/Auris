@@ -190,7 +190,7 @@ fun UpdateScreen(
 
                     OutlinedButton(
                         onClick = {
-                            val websiteUrl = "https://pereirasaymonsilva-a11y.github.io/Auris-website/"
+                            val websiteUrl = "https://synvertexstudios.github.io/Auris-website/"
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(websiteUrl))
                             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                             context.startActivity(intent)

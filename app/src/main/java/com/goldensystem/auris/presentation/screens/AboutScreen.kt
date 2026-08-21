@@ -150,7 +150,7 @@ fun AboutScreen(
     }
 
     // URLs
-    val officialWebsite = "https://pereirasaymonsilva-a11y.github.io/Auris-website/data/home.html"
+    val officialWebsite = "https://synvertexstudios.github.io/Auris-website/data/home.html"
     val youtubeUrl = "https://www.youtube.com/@AurisMusicPlayer"
     val instagramUrl = "https://www.instagram.com/aurismp"
     val tiktokUrl = "https://www.tiktok.com/@auris_music_player"
@@ -161,7 +161,7 @@ fun AboutScreen(
         displayName = "Golden System",
         role = stringResource(R.string.contributor_golden_role),
         detail = stringResource(R.string.contributor_golden_detail),
-        avatarUrl = "https://raw.githubusercontent.com/pereirasaymonsilva-a11y/Auris/main/app/src/main/res/drawable/goldensystem_icon.png",
+        avatarUrl = "https://raw.githubusercontent.com/synvertexstudios/Auris/main/app/src/main/res/drawable/goldensystem_icon.png",
         iconRes = R.drawable.ic_music_placeholder,
         githubUrl = null,
         telegramUrl = null,
@@ -170,13 +170,13 @@ fun AboutScreen(
     )
 
     val aurisMaintainer = Contributor(
-        id = "pereirasaymonsilva-a11y",
+        id = "synvertexstudios",
         displayName = stringResource(R.string.contributor_auris_display_name),
         role = stringResource(R.string.contributor_auris_role),
         detail = stringResource(R.string.contributor_auris_detail),
-        avatarUrl = "https://raw.githubusercontent.com/pereirasaymonsilva-a11y/Auris/refs/heads/main/app/src/main/res/drawable/ic_guarafox_ft.png",
+        avatarUrl = "https://raw.githubusercontent.com/synvertexstudios/Auris/refs/heads/main/app/src/main/res/drawable/ic_guarafox_ft.png",
         iconRes = R.drawable.ic_music_placeholder,
-        githubUrl = "https://github.com/pereirasaymonsilva-a11y",
+        githubUrl = "https://github.com/synvertexstudios",
         telegramUrl = null,
         instagramUrl = null,
         tiktokUrl = null,
@@ -416,7 +416,7 @@ fun AboutScreen(
                     )
                     OutlinedButton(
                         onClick = {
-                            openUrl(context, "https://github.com/pereirasaymonsilva-a11y/Auris/issues/new?template=blank")
+                            openUrl(context, "https://github.com/synvertexstudios/Auris/issues/new?template=blank")
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -823,7 +823,7 @@ private fun ContributorCard(
                     )
                 } 
                 // Para Saymon: não mostrar nenhum ícone
-                else if (contributor.id == "pereirasaymonsilva-a11y") {
+                else if (contributor.id == "synvertexstudios") {
                     // Não mostrar nenhum ícone
                 }
                 // Para outros casos (fallback)

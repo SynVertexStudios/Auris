@@ -68,10 +68,10 @@ fun BetaInfoBottomSheet(
     
     // URLs
     val feedbackUrl = remember { 
-        "https://github.com/pereirasaymonsilva-a11y/Auris/issues/new/choose" 
+        "https://github.com/synvertexstudios/Auris/issues/new/choose" 
     }
     val officialWebsite = remember { 
-        "https://pereirasaymonsilva-a11y.github.io/Auris-website/home.html" 
+        "https://synvertexstudios.github.io/Auris-website/home.html" 
     }
     val youtubeUrl = remember { 
         "https://www.youtube.com/@AurisMusicPlayer" 

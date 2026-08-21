@@ -74,7 +74,7 @@ private val CATEGORY_CONFIG = mapOf(
 )
 
 private const val BASE_URL =
-    "https://raw.githubusercontent.com/pereirasaymonsilva-a11y/Auris/main/assets/wallpaper"
+    "https://raw.githubusercontent.com/synvertexstudios/Auris/main/assets/wallpaper"
 
 val WALLPAPER_CATEGORIES = mutableMapOf<WallpaperCategory, List<String>>().apply {
     CATEGORY_CONFIG.forEach { (category, config) ->
