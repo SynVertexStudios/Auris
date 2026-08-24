@@ -11,7 +11,7 @@ import com.goldensystem.auris.data.preferences.CustomThemeConfig
 
 fun customColorScheme(
     config: CustomThemeConfig,
-    isDark: Boolean
+    isDark: Boolean = true
 ): ColorScheme {
     val primary = Color(config.primaryColor)
     val onPrimary = Color(config.onPrimaryColor)
@@ -43,40 +43,7 @@ fun customColorScheme(
     val inverseOnSurface = onSurface
     val scrim = Color(0x66000000.toInt())
 
-    return if (isDark) {
-        darkColorScheme(
-            primary = primary,
-            onPrimary = onPrimary,
-            secondary = secondary,
-            onSecondary = onSecondary,
-            tertiary = tertiary,
-            onTertiary = onTertiary,
-            background = background,
-            onBackground = onBackground,
-            surface = surface,
-            onSurface = onSurface,
-            surfaceVariant = surfaceVariant,
-            onSurfaceVariant = onSurfaceVariant,
-            primaryContainer = primaryContainer,
-            onPrimaryContainer = onPrimaryContainer,
-            secondaryContainer = secondaryContainer,
-            onSecondaryContainer = onSecondaryContainer,
-            tertiaryContainer = tertiaryContainer,
-            onTertiaryContainer = onTertiaryContainer,
-            error = error,
-            onError = onError,
-            errorContainer = errorContainer,
-            onErrorContainer = onErrorContainer,
-            outline = outline,
-            outlineVariant = outlineVariant,
-            surfaceTint = surfaceTint,
-            inversePrimary = inversePrimary,
-            inverseSurface = inverseSurface,
-            inverseOnSurface = inverseOnSurface,
-            scrim = scrim
-        )
-    } else {
-        lightColorScheme(
+    return darkColorScheme(
             primary = primary,
             onPrimary = onPrimary,
             secondary = secondary,
@@ -108,4 +75,3 @@ fun customColorScheme(
             scrim = scrim
         )
     }
-}

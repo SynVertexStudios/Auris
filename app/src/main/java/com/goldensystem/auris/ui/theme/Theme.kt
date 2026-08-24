@@ -146,7 +146,7 @@ fun AurisTheme(
         }
 
         if (config.isEnabled) {
-            val customColorScheme = customColorScheme(config, darkTheme)
+            val customColorScheme = customColorScheme(config, isDark = true)
 
             MaterialTheme(
                 colorScheme = customColorScheme,
