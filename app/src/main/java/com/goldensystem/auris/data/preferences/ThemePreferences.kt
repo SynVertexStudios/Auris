@@ -21,46 +21,38 @@ import javax.inject.Singleton
 data class CustomThemeConfig(
     val isEnabled: Boolean = false,
     
-    // CORES PRINCIPAIS
-    val primary: Int = 0xFF6750A4.toInt(),
-    val onPrimary: Int = 0xFFFFFFFF.toInt(),
-    val primaryContainer: Int = 0xFFEADDFF.toInt(),
-    val onPrimaryContainer: Int = 0xFF21005D.toInt(),
+    // ===== CORES EXISTENTES (MANTENHA) =====
+    val primaryColor: Int = 0xFF6750A4.toInt(),
+    val secondaryColor: Int = 0xFFF06292.toInt(),
+    val backgroundColor: Int = 0xFF1E1234.toInt(),
+    val onPrimaryColor: Int = 0xFFFFFFFF.toInt(),
+    val onSurfaceColor: Int = 0xFFE1BEE7.toInt(),
+    val accentColor: Int = 0xFFFF8A65.toInt(),
     
-    val secondary: Int = 0xFF625B71.toInt(),
-    val onSecondary: Int = 0xFFFFFFFF.toInt(),
-    val secondaryContainer: Int = 0xFFE8DEF8.toInt(),
-    val onSecondaryContainer: Int = 0xFF1D192B.toInt(),
+    // ===== NOVAS CORES (ADICIONE) =====
+    val tertiaryColor: Int = 0xFF7D5260.toInt(),
+    val onSecondaryColor: Int = 0xFFFFFFFF.toInt(),
+    val secondaryContainerColor: Int = 0xFFE8DEF8.toInt(),
+    val onSecondaryContainerColor: Int = 0xFF1D192B.toInt(),
+    val tertiaryContainerColor: Int = 0xFFFFD8E4.toInt(),
+    val onTertiaryContainerColor: Int = 0xFF31111D.toInt(),
+    val onBackgroundColor: Int = 0xFF1C1B1F.toInt(),
+    val surfaceColor: Int = 0xFFFFFBFE.toInt(),
+    val surfaceVariantColor: Int = 0xFFE7E0EC.toInt(),
+    val onSurfaceVariantColor: Int = 0xFF49454F.toInt(),
+    val errorColor: Int = 0xFFB3261E.toInt(),
+    val onErrorColor: Int = 0xFFFFFFFF.toInt(),
+    val errorContainerColor: Int = 0xFFF9DEDC.toInt(),
+    val onErrorContainerColor: Int = 0xFF410E0B.toInt(),
+    val outlineColor: Int = 0xFF79747E.toInt(),
+    val outlineVariantColor: Int = 0xFFCAC4D0.toInt(),
+    val surfaceTintColor: Int = 0xFF6750A4.toInt(),
+    val inversePrimaryColor: Int = 0xFFD0BCFF.toInt(),
+    val inverseSurfaceColor: Int = 0xFF313033.toInt(),
+    val inverseOnSurfaceColor: Int = 0xFFF4EFF4.toInt(),
+    val scrimColor: Int = 0xFF000000.toInt(),
     
-    val tertiary: Int = 0xFF7D5260.toInt(),
-    val onTertiary: Int = 0xFFFFFFFF.toInt(),
-    val tertiaryContainer: Int = 0xFFFFD8E4.toInt(),
-    val onTertiaryContainer: Int = 0xFF31111D.toInt(),
-    
-    // FUNDO E SUPERFÍCIE
-    val background: Int = 0xFFFFFBFE.toInt(),
-    val onBackground: Int = 0xFF1C1B1F.toInt(),
-    val surface: Int = 0xFFFFFBFE.toInt(),
-    val onSurface: Int = 0xFF1C1B1F.toInt(),
-    val surfaceVariant: Int = 0xFFE7E0EC.toInt(),
-    val onSurfaceVariant: Int = 0xFF49454F.toInt(),
-    
-    // ERRO
-    val error: Int = 0xFFB3261E.toInt(),
-    val onError: Int = 0xFFFFFFFF.toInt(),
-    val errorContainer: Int = 0xFFF9DEDC.toInt(),
-    val onErrorContainer: Int = 0xFF410E0B.toInt(),
-    
-    // OUTRAS
-    val outline: Int = 0xFF79747E.toInt(),
-    val outlineVariant: Int = 0xFFCAC4D0.toInt(),
-    val surfaceTint: Int = 0xFF6750A4.toInt(),
-    val inversePrimary: Int = 0xFFD0BCFF.toInt(),
-    val inverseSurface: Int = 0xFF313033.toInt(),
-    val inverseOnSurface: Int = 0xFFF4EFF4.toInt(),
-    val scrim: Int = 0xFF000000.toInt(),
-    
-    // WALLPAPER (mantém igual)
+    // ===== WALLPAPER (MANTENHA) =====
     val wallpaperType: WallpaperType = WallpaperType.SOLID,
     val wallpaperColor: Int = 0xFF1E1234.toInt(),
     val wallpaperUri: String? = null,
@@ -80,45 +72,39 @@ class ThemePreferences @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) {
     companion object {
+    // Chaves existentes (MANTENHA)
     private val THEME_ENABLED = booleanPreferencesKey("custom_theme_enabled")
+    private val PRIMARY_COLOR = intPreferencesKey("custom_primary_color")
+    private val SECONDARY_COLOR = intPreferencesKey("custom_secondary_color")
+    private val BACKGROUND_COLOR = intPreferencesKey("custom_background_color")
+    private val ON_PRIMARY_COLOR = intPreferencesKey("custom_on_primary_color")
+    private val ON_SURFACE_COLOR = intPreferencesKey("custom_on_surface_color")
+    private val ACCENT_COLOR = intPreferencesKey("custom_accent_color")
     
-    // CORES PRINCIPAIS
-    private val PRIMARY = intPreferencesKey("custom_primary")
-    private val ON_PRIMARY = intPreferencesKey("custom_on_primary")
-    private val PRIMARY_CONTAINER = intPreferencesKey("custom_primary_container")
-    private val ON_PRIMARY_CONTAINER = intPreferencesKey("custom_on_primary_container")
+    // Novas chaves (ADICIONE)
+    private val TERTIARY_COLOR = intPreferencesKey("custom_tertiary_color")
+    private val ON_SECONDARY_COLOR = intPreferencesKey("custom_on_secondary_color")
+    private val SECONDARY_CONTAINER_COLOR = intPreferencesKey("custom_secondary_container_color")
+    private val ON_SECONDARY_CONTAINER_COLOR = intPreferencesKey("custom_on_secondary_container_color")
+    private val TERTIARY_CONTAINER_COLOR = intPreferencesKey("custom_tertiary_container_color")
+    private val ON_TERTIARY_CONTAINER_COLOR = intPreferencesKey("custom_on_tertiary_container_color")
+    private val ON_BACKGROUND_COLOR = intPreferencesKey("custom_on_background_color")
+    private val SURFACE_COLOR = intPreferencesKey("custom_surface_color")
+    private val SURFACE_VARIANT_COLOR = intPreferencesKey("custom_surface_variant_color")
+    private val ON_SURFACE_VARIANT_COLOR = intPreferencesKey("custom_on_surface_variant_color")
+    private val ERROR_COLOR = intPreferencesKey("custom_error_color")
+    private val ON_ERROR_COLOR = intPreferencesKey("custom_on_error_color")
+    private val ERROR_CONTAINER_COLOR = intPreferencesKey("custom_error_container_color")
+    private val ON_ERROR_CONTAINER_COLOR = intPreferencesKey("custom_on_error_container_color")
+    private val OUTLINE_COLOR = intPreferencesKey("custom_outline_color")
+    private val OUTLINE_VARIANT_COLOR = intPreferencesKey("custom_outline_variant_color")
+    private val SURFACE_TINT_COLOR = intPreferencesKey("custom_surface_tint_color")
+    private val INVERSE_PRIMARY_COLOR = intPreferencesKey("custom_inverse_primary_color")
+    private val INVERSE_SURFACE_COLOR = intPreferencesKey("custom_inverse_surface_color")
+    private val INVERSE_ON_SURFACE_COLOR = intPreferencesKey("custom_inverse_on_surface_color")
+    private val SCRIM_COLOR = intPreferencesKey("custom_scrim_color")
     
-    private val SECONDARY = intPreferencesKey("custom_secondary")
-    private val ON_SECONDARY = intPreferencesKey("custom_on_secondary")
-    private val SECONDARY_CONTAINER = intPreferencesKey("custom_secondary_container")
-    private val ON_SECONDARY_CONTAINER = intPreferencesKey("custom_on_secondary_container")
-    
-    private val TERTIARY = intPreferencesKey("custom_tertiary")
-    private val ON_TERTIARY = intPreferencesKey("custom_on_tertiary")
-    private val TERTIARY_CONTAINER = intPreferencesKey("custom_tertiary_container")
-    private val ON_TERTIARY_CONTAINER = intPreferencesKey("custom_on_tertiary_container")
-    
-    private val BACKGROUND = intPreferencesKey("custom_background")
-    private val ON_BACKGROUND = intPreferencesKey("custom_on_background")
-    private val SURFACE = intPreferencesKey("custom_surface")
-    private val ON_SURFACE = intPreferencesKey("custom_on_surface")
-    private val SURFACE_VARIANT = intPreferencesKey("custom_surface_variant")
-    private val ON_SURFACE_VARIANT = intPreferencesKey("custom_on_surface_variant")
-    
-    private val ERROR = intPreferencesKey("custom_error")
-    private val ON_ERROR = intPreferencesKey("custom_on_error")
-    private val ERROR_CONTAINER = intPreferencesKey("custom_error_container")
-    private val ON_ERROR_CONTAINER = intPreferencesKey("custom_on_error_container")
-    
-    private val OUTLINE = intPreferencesKey("custom_outline")
-    private val OUTLINE_VARIANT = intPreferencesKey("custom_outline_variant")
-    private val SURFACE_TINT = intPreferencesKey("custom_surface_tint")
-    private val INVERSE_PRIMARY = intPreferencesKey("custom_inverse_primary")
-    private val INVERSE_SURFACE = intPreferencesKey("custom_inverse_surface")
-    private val INVERSE_ON_SURFACE = intPreferencesKey("custom_inverse_on_surface")
-    private val SCRIM = intPreferencesKey("custom_scrim")
-    
-    // WALLPAPER (mantém igual)
+    // Wallpaper (MANTENHA)
     private val WALLPAPER_TYPE = stringPreferencesKey("wallpaper_type")
     private val WALLPAPER_COLOR = intPreferencesKey("wallpaper_color")
     private val WALLPAPER_URI = stringPreferencesKey("wallpaper_uri")
@@ -129,43 +115,39 @@ class ThemePreferences @Inject constructor(
 
     val customThemeConfig: Flow<CustomThemeConfig> = dataStore.data.map { prefs ->
     CustomThemeConfig(
+        // Existentes (MANTENHA)
         isEnabled = prefs[THEME_ENABLED] ?: false,
+        primaryColor = prefs[PRIMARY_COLOR] ?: 0xFF6750A4.toInt(),
+        secondaryColor = prefs[SECONDARY_COLOR] ?: 0xFFF06292.toInt(),
+        backgroundColor = prefs[BACKGROUND_COLOR] ?: 0xFF1E1234.toInt(),
+        onPrimaryColor = prefs[ON_PRIMARY_COLOR] ?: 0xFFFFFFFF.toInt(),
+        onSurfaceColor = prefs[ON_SURFACE_COLOR] ?: 0xFFE1BEE7.toInt(),
+        accentColor = prefs[ACCENT_COLOR] ?: 0xFFFF8A65.toInt(),
         
-        primary = prefs[PRIMARY] ?: 0xFF6750A4.toInt(),
-        onPrimary = prefs[ON_PRIMARY] ?: 0xFFFFFFFF.toInt(),
-        primaryContainer = prefs[PRIMARY_CONTAINER] ?: 0xFFEADDFF.toInt(),
-        onPrimaryContainer = prefs[ON_PRIMARY_CONTAINER] ?: 0xFF21005D.toInt(),
+        // Novas (ADICIONE)
+        tertiaryColor = prefs[TERTIARY_COLOR] ?: 0xFF7D5260.toInt(),
+        onSecondaryColor = prefs[ON_SECONDARY_COLOR] ?: 0xFFFFFFFF.toInt(),
+        secondaryContainerColor = prefs[SECONDARY_CONTAINER_COLOR] ?: 0xFFE8DEF8.toInt(),
+        onSecondaryContainerColor = prefs[ON_SECONDARY_CONTAINER_COLOR] ?: 0xFF1D192B.toInt(),
+        tertiaryContainerColor = prefs[TERTIARY_CONTAINER_COLOR] ?: 0xFFFFD8E4.toInt(),
+        onTertiaryContainerColor = prefs[ON_TERTIARY_CONTAINER_COLOR] ?: 0xFF31111D.toInt(),
+        onBackgroundColor = prefs[ON_BACKGROUND_COLOR] ?: 0xFF1C1B1F.toInt(),
+        surfaceColor = prefs[SURFACE_COLOR] ?: 0xFFFFFBFE.toInt(),
+        surfaceVariantColor = prefs[SURFACE_VARIANT_COLOR] ?: 0xFFE7E0EC.toInt(),
+        onSurfaceVariantColor = prefs[ON_SURFACE_VARIANT_COLOR] ?: 0xFF49454F.toInt(),
+        errorColor = prefs[ERROR_COLOR] ?: 0xFFB3261E.toInt(),
+        onErrorColor = prefs[ON_ERROR_COLOR] ?: 0xFFFFFFFF.toInt(),
+        errorContainerColor = prefs[ERROR_CONTAINER_COLOR] ?: 0xFFF9DEDC.toInt(),
+        onErrorContainerColor = prefs[ON_ERROR_CONTAINER_COLOR] ?: 0xFF410E0B.toInt(),
+        outlineColor = prefs[OUTLINE_COLOR] ?: 0xFF79747E.toInt(),
+        outlineVariantColor = prefs[OUTLINE_VARIANT_COLOR] ?: 0xFFCAC4D0.toInt(),
+        surfaceTintColor = prefs[SURFACE_TINT_COLOR] ?: 0xFF6750A4.toInt(),
+        inversePrimaryColor = prefs[INVERSE_PRIMARY_COLOR] ?: 0xFFD0BCFF.toInt(),
+        inverseSurfaceColor = prefs[INVERSE_SURFACE_COLOR] ?: 0xFF313033.toInt(),
+        inverseOnSurfaceColor = prefs[INVERSE_ON_SURFACE_COLOR] ?: 0xFFF4EFF4.toInt(),
+        scrimColor = prefs[SCRIM_COLOR] ?: 0xFF000000.toInt(),
         
-        secondary = prefs[SECONDARY] ?: 0xFF625B71.toInt(),
-        onSecondary = prefs[ON_SECONDARY] ?: 0xFFFFFFFF.toInt(),
-        secondaryContainer = prefs[SECONDARY_CONTAINER] ?: 0xFFE8DEF8.toInt(),
-        onSecondaryContainer = prefs[ON_SECONDARY_CONTAINER] ?: 0xFF1D192B.toInt(),
-        
-        tertiary = prefs[TERTIARY] ?: 0xFF7D5260.toInt(),
-        onTertiary = prefs[ON_TERTIARY] ?: 0xFFFFFFFF.toInt(),
-        tertiaryContainer = prefs[TERTIARY_CONTAINER] ?: 0xFFFFD8E4.toInt(),
-        onTertiaryContainer = prefs[ON_TERTIARY_CONTAINER] ?: 0xFF31111D.toInt(),
-        
-        background = prefs[BACKGROUND] ?: 0xFFFFFBFE.toInt(),
-        onBackground = prefs[ON_BACKGROUND] ?: 0xFF1C1B1F.toInt(),
-        surface = prefs[SURFACE] ?: 0xFFFFFBFE.toInt(),
-        onSurface = prefs[ON_SURFACE] ?: 0xFF1C1B1F.toInt(),
-        surfaceVariant = prefs[SURFACE_VARIANT] ?: 0xFFE7E0EC.toInt(),
-        onSurfaceVariant = prefs[ON_SURFACE_VARIANT] ?: 0xFF49454F.toInt(),
-        
-        error = prefs[ERROR] ?: 0xFFB3261E.toInt(),
-        onError = prefs[ON_ERROR] ?: 0xFFFFFFFF.toInt(),
-        errorContainer = prefs[ERROR_CONTAINER] ?: 0xFFF9DEDC.toInt(),
-        onErrorContainer = prefs[ON_ERROR_CONTAINER] ?: 0xFF410E0B.toInt(),
-        
-        outline = prefs[OUTLINE] ?: 0xFF79747E.toInt(),
-        outlineVariant = prefs[OUTLINE_VARIANT] ?: 0xFFCAC4D0.toInt(),
-        surfaceTint = prefs[SURFACE_TINT] ?: 0xFF6750A4.toInt(),
-        inversePrimary = prefs[INVERSE_PRIMARY] ?: 0xFFD0BCFF.toInt(),
-        inverseSurface = prefs[INVERSE_SURFACE] ?: 0xFF313033.toInt(),
-        inverseOnSurface = prefs[INVERSE_ON_SURFACE] ?: 0xFFF4EFF4.toInt(),
-        scrim = prefs[SCRIM] ?: 0xFF000000.toInt(),
-        
+        // Wallpaper (MANTENHA)
         wallpaperType = try {
             val typeName = prefs[WALLPAPER_TYPE] ?: WallpaperType.SOLID.name
             WallpaperType.valueOf(typeName)
@@ -182,44 +164,39 @@ class ThemePreferences @Inject constructor(
 
     suspend fun setCustomTheme(config: CustomThemeConfig) {
     dataStore.edit { prefs ->
+        // Existentes (MANTENHA)
         prefs[THEME_ENABLED] = config.isEnabled
+        prefs[PRIMARY_COLOR] = config.primaryColor
+        prefs[SECONDARY_COLOR] = config.secondaryColor
+        prefs[BACKGROUND_COLOR] = config.backgroundColor
+        prefs[ON_PRIMARY_COLOR] = config.onPrimaryColor
+        prefs[ON_SURFACE_COLOR] = config.onSurfaceColor
+        prefs[ACCENT_COLOR] = config.accentColor
         
-        prefs[PRIMARY] = config.primary
-        prefs[ON_PRIMARY] = config.onPrimary
-        prefs[PRIMARY_CONTAINER] = config.primaryContainer
-        prefs[ON_PRIMARY_CONTAINER] = config.onPrimaryContainer
+        // Novas (ADICIONE)
+        prefs[TERTIARY_COLOR] = config.tertiaryColor
+        prefs[ON_SECONDARY_COLOR] = config.onSecondaryColor
+        prefs[SECONDARY_CONTAINER_COLOR] = config.secondaryContainerColor
+        prefs[ON_SECONDARY_CONTAINER_COLOR] = config.onSecondaryContainerColor
+        prefs[TERTIARY_CONTAINER_COLOR] = config.tertiaryContainerColor
+        prefs[ON_TERTIARY_CONTAINER_COLOR] = config.onTertiaryContainerColor
+        prefs[ON_BACKGROUND_COLOR] = config.onBackgroundColor
+        prefs[SURFACE_COLOR] = config.surfaceColor
+        prefs[SURFACE_VARIANT_COLOR] = config.surfaceVariantColor
+        prefs[ON_SURFACE_VARIANT_COLOR] = config.onSurfaceVariantColor
+        prefs[ERROR_COLOR] = config.errorColor
+        prefs[ON_ERROR_COLOR] = config.onErrorColor
+        prefs[ERROR_CONTAINER_COLOR] = config.errorContainerColor
+        prefs[ON_ERROR_CONTAINER_COLOR] = config.onErrorContainerColor
+        prefs[OUTLINE_COLOR] = config.outlineColor
+        prefs[OUTLINE_VARIANT_COLOR] = config.outlineVariantColor
+        prefs[SURFACE_TINT_COLOR] = config.surfaceTintColor
+        prefs[INVERSE_PRIMARY_COLOR] = config.inversePrimaryColor
+        prefs[INVERSE_SURFACE_COLOR] = config.inverseSurfaceColor
+        prefs[INVERSE_ON_SURFACE_COLOR] = config.inverseOnSurfaceColor
+        prefs[SCRIM_COLOR] = config.scrimColor
         
-        prefs[SECONDARY] = config.secondary
-        prefs[ON_SECONDARY] = config.onSecondary
-        prefs[SECONDARY_CONTAINER] = config.secondaryContainer
-        prefs[ON_SECONDARY_CONTAINER] = config.onSecondaryContainer
-        
-        prefs[TERTIARY] = config.tertiary
-        prefs[ON_TERTIARY] = config.onTertiary
-        prefs[TERTIARY_CONTAINER] = config.tertiaryContainer
-        prefs[ON_TERTIARY_CONTAINER] = config.onTertiaryContainer
-        
-        prefs[BACKGROUND] = config.background
-        prefs[ON_BACKGROUND] = config.onBackground
-        prefs[SURFACE] = config.surface
-        prefs[ON_SURFACE] = config.onSurface
-        prefs[SURFACE_VARIANT] = config.surfaceVariant
-        prefs[ON_SURFACE_VARIANT] = config.onSurfaceVariant
-        
-        prefs[ERROR] = config.error
-        prefs[ON_ERROR] = config.onError
-        prefs[ERROR_CONTAINER] = config.errorContainer
-        prefs[ON_ERROR_CONTAINER] = config.onErrorContainer
-        
-        prefs[OUTLINE] = config.outline
-        prefs[OUTLINE_VARIANT] = config.outlineVariant
-        prefs[SURFACE_TINT] = config.surfaceTint
-        prefs[INVERSE_PRIMARY] = config.inversePrimary
-        prefs[INVERSE_SURFACE] = config.inverseSurface
-        prefs[INVERSE_ON_SURFACE] = config.inverseOnSurface
-        prefs[SCRIM] = config.scrim
-        
-        // WALLPAPER
+        // Wallpaper (MANTENHA)
         prefs[WALLPAPER_TYPE] = config.wallpaperType.name
         prefs[WALLPAPER_COLOR] = config.wallpaperColor
         prefs[WALLPAPER_URI] = config.wallpaperUri ?: ""
@@ -231,50 +208,45 @@ class ThemePreferences @Inject constructor(
 
     suspend fun resetCustomTheme() {
     dataStore.edit { prefs ->
+        // Existentes (MANTENHA)
         prefs.remove(THEME_ENABLED)
+        prefs.remove(PRIMARY_COLOR)
+        prefs.remove(SECONDARY_COLOR)
+        prefs.remove(BACKGROUND_COLOR)
+        prefs.remove(ON_PRIMARY_COLOR)
+        prefs.remove(ON_SURFACE_COLOR)
+        prefs.remove(ACCENT_COLOR)
         
-        prefs.remove(PRIMARY)
-        prefs.remove(ON_PRIMARY)
-        prefs.remove(PRIMARY_CONTAINER)
-        prefs.remove(ON_PRIMARY_CONTAINER)
+        // Novas (ADICIONE)
+        prefs.remove(TERTIARY_COLOR)
+        prefs.remove(ON_SECONDARY_COLOR)
+        prefs.remove(SECONDARY_CONTAINER_COLOR)
+        prefs.remove(ON_SECONDARY_CONTAINER_COLOR)
+        prefs.remove(TERTIARY_CONTAINER_COLOR)
+        prefs.remove(ON_TERTIARY_CONTAINER_COLOR)
+        prefs.remove(ON_BACKGROUND_COLOR)
+        prefs.remove(SURFACE_COLOR)
+        prefs.remove(SURFACE_VARIANT_COLOR)
+        prefs.remove(ON_SURFACE_VARIANT_COLOR)
+        prefs.remove(ERROR_COLOR)
+        prefs.remove(ON_ERROR_COLOR)
+        prefs.remove(ERROR_CONTAINER_COLOR)
+        prefs.remove(ON_ERROR_CONTAINER_COLOR)
+        prefs.remove(OUTLINE_COLOR)
+        prefs.remove(OUTLINE_VARIANT_COLOR)
+        prefs.remove(SURFACE_TINT_COLOR)
+        prefs.remove(INVERSE_PRIMARY_COLOR)
+        prefs.remove(INVERSE_SURFACE_COLOR)
+        prefs.remove(INVERSE_ON_SURFACE_COLOR)
+        prefs.remove(SCRIM_COLOR)
         
-        prefs.remove(SECONDARY)
-        prefs.remove(ON_SECONDARY)
-        prefs.remove(SECONDARY_CONTAINER)
-        prefs.remove(ON_SECONDARY_CONTAINER)
-        
-        prefs.remove(TERTIARY)
-        prefs.remove(ON_TERTIARY)
-        prefs.remove(TERTIARY_CONTAINER)
-        prefs.remove(ON_TERTIARY_CONTAINER)
-        
-        prefs.remove(BACKGROUND)
-        prefs.remove(ON_BACKGROUND)
-        prefs.remove(SURFACE)
-        prefs.remove(ON_SURFACE)
-        prefs.remove(SURFACE_VARIANT)
-        prefs.remove(ON_SURFACE_VARIANT)
-        
-        prefs.remove(ERROR)
-        prefs.remove(ON_ERROR)
-        prefs.remove(ERROR_CONTAINER)
-        prefs.remove(ON_ERROR_CONTAINER)
-        
-        prefs.remove(OUTLINE)
-        prefs.remove(OUTLINE_VARIANT)
-        prefs.remove(SURFACE_TINT)
-        prefs.remove(INVERSE_PRIMARY)
-        prefs.remove(INVERSE_SURFACE)
-        prefs.remove(INVERSE_ON_SURFACE)
-        prefs.remove(SCRIM)
-        
-        // WALLPAPER
+        // Wallpaper (MANTENHA)
         prefs.remove(WALLPAPER_TYPE)
         prefs.remove(WALLPAPER_COLOR)
         prefs.remove(WALLPAPER_URI)
         prefs.remove(WALLPAPER_URL)
         prefs.remove(WALLPAPER_BLUR)
         prefs.remove(WALLPAPER_DIM)
-        }
     }
+}
 }
