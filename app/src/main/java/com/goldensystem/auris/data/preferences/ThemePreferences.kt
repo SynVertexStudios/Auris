@@ -275,5 +275,6 @@ class ThemePreferences @Inject constructor(
         prefs.remove(WALLPAPER_URL)
         prefs.remove(WALLPAPER_BLUR)
         prefs.remove(WALLPAPER_DIM)
+        }
     }
 }
