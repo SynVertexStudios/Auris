@@ -570,13 +570,11 @@ fun SettingsCategoryScreen(
         
         coroutineScope.launch {
             if (mode == AppThemeMode.CUSTOM) {
-                // ✅ ATIVA O TEMA CUSTOMIZADO IMEDIATAMENTE
+                // ✅ ATIVA O TEMA NA HORA
                 customThemeViewModel.saveCustomTheme()
             } else {
-                // ❌ DESATIVA O TEMA CUSTOMIZADO
+                // ❌ DESATIVA O TEMA
                 customThemeViewModel.disableCustomTheme()
-                delay(100)
-                (context as? Activity)?.recreate()
             }
         }
     },
