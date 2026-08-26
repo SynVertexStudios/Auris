@@ -102,10 +102,14 @@ fun updateScrimColor(color: Int) { _config.update { it.copy(scrimColor = color) 
         themePreferences.setCustomTheme(_config.value.copy(isEnabled = false))
         _config.value = _config.value.copy(isEnabled = false)
     }
-
-    suspend fun saveCustomTheme() {
-        themePreferences.setCustomTheme(_config.value.copy(isEnabled = true))
-    }
+suspend fun saveCustomTheme() {
+    // COMENTA ISSO:
+    // themePreferences.setCustomTheme(_config.value.copy(isEnabled = true))
+    // _config.value = _config.value.copy(isEnabled = true)
+    
+    // Só printa
+    println("saveCustomTheme chamado")
+}
 
     suspend fun resetToDefault() {
         themePreferences.resetCustomTheme()
