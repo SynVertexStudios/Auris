@@ -117,7 +117,15 @@ fun AurisTheme(
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
-    val finalColorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val viewModel: CustomThemeViewModel = hiltViewModel()
+    val config by viewModel.customThemeConfig.collectAsStateWithLifecycle()
+
+    // UM ÚNICO colorScheme
+    val finalColorScheme = if (config.isEnabled) {
+        customColorScheme(config, isDark = true)
+    } else {
+        if (darkTheme) DarkColorScheme else LightColorScheme
+    }
 
     val statusBarElevation = if (darkTheme) 4.dp else 12.dp
     val elevatedSurface = finalColorScheme.surfaceColorAtElevation(statusBarElevation)
@@ -132,9 +140,6 @@ fun AurisTheme(
     AurisStatusBarStyle(color = defaultStatusBarColor)
 
     CompositionLocalProvider(LocalAurisDarkTheme provides darkTheme) {
-        val viewModel: CustomThemeViewModel = hiltViewModel()
-        val config by viewModel.customThemeConfig.collectAsStateWithLifecycle()
-
         LaunchedEffect(config.wallpaperUri) {
             if (config.wallpaperType == WallpaperType.GALLERY && config.wallpaperUri != null) {
                 val file = File(config.wallpaperUri!!)
@@ -145,16 +150,16 @@ fun AurisTheme(
             }
         }
 
-        if (config.isEnabled) {
-            val customColorScheme = customColorScheme(config, isDark = true)
-
-            MaterialTheme(
-                colorScheme = customColorScheme,
-                typography = Typography,
-                shapes = Shapes
-            ) {
+        // UM ÚNICO MaterialTheme
+        MaterialTheme(
+            colorScheme = finalColorScheme,
+            typography = Typography,
+            shapes = Shapes
+        ) {
+            // Só adiciona o wallpaper se habilitado
+            if (config.isEnabled) {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    // ===== WALLPAPER COM BLUR =====
+                    // Wallpaper...
                     when (config.wallpaperType) {
                         WallpaperType.SOLID -> {
                             Box(
@@ -163,7 +168,6 @@ fun AurisTheme(
                                     .background(Color(config.backgroundColor))
                             )
                         }
-                        
                         WallpaperType.GALLERY -> {
                             val uri = config.wallpaperUri
                             if (uri != null) {
@@ -190,7 +194,6 @@ fun AurisTheme(
                                                             .asComposeRenderEffect()
                                                     }
                                                 } else {
-                                                    // Fallback para Android 11 e abaixo
                                                     Modifier.blur(radius = blurRadius.dp)
                                                 }
                                             ),
@@ -211,7 +214,6 @@ fun AurisTheme(
                                 )
                             }
                         }
-                        
                         WallpaperType.SERVER -> {
                             config.wallpaperUrl?.let { url ->
                                 val blurRadius = config.wallpaperBlur * 18f
@@ -235,7 +237,6 @@ fun AurisTheme(
                                                         .asComposeRenderEffect()
                                                 }
                                             } else {
-                                                // Fallback para Android 11 e abaixo
                                                 Modifier.blur(radius = blurRadius.dp)
                                             }
                                         ),
@@ -251,7 +252,6 @@ fun AurisTheme(
                         }
                     }
 
-                    // ===== DIM (ESCUREcIMENTO) =====
                     if (config.wallpaperType != WallpaperType.SOLID && config.wallpaperDim > 0f) {
                         Box(
                             modifier = Modifier
@@ -260,16 +260,9 @@ fun AurisTheme(
                         )
                     }
 
-                    // ===== CONTEÚDO DO APP =====
                     content()
                 }
-            }
-        } else {
-            MaterialTheme(
-                colorScheme = finalColorScheme,
-                typography = Typography,
-                shapes = Shapes
-            ) {
+            } else {
                 content()
             }
         }
