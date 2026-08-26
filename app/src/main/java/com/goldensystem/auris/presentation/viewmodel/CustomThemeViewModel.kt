@@ -104,19 +104,10 @@ fun updateScrimColor(color: Int) { _config.update { it.copy(scrimColor = color) 
         _config.value = _config.value.copy(isEnabled = false)
     }
     
-suspend fun saveCustomTheme() {
-    // Salva em memória IMEDIATAMENTE
-    _config.value = _config.value.copy(isEnabled = true)
-    
-    // Salva no DataStore em background sem esperar
-    viewModelScope.launch(Dispatchers.IO) {
-        try {
-            themePreferences.setCustomTheme(_config.value)
-        } catch (e: Exception) {
-            // Se der erro, ignora
-        }
+    suspend fun saveCustomTheme() {
+        _config.value = _config.value.copy(isEnabled = true)
+        themePreferences.setCustomTheme(_config.value)
     }
-}
 
     suspend fun resetToDefault() {
         themePreferences.resetCustomTheme()

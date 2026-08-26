@@ -568,9 +568,15 @@ fun SettingsCategoryScreen(
     onSelectionChanged = { mode ->
         settingsViewModel.setAppThemeMode(mode)
         
-        if (mode != AppThemeMode.CUSTOM) {
-            coroutineScope.launch {
-                customThemeViewModel.disableCustomTheme()  // ✅ CORRETO
+        coroutineScope.launch {
+            if (mode == AppThemeMode.CUSTOM) {
+                // ✅ ATIVA O TEMA CUSTOMIZADO IMEDIATAMENTE
+                customThemeViewModel.saveCustomTheme()
+            } else {
+                // ❌ DESATIVA O TEMA CUSTOMIZADO
+                customThemeViewModel.disableCustomTheme()
+                delay(100)
+                (context as? Activity)?.recreate()
             }
         }
     },
