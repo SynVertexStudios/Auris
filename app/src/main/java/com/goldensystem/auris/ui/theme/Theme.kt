@@ -152,119 +152,118 @@ fun AurisTheme(
 
         // UM ÚNICO MaterialTheme
         MaterialTheme(
-            colorScheme = finalColorScheme,
-            typography = Typography,
-            shapes = Shapes
-        ) {
-            // Só adiciona o wallpaper se habilitado
-            if (config.isEnabled) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    // Wallpaper...
-                    when (config.wallpaperType) {
-                        WallpaperType.SOLID -> {
+    colorScheme = finalColorScheme,
+    typography = Typography,
+    shapes = Shapes
+) {
+    // SEMPRE TEM UM BOX, MESMO SE DESABILITADO
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Wallpaper só se habilitado
+        if (config.isEnabled) {
+            when (config.wallpaperType) {
+                WallpaperType.SOLID -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(config.backgroundColor))
+                    )
+                }
+                WallpaperType.GALLERY -> {
+                    val uri = config.wallpaperUri
+                    if (uri != null) {
+                        val file = File(uri)
+                        if (file.exists()) {
+                            val blurRadius = config.wallpaperBlur * 18f
+                            AsyncImage(
+                                model = ImageRequest.Builder(context)
+                                    .data(file)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = "Wallpaper da galeria",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .then(
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                            Modifier.graphicsLayer {
+                                                renderEffect = RenderEffect
+                                                    .createBlurEffect(
+                                                        blurRadius,
+                                                        blurRadius,
+                                                        Shader.TileMode.MIRROR
+                                                    )
+                                                    .asComposeRenderEffect()
+                                            }
+                                        } else {
+                                            Modifier.blur(radius = blurRadius.dp)
+                                        }
+                                    ),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .background(Color(config.backgroundColor))
                             )
                         }
-                        WallpaperType.GALLERY -> {
-                            val uri = config.wallpaperUri
-                            if (uri != null) {
-                                val file = File(uri)
-                                if (file.exists()) {
-                                    val blurRadius = config.wallpaperBlur * 18f
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(context)
-                                            .data(file)
-                                            .crossfade(true)
-                                            .build(),
-                                        contentDescription = "Wallpaper da galeria",
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .then(
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                                    Modifier.graphicsLayer {
-                                                        renderEffect = RenderEffect
-                                                            .createBlurEffect(
-                                                                blurRadius,
-                                                                blurRadius,
-                                                                Shader.TileMode.MIRROR
-                                                            )
-                                                            .asComposeRenderEffect()
-                                                    }
-                                                } else {
-                                                    Modifier.blur(radius = blurRadius.dp)
-                                                }
-                                            ),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                } else {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(Color(config.backgroundColor))
-                                    )
-                                }
-                            } else {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(Color(config.backgroundColor))
-                                )
-                            }
-                        }
-                        WallpaperType.SERVER -> {
-                            config.wallpaperUrl?.let { url ->
-                                val blurRadius = config.wallpaperBlur * 18f
-                                AsyncImage(
-                                    model = ImageRequest.Builder(context)
-                                        .data(url)
-                                        .crossfade(true)
-                                        .build(),
-                                    contentDescription = "Wallpaper do servidor",
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .then(
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                                Modifier.graphicsLayer {
-                                                    renderEffect = RenderEffect
-                                                        .createBlurEffect(
-                                                            blurRadius,
-                                                            blurRadius,
-                                                            Shader.TileMode.MIRROR
-                                                        )
-                                                        .asComposeRenderEffect()
-                                                }
-                                            } else {
-                                                Modifier.blur(radius = blurRadius.dp)
-                                            }
-                                        ),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } ?: run {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(Color(config.backgroundColor))
-                                )
-                            }
-                        }
-                    }
-
-                    if (config.wallpaperType != WallpaperType.SOLID && config.wallpaperDim > 0f) {
+                    } else {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(Color.Black.copy(alpha = config.wallpaperDim))
+                                .background(Color(config.backgroundColor))
                         )
                     }
-
-                    content()
                 }
-            } else {
-                content()
+                WallpaperType.SERVER -> {
+                    config.wallpaperUrl?.let { url ->
+                        val blurRadius = config.wallpaperBlur * 18f
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(url)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "Wallpaper do servidor",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .then(
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                        Modifier.graphicsLayer {
+                                            renderEffect = RenderEffect
+                                                .createBlurEffect(
+                                                    blurRadius,
+                                                    blurRadius,
+                                                    Shader.TileMode.MIRROR
+                                                )
+                                                .asComposeRenderEffect()
+                                        }
+                                    } else {
+                                        Modifier.blur(radius = blurRadius.dp)
+                                    }
+                                ),
+                            contentScale = ContentScale.Crop
+                        )
+                    } ?: run {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color(config.backgroundColor))
+                        )
+                    }
+                }
+            }
+
+            if (config.wallpaperType != WallpaperType.SOLID && config.wallpaperDim > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = config.wallpaperDim))
+                )
             }
         }
+        
+        // SEMPRE RENDERIZA O CONTEÚDO, NA MESMA POSIÇÃO
+        content()
+    }
+}
     }
 }
