@@ -1023,9 +1023,16 @@ private fun ServerWallpaperContent(
         // Wallpapers
         // ----------------------------------------------------
 
-        val wallpapers =
-            WALLPAPER_CATEGORIES[selectedCategory]
-                ?: emptyList()
+        val wallpapers = remember(selectedCategory) {
+    if (selectedCategory == WallpaperCategory.ALL) {
+        WALLPAPER_CATEGORIES[WallpaperCategory.ALL]
+            ?.shuffled()
+            ?: emptyList()
+    } else {
+        WALLPAPER_CATEGORIES[selectedCategory]
+            ?: emptyList()
+    }
+}
 
         AnimatedContent(
             targetState = wallpapers,
