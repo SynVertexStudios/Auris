@@ -180,13 +180,14 @@ fun CustomThemeScreen(
 
             // Seletor de cores
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
+               modifier = Modifier.fillMaxWidth(),
+               shape = RoundedCornerShape(20.dp),
+               colors = CardDefaults.cardColors(
+               containerColor = Color.Transparent
+               ),
+             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -237,7 +238,7 @@ fun CustomThemeScreen(
                     ColorPickerRow(
                         label = stringResource(R.string.custom_theme_on_primary),
                         currentColor = config.onPrimaryColor,
-                        colors = listOf(0xFFFFFFFF.toInt(), 0xFF000000.toInt()),
+                        colors = MAIN_COLORS,
                         onColorSelected = { viewModel.updateOnPrimaryColor(it) },
                         onCustomColorClick = { 
                             colorPickerTarget = viewModel::updateOnPrimaryColor
@@ -249,7 +250,7 @@ fun CustomThemeScreen(
                     ColorPickerRow(
                         label = stringResource(R.string.custom_theme_on_surface),
                         currentColor = config.onSurfaceColor,
-                        colors = listOf(0xFFFFFFFF.toInt(), 0xFF000000.toInt()),
+                        colors = MAIN_COLORS,
                         onColorSelected = { viewModel.updateOnSurfaceColor(it) },
                         onCustomColorClick = { 
                             colorPickerTarget = viewModel::updateOnSurfaceColor
