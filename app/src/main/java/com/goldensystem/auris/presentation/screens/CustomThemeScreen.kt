@@ -182,7 +182,38 @@ fun CustomThemeScreen(
             )
         }
     ) { paddingValues ->
-        // DENTRO DO CARD, na seção dos ColorPickerRows
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colorScheme.background)
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Preview do Player
+            ThemePreviewCustom(
+                config = config,
+                colorScheme = colorScheme
+            )
+
+            Text(
+                stringResource(R.string.custom_theme_colors_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = colorScheme.onSurfaceVariant
+            )
+
+            // Seletor de cores
+            Card(
+               modifier = Modifier.fillMaxWidth(),
+               shape = RoundedCornerShape(20.dp),
+               colors = CardDefaults.cardColors(
+               containerColor = Color.Transparent
+               ),
+             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+
+                // DENTRO DO CARD, na seção dos ColorPickerRows
 Column(
     modifier = Modifier.padding(16.dp),
     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -525,6 +556,7 @@ Column(
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
+}
 
 // ==================== PREVIEW CARD ====================
 
