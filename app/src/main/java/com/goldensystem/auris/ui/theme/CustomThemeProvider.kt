@@ -13,65 +13,76 @@ fun customColorScheme(
     config: CustomThemeConfig,
     isDark: Boolean = true
 ): ColorScheme {
+    // CORES PRINCIPAIS
     val primary = Color(config.primaryColor)
     val onPrimary = Color(config.onPrimaryColor)
     val secondary = Color(config.secondaryColor)
-    val onSecondary = Color(config.onPrimaryColor)  // 👈 USA ON PRIMARY
-    val tertiary = Color(config.accentColor)        // 👈 USA A COR DE ACENTO
-    val onTertiary = Color(config.onPrimaryColor)   // 👈 USA ON PRIMARY
+    val onSecondary = Color(config.onSecondaryColor)  // ✅ USA ON SECONDARY
+    val tertiary = Color(config.tertiaryColor)        // ✅ USA TERTIARY
+    val onTertiary = Color(config.onTertiaryColor)    // ✅ USA ON TERTIARY
+    
+    // BACKGROUND E SURFACE
     val background = Color(config.backgroundColor)
-    val onBackground = Color(config.onSurfaceColor)
-    val surface = Color(config.backgroundColor).copy(alpha = 0.8f)
+    val onBackground = Color(config.onBackgroundColor)  // ✅ USA ON BACKGROUND
+    val surface = Color(config.surfaceColor)            // ✅ USA SURFACE
     val onSurface = Color(config.onSurfaceColor)
-    val surfaceVariant = Color(config.backgroundColor).copy(alpha = 0.6f)
-    val onSurfaceVariant = Color(config.onSurfaceColor).copy(alpha = 0.6f)
-    val primaryContainer = primary.copy(alpha = 0.2f)
+    val surfaceVariant = Color(config.surfaceVariantColor)  // ✅ USA SURFACE VARIANT
+    val onSurfaceVariant = Color(config.onSurfaceVariantColor)  // ✅ USA ON SURFACE VARIANT
+    
+    // CONTAINERS
+    val primaryContainer = Color(config.primaryColor).copy(alpha = 0.2f)
     val onPrimaryContainer = onPrimary
-    val secondaryContainer = secondary.copy(alpha = 0.2f)
-    val onSecondaryContainer = onPrimary
-    val tertiaryContainer = tertiary.copy(alpha = 0.2f)
-    val onTertiaryContainer = onPrimary
-    val error = Color(0xFFFF5252.toInt())
-    val onError = Color(0xFFFFFFFF.toInt())
-    val errorContainer = Color(0xFFFF5252.toInt()).copy(alpha = 0.2f)
-    val onErrorContainer = Color(0xFFFFFFFF.toInt())
-    val outline = Color(config.accentColor).copy(alpha = 0.5f)
-    val outlineVariant = Color(config.accentColor).copy(alpha = 0.3f)
-    val surfaceTint = primary
-    val inversePrimary = primary
-    val inverseSurface = surface
-    val inverseOnSurface = onSurface
-    val scrim = Color(0x66000000.toInt())
+    val secondaryContainer = Color(config.secondaryContainerColor)  // ✅ USA SECONDARY CONTAINER
+    val onSecondaryContainer = Color(config.onSecondaryContainerColor)  // ✅ USA ON SECONDARY CONTAINER
+    val tertiaryContainer = Color(config.tertiaryContainerColor)  // ✅ USA TERTIARY CONTAINER
+    val onTertiaryContainer = Color(config.onTertiaryContainerColor)  // ✅ USA ON TERTIARY CONTAINER
+    
+    // ERROR
+    val error = Color(config.errorColor)  // ✅ USA ERROR
+    val onError = Color(config.onErrorColor)  // ✅ USA ON ERROR
+    val errorContainer = Color(config.errorContainerColor)  // ✅ USA ERROR CONTAINER
+    val onErrorContainer = Color(config.onErrorContainerColor)  // ✅ USA ON ERROR CONTAINER
+    
+    // OUTLINE
+    val outline = Color(config.outlineColor)  // ✅ USA OUTLINE
+    val outlineVariant = Color(config.outlineVariantColor)  // ✅ USA OUTLINE VARIANT
+    
+    // OUTROS
+    val surfaceTint = Color(config.surfaceTintColor)  // ✅ USA SURFACE TINT
+    val inversePrimary = Color(config.inversePrimaryColor)  // ✅ USA INVERSE PRIMARY
+    val inverseSurface = Color(config.inverseSurfaceColor)  // ✅ USA INVERSE SURFACE
+    val inverseOnSurface = Color(config.inverseOnSurfaceColor)  // ✅ USA INVERSE ON SURFACE
+    val scrim = Color(config.scrimColor)  // ✅ USA SCRIM
 
     return darkColorScheme(
-            primary = primary,
-            onPrimary = onPrimary,
-            secondary = secondary,
-            onSecondary = onSecondary,
-            tertiary = tertiary,
-            onTertiary = onTertiary,
-            background = background,
-            onBackground = onBackground,
-            surface = surface,
-            onSurface = onSurface,
-            surfaceVariant = surfaceVariant,
-            onSurfaceVariant = onSurfaceVariant,
-            primaryContainer = primaryContainer,
-            onPrimaryContainer = onPrimaryContainer,
-            secondaryContainer = secondaryContainer,
-            onSecondaryContainer = onSecondaryContainer,
-            tertiaryContainer = tertiaryContainer,
-            onTertiaryContainer = onTertiaryContainer,
-            error = error,
-            onError = onError,
-            errorContainer = errorContainer,
-            onErrorContainer = onErrorContainer,
-            outline = outline,
-            outlineVariant = outlineVariant,
-            surfaceTint = surfaceTint,
-            inversePrimary = inversePrimary,
-            inverseSurface = inverseSurface,
-            inverseOnSurface = inverseOnSurface,
-            scrim = scrim
-        )
-    }
+        primary = primary,
+        onPrimary = onPrimary,
+        secondary = secondary,
+        onSecondary = onSecondary,
+        tertiary = tertiary,
+        onTertiary = onTertiary,
+        background = background,
+        onBackground = onBackground,
+        surface = surface,
+        onSurface = onSurface,
+        surfaceVariant = surfaceVariant,
+        onSurfaceVariant = onSurfaceVariant,
+        primaryContainer = primaryContainer,
+        onPrimaryContainer = onPrimaryContainer,
+        secondaryContainer = secondaryContainer,
+        onSecondaryContainer = onSecondaryContainer,
+        tertiaryContainer = tertiaryContainer,
+        onTertiaryContainer = onTertiaryContainer,
+        error = error,
+        onError = onError,
+        errorContainer = errorContainer,
+        onErrorContainer = onErrorContainer,
+        outline = outline,
+        outlineVariant = outlineVariant,
+        surfaceTint = surfaceTint,
+        inversePrimary = inversePrimary,
+        inverseSurface = inverseSurface,
+        inverseOnSurface = inverseOnSurface,
+        scrim = scrim
+    )
+}
