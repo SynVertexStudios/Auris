@@ -66,9 +66,9 @@ import kotlinx.coroutines.launch
 // ============================================================
 
 private val CATEGORY_CONFIG = mapOf(
-    WallpaperCategory.ANIME to ("anime" to 7),
-    WallpaperCategory.CARR to ("carr" to 12),
-    WallpaperCategory.NEON to ("neon" to 7),
+    WallpaperCategory.ANIME to ("anime" to 10),
+    WallpaperCategory.CARR to ("carr" to 10),
+    WallpaperCategory.NEON to ("neon" to 10),
     WallpaperCategory.OTRS to ("otrs" to 7),
     WallpaperCategory.SPACE to ("space" to 10)
 )

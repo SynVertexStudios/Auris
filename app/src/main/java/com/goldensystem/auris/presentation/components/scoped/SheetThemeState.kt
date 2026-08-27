@@ -150,9 +150,9 @@ internal fun rememberSheetThemeState(
     val miniReadyAlpha = miniAppearProgress.value
     val miniAppearScale = lerp(0.985f, 1f, miniAppearProgress.value)
     val playerAreaBackground = if (isAlbumArtTheme && hasAlbumArt) {
-    miniPlayerScheme.primaryContainer  // ✅ USA A COR DA CAPA
+    miniPlayerScheme.primaryContainer  // Mantém a cor da capa
 } else {
-    Color.Black.copy(alpha = 0.7f)     // ✅ USA FUNDO ESCURO (sem capa)
+    MaterialTheme.colorScheme.primary  // MUDA PRA PRIMARY COLOR! SEM TRANSPARÊNCIA!
 }
 
     // NOTE: miniAlpha and effectivePlayerAreaElevation are no longer computed here.

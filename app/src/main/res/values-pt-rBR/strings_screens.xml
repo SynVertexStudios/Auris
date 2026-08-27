@@ -208,7 +208,7 @@
     <!-- About -->
     <string name="about_no_contributors">Nenhum contribuidor encontrado no momento. Por favor, tente novamente mais tarde.</string>
     <string name="about_app_name">Auris</string>
-    <string name="about_tagline">Player de música de código aberto construído com sua comunidade.</string>
+    <string name="about_tagline">Um player de música criado para oferecer a melhor experiência ao usuário.</string>
     <string name="about_version_format">Versão v%1$s</string>
     <string name="about_contributions_format">%1$d contrib.</string>
     <string name="screen_about">Sobre</string>
