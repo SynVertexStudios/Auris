@@ -550,13 +550,14 @@ Column(
             showColorPickerDialog = true
         },
         colorScheme = colorScheme
-    )
-}
+      )
+    }
+  }
 
             Spacer(modifier = Modifier.height(32.dp))
-        }
+      }
     }
-}
+  }
 
 // ==================== PREVIEW CARD ====================
 
