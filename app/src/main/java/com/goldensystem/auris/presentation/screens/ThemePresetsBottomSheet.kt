@@ -1,7 +1,8 @@
 package com.goldensystem.auris.presentation.screens
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,11 +15,9 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -84,29 +83,14 @@ fun ThemePresetsBottomSheet(
                         ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(
+                    Text(
+                        text = stringResource(
+                            R.string.custom_theme_presets_title
+                        ),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = stringResource(
-                                R.string.custom_theme_presets_title
-                            ),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Spacer(
-                            modifier = Modifier.height(4.dp)
-                        )
-
-                        Text(
-                            text = stringResource(
-                                R.string.custom_theme_presets_subtitle
-                            ),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    )
 
                     IconButton(
                         onClick = {
@@ -116,7 +100,8 @@ fun ThemePresetsBottomSheet(
                                 viewModel.saveCustomTheme()
                                 onDismiss()
                             }
-                        }
+                        },
+                        modifier = Modifier.size(40.dp)
                     ) {
                         Icon(
                             Icons.Rounded.Close,
@@ -128,11 +113,24 @@ fun ThemePresetsBottomSheet(
                     }
                 }
 
+                Text(
+                    text = stringResource(
+                        R.string.custom_theme_presets_subtitle
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(
+                        horizontal = 24.dp,
+                        vertical = 4.dp
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 LazyColumn(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 450.dp)
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 16.dp)
+                        .heightIn(max = 400.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(COLOR_PRESETS) { preset ->
@@ -140,9 +138,19 @@ fun ThemePresetsBottomSheet(
                         val isSelected =
                             selectedPresetName == preset.name
 
-                        PresetCard(
-                            preset = preset,
-                            isSelected = isSelected,
+                        val containerColor =
+                            if (isSelected)
+                                MaterialTheme.colorScheme.primaryContainer
+                            else
+                                MaterialTheme.colorScheme.surfaceContainer
+
+                        val contentColor =
+                            if (isSelected)
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            else
+                                MaterialTheme.colorScheme.onSurface
+
+                        Surface(
                             onClick = {
                                 selectedPresetName = preset.name
 
@@ -171,14 +179,45 @@ fun ThemePresetsBottomSheet(
                                     viewModel.saveCustomTheme()
                                     onDismiss()
                                 }
+                            },
+                            shape = RoundedCornerShape(24.dp),
+                            color = containerColor,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(72.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 24.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = preset.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = if (isSelected)
+                                        FontWeight.Bold
+                                    else
+                                        FontWeight.Normal,
+                                    color = contentColor,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                if (isSelected) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Check,
+                                        contentDescription = stringResource(
+                                            R.string.presentation_batch_f_cd_selected
+                                        ),
+                                        tint = contentColor
+                                    )
+                                }
                             }
-                        )
+                        }
                     }
                 }
 
-                Spacer(
-                    modifier = Modifier.height(16.dp)
-                )
+                Spacer(modifier = Modifier.height(16.dp))
 
                 TextButton(
                     onClick = {
@@ -200,9 +239,7 @@ fun ThemePresetsBottomSheet(
                         modifier = Modifier.size(18.dp)
                     )
 
-                    Spacer(
-                        modifier = Modifier.width(8.dp)
-                    )
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     Text(
                         stringResource(
@@ -210,92 +247,6 @@ fun ThemePresetsBottomSheet(
                         )
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PresetCard(
-    preset: ColorPreset,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Surface(
-        color = if (isSelected) {
-            MaterialTheme.colorScheme.primaryContainer
-        } else {
-            MaterialTheme.colorScheme.surfaceContainer
-        },
-        shape = RoundedCornerShape(10.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = preset.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = if (isSelected) {
-                        FontWeight.Bold
-                    } else {
-                        FontWeight.Medium
-                    },
-                    color = if (isSelected) {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    }
-                )
-
-                Spacer(
-                    modifier = Modifier.height(10.dp)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    listOf(
-                        preset.primaryColor,
-                        preset.secondaryColor,
-                        preset.backgroundColor,
-                        preset.accentColor
-                    ).forEach { color ->
-
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(7.dp),
-                            shape = RoundedCornerShape(4.dp),
-                            color = Color(color)
-                        ) {}
-                    }
-                }
-            }
-
-            if (isSelected) {
-                Spacer(
-                    modifier = Modifier.width(12.dp)
-                )
-
-                Icon(
-                    imageVector = Icons.Rounded.Check,
-                    contentDescription = stringResource(
-                        R.string.presentation_batch_f_cd_selected
-                    ),
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
             }
         }
     }
