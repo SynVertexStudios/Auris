@@ -112,14 +112,6 @@ fun CustomThemeSettingsScreen(
                 )
             }
 
-            // Card de aviso expansível
-            item {
-                WarningExpandableCard(
-                    isExpanded = isWarningExpanded,
-                    onToggle = { isWarningExpanded = !isWarningExpanded }
-                )
-            }
-
             // Seção: Personalização do Tema
             item {
                 SettingsGroupHeader(
@@ -180,77 +172,6 @@ fun CustomThemeSettingsScreen(
             viewModel = viewModel,
             onDismiss = { showPresetsSheet = false }
         )
-    }
-}
-
-@Composable
-private fun WarningExpandableCard(
-    isExpanded: Boolean,
-    onToggle: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onToggle() },
-        color = Color(0xFFFFF3F3),
-        tonalElevation = 1.dp
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Surface(
-                    modifier = Modifier.size(32.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    color = Color(0xFFFFEBEB)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Rounded.Warning,
-                            contentDescription = null,
-                            tint = Color(0xFFD32F2F),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-
-                Text(
-                    text = stringResource(R.string.custom_theme_warning_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = Color(0xFFD32F2F),
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
-                )
-
-                Icon(
-                    if (isExpanded) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
-                    contentDescription = if (isExpanded) 
-                        stringResource(R.string.custom_theme_collapse) 
-                    else 
-                        stringResource(R.string.custom_theme_expand),
-                    tint = Color(0xFFD32F2F)
-                )
-            }
-
-            if (isExpanded) {
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Text(
-                    text = stringResource(R.string.custom_theme_warning_message),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFD32F2F).copy(alpha = 0.9f),
-                    modifier = Modifier.padding(start = 44.dp)
-                )
-            }
-        }
     }
 }
 
