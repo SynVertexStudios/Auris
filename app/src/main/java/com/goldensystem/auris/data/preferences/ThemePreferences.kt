@@ -54,7 +54,10 @@ data class CustomThemeConfig(
     // ===== NOVAS CORES QUE FALTAVAM =====
     val primaryContainerColor: Int = 0xFF6750A4.toInt(),
     val onPrimaryContainerColor: Int = 0xFFFFFFFF.toInt(),
+
+    // ===== Containers =====
     val surfaceContainerColor: Int = 0xFF1E1E1E.toInt(),
+    val surfaceContainerLowColor: Int = 0xFF1C1C1C.toInt(),
     
     // ===== WALLPAPER =====
     val wallpaperType: WallpaperType = WallpaperType.SOLID,
@@ -108,6 +111,7 @@ class ThemePreferences @Inject constructor(
         private val INVERSE_SURFACE_COLOR = intPreferencesKey("custom_inverse_surface_color")
         private val INVERSE_ON_SURFACE_COLOR = intPreferencesKey("custom_inverse_on_surface_color")
         private val SCRIM_COLOR = intPreferencesKey("custom_scrim_color")
+        private val SURFACE_CONTAINER_LOW_COLOR = intPreferencesKey("custom_surface_container_low_color")
         
         // NOVAS CHAVES QUE FALTAVAM
         private val PRIMARY_CONTAINER_COLOR = intPreferencesKey("custom_primary_container_color")
@@ -153,6 +157,7 @@ class ThemePreferences @Inject constructor(
             inverseSurfaceColor = prefs[INVERSE_SURFACE_COLOR] ?: 0xFF313033.toInt(),
             inverseOnSurfaceColor = prefs[INVERSE_ON_SURFACE_COLOR] ?: 0xFFF4EFF4.toInt(),
             scrimColor = prefs[SCRIM_COLOR] ?: 0xFF000000.toInt(),
+            surfaceContainerLowColor = prefs[SURFACE_CONTAINER_LOW_COLOR] ?: 0xFF1C1C1C.toInt(),
             
             // NOVAS CORES QUE FALTAVAM
             primaryContainerColor = prefs[PRIMARY_CONTAINER_COLOR] ?: 0xFF6750A4.toInt(),
@@ -203,6 +208,7 @@ class ThemePreferences @Inject constructor(
             prefs[INVERSE_SURFACE_COLOR] = config.inverseSurfaceColor
             prefs[INVERSE_ON_SURFACE_COLOR] = config.inverseOnSurfaceColor
             prefs[SCRIM_COLOR] = config.scrimColor
+            prefs[SURFACE_CONTAINER_LOW_COLOR] = config.surfaceContainerLowColor
             
             // NOVAS CORES QUE FALTAVAM
             prefs[PRIMARY_CONTAINER_COLOR] = config.primaryContainerColor
@@ -248,6 +254,7 @@ class ThemePreferences @Inject constructor(
             prefs.remove(INVERSE_SURFACE_COLOR)
             prefs.remove(INVERSE_ON_SURFACE_COLOR)
             prefs.remove(SCRIM_COLOR)
+            prefs.remove(SURFACE_CONTAINER_LOW_COLOR)
             
             // NOVAS CORES QUE FALTAVAM
             prefs.remove(PRIMARY_CONTAINER_COLOR)

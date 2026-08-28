@@ -43,8 +43,9 @@ fun customColorScheme(
     val scrim = Color(0x66000000.toInt())
     
     /*vamos englobar essa cor no geral containers
-    》》*/val surfaceContainer = Color(config.surfaceContainerColor)
-
+    》》*/val surfaceContainer = Color(config.surfaceContainerColor)/*
+    》》*/val surfaceContainerLow = Color(config.surfaceContainerLowColor)
+    
     return darkColorScheme(
             primary = primary,
             onPrimary = onPrimary,
@@ -57,6 +58,7 @@ fun customColorScheme(
             surface = surface,
             onSurface = onSurface,
             surfaceContainer = surfaceContainer,
+            surfaceContainerLow = surfaceContainerLow,
             surfaceVariant = surfaceVariant,
             onSurfaceVariant = onSurfaceVariant,
             primaryContainer = primaryContainer,

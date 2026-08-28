@@ -79,7 +79,7 @@ fun HomeGradientTopBar(
                     shape = CircleShape,
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
                     colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
                         contentColor = MaterialTheme.colorScheme.onSurface
                     ),
                     onClick = onBetaClick
@@ -105,7 +105,7 @@ fun HomeGradientTopBar(
                 FilledIconButton(
                     onClick = onTelegramClick,
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
                         contentColor = MaterialTheme.colorScheme.onSurface
                     )
                 ) {
@@ -117,7 +117,7 @@ fun HomeGradientTopBar(
                 FilledIconButton(
                     onClick = onVideoGalleryClick,
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        MaterialTheme.colorScheme.surfaceContainer,
                         contentColor = MaterialTheme.colorScheme.onSurface
                     )
                 ) {
@@ -130,7 +130,7 @@ fun HomeGradientTopBar(
                 FilledIconButton(
                     onClick = onCustomThemeClick,
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        MaterialTheme.colorScheme.surfaceContainer,
                         contentColor = MaterialTheme.colorScheme.onSurface
                     )
                 ) {
@@ -142,7 +142,7 @@ fun HomeGradientTopBar(
                 FilledIconButton(
                     onClick = onNavigationIconClick,
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        MaterialTheme.colorScheme.surfaceContainer,
                         contentColor = MaterialTheme.colorScheme.onSurface
                     )
                 ) {

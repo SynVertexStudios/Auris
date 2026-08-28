@@ -70,8 +70,13 @@ fun updateInversePrimaryColor(color: Int) { _config.update { it.copy(inversePrim
 fun updateInverseSurfaceColor(color: Int) { _config.update { it.copy(inverseSurfaceColor = color) } }
 fun updateInverseOnSurfaceColor(color: Int) { _config.update { it.copy(inverseOnSurfaceColor = color) } }
 fun updateScrimColor(color: Int) { _config.update { it.copy(scrimColor = color) } }
+
+   //CONTAINERS NOVA VERCAO
 fun updateSurfaceContainerColor(color: Int) { 
     _config.update { it.copy(surfaceContainerColor = color) } 
+    }
+fun updateSurfaceContainerLowColor(color: Int) { 
+    _config.update { it.copy(surfaceContainerLowColor = color) } 
     }
 
     // ===== WALLPAPER =====
