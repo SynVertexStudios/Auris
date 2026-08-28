@@ -125,6 +125,9 @@ fun CustomThemeScreen(
             colorPickerTarget == viewModel::updateInverseSurfaceColor -> config.inverseSurfaceColor
             colorPickerTarget == viewModel::updateInverseOnSurfaceColor -> config.inverseOnSurfaceColor
             colorPickerTarget == viewModel::updateScrimColor -> config.scrimColor
+                  // ⬇️⬇️⬇️ NOVAS CORES QUE FALTAVAM ⬇️⬇️⬇️
+            colorPickerTarget == viewModel::updatePrimaryContainerColor -> config.primaryContainerColor
+            colorPickerTarget == viewModel::updateOnPrimaryContainerColor -> config.onPrimaryContainerColor
             
             else -> config.primaryColor
         },
@@ -551,6 +554,30 @@ Column(
         },
         colorScheme = colorScheme
       )
+      // Depois do último ColorPickerRow (scrimColor)
+ColorPickerRow(
+    label = "Teste primaryContainerColor",
+    currentColor = config.primaryContainerColor,
+    colors = MAIN_COLORS,
+    onColorSelected = { viewModel.updatePrimaryContainerColor(it) },
+    onCustomColorClick = { 
+        colorPickerTarget = viewModel::updatePrimaryContainerColor
+        showColorPickerDialog = true
+    },
+    colorScheme = colorScheme
+)
+
+ColorPickerRow(
+    label = "Teste onPrimaryContainerColor",
+    currentColor = config.onPrimaryContainerColor,
+    colors = MAIN_COLORS,
+    onColorSelected = { viewModel.updateOnPrimaryContainerColor(it) },
+    onCustomColorClick = { 
+        colorPickerTarget = viewModel::updateOnPrimaryContainerColor
+        showColorPickerDialog = true
+    },
+    colorScheme = colorScheme
+)
     }
   }
 
