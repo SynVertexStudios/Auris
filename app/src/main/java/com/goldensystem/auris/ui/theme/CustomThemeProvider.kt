@@ -13,44 +13,37 @@ fun customColorScheme(
     config: CustomThemeConfig,
     isDark: Boolean = true
 ): ColorScheme {
-    // NÃO MEXER - já tem config.
+    // TODAS AS CORES USAM config. DIRETAMENTE
     val primary = Color(config.primaryColor)
     val onPrimary = Color(config.onPrimaryColor)
     val secondary = Color(config.secondaryColor)
-    val onSecondary = Color(config.onPrimaryColor)
-    val tertiary = Color(config.accentColor)
-    val onTertiary = Color(config.onPrimaryColor)
+    val onSecondary = Color(config.onSecondaryColor)
+    val tertiary = Color(config.tertiaryColor)
+    val onTertiary = Color(config.onTertiaryColor)
     val background = Color(config.backgroundColor)
-    val onBackground = Color(config.onSurfaceColor)
-    val surface = Color(config.backgroundColor).copy(alpha = 0.8f)
+    val onBackground = Color(config.onBackgroundColor)
+    val surface = Color(config.surfaceColor)
     val onSurface = Color(config.onSurfaceColor)
-    val surfaceVariant = Color(config.backgroundColor).copy(alpha = 0.6f)
-    val onSurfaceVariant = Color(config.onSurfaceColor).copy(alpha = 0.6f)
-    
-    // MODIFICADOS - agora usam config.
-    val primaryContainer = Color(config.primaryColor).copy(alpha = 0.2f)
-    val onPrimaryContainer = Color(config.onPrimaryColor)
-    val secondaryContainer = Color(config.secondaryColor).copy(alpha = 0.2f)
-    val onSecondaryContainer = Color(config.onPrimaryColor)
-    val tertiaryContainer = Color(config.accentColor).copy(alpha = 0.2f)
-    val onTertiaryContainer = Color(config.onPrimaryColor)
+    val surfaceVariant = Color(config.surfaceVariantColor)
+    val onSurfaceVariant = Color(config.onSurfaceVariantColor)
+    val primaryContainer = Color(config.primaryContainerColor)
+    val onPrimaryContainer = Color(config.onPrimaryContainerColor)
+    val secondaryContainer = Color(config.secondaryContainerColor)
+    val onSecondaryContainer = Color(config.onSecondaryContainerColor)
+    val tertiaryContainer = Color(config.tertiaryContainerColor)
+    val onTertiaryContainer = Color(config.onTertiaryContainerColor)
     val error = Color(config.errorColor)
     val onError = Color(config.onErrorColor)
-    val errorContainer = Color(config.errorColor).copy(alpha = 0.2f)
-    val onErrorContainer = Color(config.onErrorColor)
-    
-    // NÃO MEXER - já tem config.
-    val outline = Color(config.accentColor).copy(alpha = 0.5f)
-    val outlineVariant = Color(config.accentColor).copy(alpha = 0.3f)
-    
-    // MODIFICADOS - agora usam config.
+    val errorContainer = Color(config.errorContainerColor)
+    val onErrorContainer = Color(config.onErrorContainerColor)
+    val outline = Color(config.outlineColor)
+    val outlineVariant = Color(config.outlineVariantColor)
     val surfaceTint = Color(config.surfaceTintColor)
     val inversePrimary = Color(config.inversePrimaryColor)
     val inverseSurface = Color(config.inverseSurfaceColor)
     val inverseOnSurface = Color(config.inverseOnSurfaceColor)
     val scrim = Color(config.scrimColor)
 
-    // NÃO MEXER
     return darkColorScheme(
         primary = primary,
         onPrimary = onPrimary,
