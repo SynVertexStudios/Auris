@@ -56,6 +56,7 @@ fun customColorScheme(
             onBackground = onBackground,
             surface = surface,
             onSurface = onSurface,
+            surfaceContainer = surfaceContainer,
             surfaceVariant = surfaceVariant,
             onSurfaceVariant = onSurfaceVariant,
             primaryContainer = primaryContainer,
