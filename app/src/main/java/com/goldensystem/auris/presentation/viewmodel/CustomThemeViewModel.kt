@@ -48,6 +48,8 @@ fun updateAccentColor(color: Int) { _config.update { it.copy(accentColor = color
 
 // Novas funções (ADICIONE)
 fun updateTertiaryColor(color: Int) { _config.update { it.copy(tertiaryColor = color) } }
+fun updatePrimaryContainerColor(color: Int) { _config.update { it.copy(primaryContainerColor = color) } }
+fun updateOnPrimaryContainerColor(color: Int) { _config.update { it.copy(onPrimaryContainerColor = color) } }
 fun updateOnSecondaryColor(color: Int) { _config.update { it.copy(onSecondaryColor = color) } }
 fun updateSecondaryContainerColor(color: Int) { _config.update { it.copy(secondaryContainerColor = color) } }
 fun updateOnSecondaryContainerColor(color: Int) { _config.update { it.copy(onSecondaryContainerColor = color) } }

@@ -17,11 +17,10 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// data/preferences/ThemePreferences.kt
 data class CustomThemeConfig(
     val isEnabled: Boolean = false,
     
-    // ===== CORES EXISTENTES (MANTENHA) =====
+    // ===== CORES EXISTENTES =====
     val primaryColor: Int = 0xFF6750A4.toInt(),
     val secondaryColor: Int = 0xFFF06292.toInt(),
     val backgroundColor: Int = 0xFF1E1234.toInt(),
@@ -29,7 +28,7 @@ data class CustomThemeConfig(
     val onSurfaceColor: Int = 0xFFE1BEE7.toInt(),
     val accentColor: Int = 0xFFFF8A65.toInt(),
     
-    // ===== NOVAS CORES (ADICIONE) =====
+    // ===== NOVAS CORES =====
     val tertiaryColor: Int = 0xFF7D5260.toInt(),
     val onSecondaryColor: Int = 0xFFFFFFFF.toInt(),
     val secondaryContainerColor: Int = 0xFFE8DEF8.toInt(),
@@ -52,7 +51,11 @@ data class CustomThemeConfig(
     val inverseOnSurfaceColor: Int = 0xFFF4EFF4.toInt(),
     val scrimColor: Int = 0xFF000000.toInt(),
     
-    // ===== WALLPAPER (MANTENHA) =====
+    // ===== NOVAS CORES QUE FALTAVAM =====
+    val primaryContainerColor: Int = 0xFF6750A4.toInt(),
+    val onPrimaryContainerColor: Int = 0xFFFFFFFF.toInt(),
+    
+    // ===== WALLPAPER =====
     val wallpaperType: WallpaperType = WallpaperType.SOLID,
     val wallpaperColor: Int = 0xFF1E1234.toInt(),
     val wallpaperUri: String? = null,
@@ -72,181 +75,188 @@ class ThemePreferences @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) {
     companion object {
-    // Chaves existentes (MANTENHA)
-    private val THEME_ENABLED = booleanPreferencesKey("custom_theme_enabled")
-    private val PRIMARY_COLOR = intPreferencesKey("custom_primary_color")
-    private val SECONDARY_COLOR = intPreferencesKey("custom_secondary_color")
-    private val BACKGROUND_COLOR = intPreferencesKey("custom_background_color")
-    private val ON_PRIMARY_COLOR = intPreferencesKey("custom_on_primary_color")
-    private val ON_SURFACE_COLOR = intPreferencesKey("custom_on_surface_color")
-    private val ACCENT_COLOR = intPreferencesKey("custom_accent_color")
-    
-    // Novas chaves (ADICIONE)
-    private val TERTIARY_COLOR = intPreferencesKey("custom_tertiary_color")
-    private val ON_SECONDARY_COLOR = intPreferencesKey("custom_on_secondary_color")
-    private val SECONDARY_CONTAINER_COLOR = intPreferencesKey("custom_secondary_container_color")
-    private val ON_SECONDARY_CONTAINER_COLOR = intPreferencesKey("custom_on_secondary_container_color")
-    private val TERTIARY_CONTAINER_COLOR = intPreferencesKey("custom_tertiary_container_color")
-    private val ON_TERTIARY_CONTAINER_COLOR = intPreferencesKey("custom_on_tertiary_container_color")
-    private val ON_BACKGROUND_COLOR = intPreferencesKey("custom_on_background_color")
-    private val SURFACE_COLOR = intPreferencesKey("custom_surface_color")
-    private val SURFACE_VARIANT_COLOR = intPreferencesKey("custom_surface_variant_color")
-    private val ON_SURFACE_VARIANT_COLOR = intPreferencesKey("custom_on_surface_variant_color")
-    private val ERROR_COLOR = intPreferencesKey("custom_error_color")
-    private val ON_ERROR_COLOR = intPreferencesKey("custom_on_error_color")
-    private val ERROR_CONTAINER_COLOR = intPreferencesKey("custom_error_container_color")
-    private val ON_ERROR_CONTAINER_COLOR = intPreferencesKey("custom_on_error_container_color")
-    private val OUTLINE_COLOR = intPreferencesKey("custom_outline_color")
-    private val OUTLINE_VARIANT_COLOR = intPreferencesKey("custom_outline_variant_color")
-    private val SURFACE_TINT_COLOR = intPreferencesKey("custom_surface_tint_color")
-    private val INVERSE_PRIMARY_COLOR = intPreferencesKey("custom_inverse_primary_color")
-    private val INVERSE_SURFACE_COLOR = intPreferencesKey("custom_inverse_surface_color")
-    private val INVERSE_ON_SURFACE_COLOR = intPreferencesKey("custom_inverse_on_surface_color")
-    private val SCRIM_COLOR = intPreferencesKey("custom_scrim_color")
-    
-    // Wallpaper (MANTENHA)
-    private val WALLPAPER_TYPE = stringPreferencesKey("wallpaper_type")
-    private val WALLPAPER_COLOR = intPreferencesKey("wallpaper_color")
-    private val WALLPAPER_URI = stringPreferencesKey("wallpaper_uri")
-    private val WALLPAPER_URL = stringPreferencesKey("wallpaper_url")
-    private val WALLPAPER_BLUR = floatPreferencesKey("wallpaper_blur")
-    private val WALLPAPER_DIM = floatPreferencesKey("wallpaper_dim")
-}
+        // Chaves existentes
+        private val THEME_ENABLED = booleanPreferencesKey("custom_theme_enabled")
+        private val PRIMARY_COLOR = intPreferencesKey("custom_primary_color")
+        private val SECONDARY_COLOR = intPreferencesKey("custom_secondary_color")
+        private val BACKGROUND_COLOR = intPreferencesKey("custom_background_color")
+        private val ON_PRIMARY_COLOR = intPreferencesKey("custom_on_primary_color")
+        private val ON_SURFACE_COLOR = intPreferencesKey("custom_on_surface_color")
+        private val ACCENT_COLOR = intPreferencesKey("custom_accent_color")
+        
+        // Novas chaves
+        private val TERTIARY_COLOR = intPreferencesKey("custom_tertiary_color")
+        private val ON_SECONDARY_COLOR = intPreferencesKey("custom_on_secondary_color")
+        private val SECONDARY_CONTAINER_COLOR = intPreferencesKey("custom_secondary_container_color")
+        private val ON_SECONDARY_CONTAINER_COLOR = intPreferencesKey("custom_on_secondary_container_color")
+        private val TERTIARY_CONTAINER_COLOR = intPreferencesKey("custom_tertiary_container_color")
+        private val ON_TERTIARY_CONTAINER_COLOR = intPreferencesKey("custom_on_tertiary_container_color")
+        private val ON_BACKGROUND_COLOR = intPreferencesKey("custom_on_background_color")
+        private val SURFACE_COLOR = intPreferencesKey("custom_surface_color")
+        private val SURFACE_VARIANT_COLOR = intPreferencesKey("custom_surface_variant_color")
+        private val ON_SURFACE_VARIANT_COLOR = intPreferencesKey("custom_on_surface_variant_color")
+        private val ERROR_COLOR = intPreferencesKey("custom_error_color")
+        private val ON_ERROR_COLOR = intPreferencesKey("custom_on_error_color")
+        private val ERROR_CONTAINER_COLOR = intPreferencesKey("custom_error_container_color")
+        private val ON_ERROR_CONTAINER_COLOR = intPreferencesKey("custom_on_error_container_color")
+        private val OUTLINE_COLOR = intPreferencesKey("custom_outline_color")
+        private val OUTLINE_VARIANT_COLOR = intPreferencesKey("custom_outline_variant_color")
+        private val SURFACE_TINT_COLOR = intPreferencesKey("custom_surface_tint_color")
+        private val INVERSE_PRIMARY_COLOR = intPreferencesKey("custom_inverse_primary_color")
+        private val INVERSE_SURFACE_COLOR = intPreferencesKey("custom_inverse_surface_color")
+        private val INVERSE_ON_SURFACE_COLOR = intPreferencesKey("custom_inverse_on_surface_color")
+        private val SCRIM_COLOR = intPreferencesKey("custom_scrim_color")
+        
+        // NOVAS CHAVES QUE FALTAVAM
+        private val PRIMARY_CONTAINER_COLOR = intPreferencesKey("custom_primary_container_color")
+        private val ON_PRIMARY_CONTAINER_COLOR = intPreferencesKey("custom_on_primary_container_color")
+        
+        // Wallpaper
+        private val WALLPAPER_TYPE = stringPreferencesKey("wallpaper_type")
+        private val WALLPAPER_COLOR = intPreferencesKey("wallpaper_color")
+        private val WALLPAPER_URI = stringPreferencesKey("wallpaper_uri")
+        private val WALLPAPER_URL = stringPreferencesKey("wallpaper_url")
+        private val WALLPAPER_BLUR = floatPreferencesKey("wallpaper_blur")
+        private val WALLPAPER_DIM = floatPreferencesKey("wallpaper_dim")
+    }
 
     val customThemeConfig: Flow<CustomThemeConfig> = dataStore.data.map { prefs ->
-    CustomThemeConfig(
-        // Existentes (MANTENHA)
-        isEnabled = prefs[THEME_ENABLED] ?: false,
-        primaryColor = prefs[PRIMARY_COLOR] ?: 0xFF6750A4.toInt(),
-        secondaryColor = prefs[SECONDARY_COLOR] ?: 0xFFF06292.toInt(),
-        backgroundColor = prefs[BACKGROUND_COLOR] ?: 0xFF1E1234.toInt(),
-        onPrimaryColor = prefs[ON_PRIMARY_COLOR] ?: 0xFFFFFFFF.toInt(),
-        onSurfaceColor = prefs[ON_SURFACE_COLOR] ?: 0xFFE1BEE7.toInt(),
-        accentColor = prefs[ACCENT_COLOR] ?: 0xFFFF8A65.toInt(),
-        
-        // Novas (ADICIONE)
-        tertiaryColor = prefs[TERTIARY_COLOR] ?: 0xFF7D5260.toInt(),
-        onSecondaryColor = prefs[ON_SECONDARY_COLOR] ?: 0xFFFFFFFF.toInt(),
-        secondaryContainerColor = prefs[SECONDARY_CONTAINER_COLOR] ?: 0xFFE8DEF8.toInt(),
-        onSecondaryContainerColor = prefs[ON_SECONDARY_CONTAINER_COLOR] ?: 0xFF1D192B.toInt(),
-        tertiaryContainerColor = prefs[TERTIARY_CONTAINER_COLOR] ?: 0xFFFFD8E4.toInt(),
-        onTertiaryContainerColor = prefs[ON_TERTIARY_CONTAINER_COLOR] ?: 0xFF31111D.toInt(),
-        onBackgroundColor = prefs[ON_BACKGROUND_COLOR] ?: 0xFF1C1B1F.toInt(),
-        surfaceColor = prefs[SURFACE_COLOR] ?: 0xFFFFFBFE.toInt(),
-        surfaceVariantColor = prefs[SURFACE_VARIANT_COLOR] ?: 0xFFE7E0EC.toInt(),
-        onSurfaceVariantColor = prefs[ON_SURFACE_VARIANT_COLOR] ?: 0xFF49454F.toInt(),
-        errorColor = prefs[ERROR_COLOR] ?: 0xFFB3261E.toInt(),
-        onErrorColor = prefs[ON_ERROR_COLOR] ?: 0xFFFFFFFF.toInt(),
-        errorContainerColor = prefs[ERROR_CONTAINER_COLOR] ?: 0xFFF9DEDC.toInt(),
-        onErrorContainerColor = prefs[ON_ERROR_CONTAINER_COLOR] ?: 0xFF410E0B.toInt(),
-        outlineColor = prefs[OUTLINE_COLOR] ?: 0xFF79747E.toInt(),
-        outlineVariantColor = prefs[OUTLINE_VARIANT_COLOR] ?: 0xFFCAC4D0.toInt(),
-        surfaceTintColor = prefs[SURFACE_TINT_COLOR] ?: 0xFF6750A4.toInt(),
-        inversePrimaryColor = prefs[INVERSE_PRIMARY_COLOR] ?: 0xFFD0BCFF.toInt(),
-        inverseSurfaceColor = prefs[INVERSE_SURFACE_COLOR] ?: 0xFF313033.toInt(),
-        inverseOnSurfaceColor = prefs[INVERSE_ON_SURFACE_COLOR] ?: 0xFFF4EFF4.toInt(),
-        scrimColor = prefs[SCRIM_COLOR] ?: 0xFF000000.toInt(),
-        
-        // Wallpaper (MANTENHA)
-        wallpaperType = try {
-            val typeName = prefs[WALLPAPER_TYPE] ?: WallpaperType.SOLID.name
-            WallpaperType.valueOf(typeName)
-        } catch (_: Exception) {
-            WallpaperType.SOLID
-        },
-        wallpaperColor = prefs[WALLPAPER_COLOR] ?: 0xFF1E1234.toInt(),
-        wallpaperUri = prefs[WALLPAPER_URI],
-        wallpaperUrl = prefs[WALLPAPER_URL],
-        wallpaperBlur = prefs[WALLPAPER_BLUR] ?: 0.5f,
-        wallpaperDim = prefs[WALLPAPER_DIM] ?: 0.3f
-    )
-}
+        CustomThemeConfig(
+            isEnabled = prefs[THEME_ENABLED] ?: false,
+            primaryColor = prefs[PRIMARY_COLOR] ?: 0xFF6750A4.toInt(),
+            secondaryColor = prefs[SECONDARY_COLOR] ?: 0xFFF06292.toInt(),
+            backgroundColor = prefs[BACKGROUND_COLOR] ?: 0xFF1E1234.toInt(),
+            onPrimaryColor = prefs[ON_PRIMARY_COLOR] ?: 0xFFFFFFFF.toInt(),
+            onSurfaceColor = prefs[ON_SURFACE_COLOR] ?: 0xFFE1BEE7.toInt(),
+            accentColor = prefs[ACCENT_COLOR] ?: 0xFFFF8A65.toInt(),
+            
+            tertiaryColor = prefs[TERTIARY_COLOR] ?: 0xFF7D5260.toInt(),
+            onSecondaryColor = prefs[ON_SECONDARY_COLOR] ?: 0xFFFFFFFF.toInt(),
+            secondaryContainerColor = prefs[SECONDARY_CONTAINER_COLOR] ?: 0xFFE8DEF8.toInt(),
+            onSecondaryContainerColor = prefs[ON_SECONDARY_CONTAINER_COLOR] ?: 0xFF1D192B.toInt(),
+            tertiaryContainerColor = prefs[TERTIARY_CONTAINER_COLOR] ?: 0xFFFFD8E4.toInt(),
+            onTertiaryContainerColor = prefs[ON_TERTIARY_CONTAINER_COLOR] ?: 0xFF31111D.toInt(),
+            onBackgroundColor = prefs[ON_BACKGROUND_COLOR] ?: 0xFF1C1B1F.toInt(),
+            surfaceColor = prefs[SURFACE_COLOR] ?: 0xFFFFFBFE.toInt(),
+            surfaceVariantColor = prefs[SURFACE_VARIANT_COLOR] ?: 0xFFE7E0EC.toInt(),
+            onSurfaceVariantColor = prefs[ON_SURFACE_VARIANT_COLOR] ?: 0xFF49454F.toInt(),
+            errorColor = prefs[ERROR_COLOR] ?: 0xFFB3261E.toInt(),
+            onErrorColor = prefs[ON_ERROR_COLOR] ?: 0xFFFFFFFF.toInt(),
+            errorContainerColor = prefs[ERROR_CONTAINER_COLOR] ?: 0xFFF9DEDC.toInt(),
+            onErrorContainerColor = prefs[ON_ERROR_CONTAINER_COLOR] ?: 0xFF410E0B.toInt(),
+            outlineColor = prefs[OUTLINE_COLOR] ?: 0xFF79747E.toInt(),
+            outlineVariantColor = prefs[OUTLINE_VARIANT_COLOR] ?: 0xFFCAC4D0.toInt(),
+            surfaceTintColor = prefs[SURFACE_TINT_COLOR] ?: 0xFF6750A4.toInt(),
+            inversePrimaryColor = prefs[INVERSE_PRIMARY_COLOR] ?: 0xFFD0BCFF.toInt(),
+            inverseSurfaceColor = prefs[INVERSE_SURFACE_COLOR] ?: 0xFF313033.toInt(),
+            inverseOnSurfaceColor = prefs[INVERSE_ON_SURFACE_COLOR] ?: 0xFFF4EFF4.toInt(),
+            scrimColor = prefs[SCRIM_COLOR] ?: 0xFF000000.toInt(),
+            
+            // NOVAS CORES QUE FALTAVAM
+            primaryContainerColor = prefs[PRIMARY_CONTAINER_COLOR] ?: 0xFF6750A4.toInt(),
+            onPrimaryContainerColor = prefs[ON_PRIMARY_CONTAINER_COLOR] ?: 0xFFFFFFFF.toInt(),
+            
+            wallpaperType = try {
+                val typeName = prefs[WALLPAPER_TYPE] ?: WallpaperType.SOLID.name
+                WallpaperType.valueOf(typeName)
+            } catch (_: Exception) {
+                WallpaperType.SOLID
+            },
+            wallpaperColor = prefs[WALLPAPER_COLOR] ?: 0xFF1E1234.toInt(),
+            wallpaperUri = prefs[WALLPAPER_URI],
+            wallpaperUrl = prefs[WALLPAPER_URL],
+            wallpaperBlur = prefs[WALLPAPER_BLUR] ?: 0.5f,
+            wallpaperDim = prefs[WALLPAPER_DIM] ?: 0.3f
+        )
+    }
 
     suspend fun setCustomTheme(config: CustomThemeConfig) {
-    dataStore.edit { prefs ->
-        // Existentes (MANTENHA)
-        prefs[THEME_ENABLED] = config.isEnabled
-        prefs[PRIMARY_COLOR] = config.primaryColor
-        prefs[SECONDARY_COLOR] = config.secondaryColor
-        prefs[BACKGROUND_COLOR] = config.backgroundColor
-        prefs[ON_PRIMARY_COLOR] = config.onPrimaryColor
-        prefs[ON_SURFACE_COLOR] = config.onSurfaceColor
-        prefs[ACCENT_COLOR] = config.accentColor
-        
-        // Novas (ADICIONE)
-        prefs[TERTIARY_COLOR] = config.tertiaryColor
-        prefs[ON_SECONDARY_COLOR] = config.onSecondaryColor
-        prefs[SECONDARY_CONTAINER_COLOR] = config.secondaryContainerColor
-        prefs[ON_SECONDARY_CONTAINER_COLOR] = config.onSecondaryContainerColor
-        prefs[TERTIARY_CONTAINER_COLOR] = config.tertiaryContainerColor
-        prefs[ON_TERTIARY_CONTAINER_COLOR] = config.onTertiaryContainerColor
-        prefs[ON_BACKGROUND_COLOR] = config.onBackgroundColor
-        prefs[SURFACE_COLOR] = config.surfaceColor
-        prefs[SURFACE_VARIANT_COLOR] = config.surfaceVariantColor
-        prefs[ON_SURFACE_VARIANT_COLOR] = config.onSurfaceVariantColor
-        prefs[ERROR_COLOR] = config.errorColor
-        prefs[ON_ERROR_COLOR] = config.onErrorColor
-        prefs[ERROR_CONTAINER_COLOR] = config.errorContainerColor
-        prefs[ON_ERROR_CONTAINER_COLOR] = config.onErrorContainerColor
-        prefs[OUTLINE_COLOR] = config.outlineColor
-        prefs[OUTLINE_VARIANT_COLOR] = config.outlineVariantColor
-        prefs[SURFACE_TINT_COLOR] = config.surfaceTintColor
-        prefs[INVERSE_PRIMARY_COLOR] = config.inversePrimaryColor
-        prefs[INVERSE_SURFACE_COLOR] = config.inverseSurfaceColor
-        prefs[INVERSE_ON_SURFACE_COLOR] = config.inverseOnSurfaceColor
-        prefs[SCRIM_COLOR] = config.scrimColor
-        
-        // Wallpaper (MANTENHA)
-        prefs[WALLPAPER_TYPE] = config.wallpaperType.name
-        prefs[WALLPAPER_COLOR] = config.wallpaperColor
-        prefs[WALLPAPER_URI] = config.wallpaperUri ?: ""
-        prefs[WALLPAPER_URL] = config.wallpaperUrl ?: ""
-        prefs[WALLPAPER_BLUR] = config.wallpaperBlur
-        prefs[WALLPAPER_DIM] = config.wallpaperDim
+        dataStore.edit { prefs ->
+            prefs[THEME_ENABLED] = config.isEnabled
+            prefs[PRIMARY_COLOR] = config.primaryColor
+            prefs[SECONDARY_COLOR] = config.secondaryColor
+            prefs[BACKGROUND_COLOR] = config.backgroundColor
+            prefs[ON_PRIMARY_COLOR] = config.onPrimaryColor
+            prefs[ON_SURFACE_COLOR] = config.onSurfaceColor
+            prefs[ACCENT_COLOR] = config.accentColor
+            
+            prefs[TERTIARY_COLOR] = config.tertiaryColor
+            prefs[ON_SECONDARY_COLOR] = config.onSecondaryColor
+            prefs[SECONDARY_CONTAINER_COLOR] = config.secondaryContainerColor
+            prefs[ON_SECONDARY_CONTAINER_COLOR] = config.onSecondaryContainerColor
+            prefs[TERTIARY_CONTAINER_COLOR] = config.tertiaryContainerColor
+            prefs[ON_TERTIARY_CONTAINER_COLOR] = config.onTertiaryContainerColor
+            prefs[ON_BACKGROUND_COLOR] = config.onBackgroundColor
+            prefs[SURFACE_COLOR] = config.surfaceColor
+            prefs[SURFACE_VARIANT_COLOR] = config.surfaceVariantColor
+            prefs[ON_SURFACE_VARIANT_COLOR] = config.onSurfaceVariantColor
+            prefs[ERROR_COLOR] = config.errorColor
+            prefs[ON_ERROR_COLOR] = config.onErrorColor
+            prefs[ERROR_CONTAINER_COLOR] = config.errorContainerColor
+            prefs[ON_ERROR_CONTAINER_COLOR] = config.onErrorContainerColor
+            prefs[OUTLINE_COLOR] = config.outlineColor
+            prefs[OUTLINE_VARIANT_COLOR] = config.outlineVariantColor
+            prefs[SURFACE_TINT_COLOR] = config.surfaceTintColor
+            prefs[INVERSE_PRIMARY_COLOR] = config.inversePrimaryColor
+            prefs[INVERSE_SURFACE_COLOR] = config.inverseSurfaceColor
+            prefs[INVERSE_ON_SURFACE_COLOR] = config.inverseOnSurfaceColor
+            prefs[SCRIM_COLOR] = config.scrimColor
+            
+            // NOVAS CORES QUE FALTAVAM
+            prefs[PRIMARY_CONTAINER_COLOR] = config.primaryContainerColor
+            prefs[ON_PRIMARY_CONTAINER_COLOR] = config.onPrimaryContainerColor
+            
+            prefs[WALLPAPER_TYPE] = config.wallpaperType.name
+            prefs[WALLPAPER_COLOR] = config.wallpaperColor
+            prefs[WALLPAPER_URI] = config.wallpaperUri ?: ""
+            prefs[WALLPAPER_URL] = config.wallpaperUrl ?: ""
+            prefs[WALLPAPER_BLUR] = config.wallpaperBlur
+            prefs[WALLPAPER_DIM] = config.wallpaperDim
+        }
     }
-}
 
     suspend fun resetCustomTheme() {
-    dataStore.edit { prefs ->
-        // Existentes (MANTENHA)
-        prefs.remove(THEME_ENABLED)
-        prefs.remove(PRIMARY_COLOR)
-        prefs.remove(SECONDARY_COLOR)
-        prefs.remove(BACKGROUND_COLOR)
-        prefs.remove(ON_PRIMARY_COLOR)
-        prefs.remove(ON_SURFACE_COLOR)
-        prefs.remove(ACCENT_COLOR)
-        
-        // Novas (ADICIONE)
-        prefs.remove(TERTIARY_COLOR)
-        prefs.remove(ON_SECONDARY_COLOR)
-        prefs.remove(SECONDARY_CONTAINER_COLOR)
-        prefs.remove(ON_SECONDARY_CONTAINER_COLOR)
-        prefs.remove(TERTIARY_CONTAINER_COLOR)
-        prefs.remove(ON_TERTIARY_CONTAINER_COLOR)
-        prefs.remove(ON_BACKGROUND_COLOR)
-        prefs.remove(SURFACE_COLOR)
-        prefs.remove(SURFACE_VARIANT_COLOR)
-        prefs.remove(ON_SURFACE_VARIANT_COLOR)
-        prefs.remove(ERROR_COLOR)
-        prefs.remove(ON_ERROR_COLOR)
-        prefs.remove(ERROR_CONTAINER_COLOR)
-        prefs.remove(ON_ERROR_CONTAINER_COLOR)
-        prefs.remove(OUTLINE_COLOR)
-        prefs.remove(OUTLINE_VARIANT_COLOR)
-        prefs.remove(SURFACE_TINT_COLOR)
-        prefs.remove(INVERSE_PRIMARY_COLOR)
-        prefs.remove(INVERSE_SURFACE_COLOR)
-        prefs.remove(INVERSE_ON_SURFACE_COLOR)
-        prefs.remove(SCRIM_COLOR)
-        
-        // Wallpaper (MANTENHA)
-        prefs.remove(WALLPAPER_TYPE)
-        prefs.remove(WALLPAPER_COLOR)
-        prefs.remove(WALLPAPER_URI)
-        prefs.remove(WALLPAPER_URL)
-        prefs.remove(WALLPAPER_BLUR)
-        prefs.remove(WALLPAPER_DIM)
+        dataStore.edit { prefs ->
+            prefs.remove(THEME_ENABLED)
+            prefs.remove(PRIMARY_COLOR)
+            prefs.remove(SECONDARY_COLOR)
+            prefs.remove(BACKGROUND_COLOR)
+            prefs.remove(ON_PRIMARY_COLOR)
+            prefs.remove(ON_SURFACE_COLOR)
+            prefs.remove(ACCENT_COLOR)
+            
+            prefs.remove(TERTIARY_COLOR)
+            prefs.remove(ON_SECONDARY_COLOR)
+            prefs.remove(SECONDARY_CONTAINER_COLOR)
+            prefs.remove(ON_SECONDARY_CONTAINER_COLOR)
+            prefs.remove(TERTIARY_CONTAINER_COLOR)
+            prefs.remove(ON_TERTIARY_CONTAINER_COLOR)
+            prefs.remove(ON_BACKGROUND_COLOR)
+            prefs.remove(SURFACE_COLOR)
+            prefs.remove(SURFACE_VARIANT_COLOR)
+            prefs.remove(ON_SURFACE_VARIANT_COLOR)
+            prefs.remove(ERROR_COLOR)
+            prefs.remove(ON_ERROR_COLOR)
+            prefs.remove(ERROR_CONTAINER_COLOR)
+            prefs.remove(ON_ERROR_CONTAINER_COLOR)
+            prefs.remove(OUTLINE_COLOR)
+            prefs.remove(OUTLINE_VARIANT_COLOR)
+            prefs.remove(SURFACE_TINT_COLOR)
+            prefs.remove(INVERSE_PRIMARY_COLOR)
+            prefs.remove(INVERSE_SURFACE_COLOR)
+            prefs.remove(INVERSE_ON_SURFACE_COLOR)
+            prefs.remove(SCRIM_COLOR)
+            
+            // NOVAS CORES QUE FALTAVAM
+            prefs.remove(PRIMARY_CONTAINER_COLOR)
+            prefs.remove(ON_PRIMARY_CONTAINER_COLOR)
+            
+            prefs.remove(WALLPAPER_TYPE)
+            prefs.remove(WALLPAPER_COLOR)
+            prefs.remove(WALLPAPER_URI)
+            prefs.remove(WALLPAPER_URL)
+            prefs.remove(WALLPAPER_BLUR)
+            prefs.remove(WALLPAPER_DIM)
+        }
     }
-}
 }
