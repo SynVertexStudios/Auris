@@ -19,7 +19,7 @@ fun customColorScheme(
     val secondary = Color(config.secondaryColor)
     val onSecondary = Color(config.onSecondaryColor)
     val tertiary = Color(config.tertiaryColor)
-    val onTertiary = Color(config.onTertiaryColor)
+    val onTertiary = Color(config.primaryColor)
     val background = Color(config.backgroundColor)
     val onBackground = Color(config.onBackgroundColor)
     val surface = Color(config.surfaceColor)
