@@ -14,6 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.RestartAlt
+import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -39,6 +41,9 @@ fun ThemePresetsBottomSheet(
     var selectedPresetName by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     var isVisible by remember { mutableStateOf(true) }
+    
+    // Estado do tema (claro/escuro)
+    var isDarkTheme by remember { mutableStateOf(true) }
 
     ModalBottomSheet(
         onDismissRequest = {
@@ -93,6 +98,31 @@ fun ThemePresetsBottomSheet(
                         modifier = Modifier.weight(1f)
                     )
 
+                    // Botão para alternar tema claro/escuro
+                    FilledIconButton(
+                        onClick = {
+                            isDarkTheme = !isDarkTheme
+                        },
+                        modifier = Modifier.size(40.dp),
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    ) {
+                        Icon(
+                            imageVector = if (isDarkTheme) 
+                                Icons.Rounded.DarkMode 
+                            else 
+                                Icons.Rounded.LightMode,
+                            contentDescription = if (isDarkTheme) 
+                                "Tema Escuro" 
+                            else 
+                                "Tema Claro"
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
                     IconButton(
                         onClick = {
                             scope.launch {
@@ -135,9 +165,8 @@ fun ThemePresetsBottomSheet(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(COLOR_PRESETS) { preset ->
-
-                        val isSelected =
-                            selectedPresetName == preset.name
+                        val isSelected = selectedPresetName == preset.name
+                        val colors = preset.getColors(isDarkTheme)
 
                         val containerColor =
                             if (isSelected)
@@ -155,24 +184,13 @@ fun ThemePresetsBottomSheet(
                             onClick = {
                                 selectedPresetName = preset.name
 
-                                viewModel.updatePrimaryColor(
-                                    preset.primaryColor
-                                )
-                                viewModel.updateSecondaryColor(
-                                    preset.secondaryColor
-                                )
-                                viewModel.updateBackgroundColor(
-                                    preset.backgroundColor
-                                )
-                                viewModel.updateOnPrimaryColor(
-                                    preset.onPrimaryColor
-                                )
-                                viewModel.updateOnSurfaceColor(
-                                    preset.onSurfaceColor
-                                )
-                                viewModel.updateAccentColor(
-                                    preset.accentColor
-                                )
+                                // Aplica as cores do preset (claro ou escuro)
+                                viewModel.updatePrimaryColor(colors.primaryColor)
+                                viewModel.updateSecondaryColor(colors.secondaryColor)
+                                viewModel.updateBackgroundColor(colors.backgroundColor)
+                                viewModel.updateOnPrimaryColor(colors.onPrimaryColor)
+                                viewModel.updateOnSurfaceColor(colors.onSurfaceColor)
+                                viewModel.updateAccentColor(colors.accentColor)
 
                                 scope.launch {
                                     isVisible = false
@@ -193,6 +211,16 @@ fun ThemePresetsBottomSheet(
                                     .padding(horizontal = 24.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
+                                // Ícone do preset
+                                Icon(
+                                    imageVector = preset.icon,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                
+                                Spacer(modifier = Modifier.width(12.dp))
+
                                 Text(
                                     text = preset.name,
                                     style = MaterialTheme.typography.titleMedium,

@@ -27,8 +27,21 @@ class CustomThemeViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
+
     private val _config = MutableStateFlow(CustomThemeConfig())
     val customThemeConfig: StateFlow<CustomThemeConfig> = _config.asStateFlow()
+    
+
+    private val _isDarkTheme = MutableStateFlow(true)
+    val isDarkTheme: StateFlow<Boolean> = _isDarkTheme.asStateFlow()
+
+    fun toggleTheme() {
+        _isDarkTheme.update { !it }
+    }
+
+    fun setDarkTheme(isDark: Boolean) {
+        _isDarkTheme.update { isDark }
+    }
 
     init {
         viewModelScope.launch {
