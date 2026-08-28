@@ -54,6 +54,7 @@ data class CustomThemeConfig(
     // ===== NOVAS CORES QUE FALTAVAM =====
     val primaryContainerColor: Int = 0xFF6750A4.toInt(),
     val onPrimaryContainerColor: Int = 0xFFFFFFFF.toInt(),
+    val surfaceContainerColor: Int = 0xFF1E1E1E.toInt(),
     
     // ===== WALLPAPER =====
     val wallpaperType: WallpaperType = WallpaperType.SOLID,
@@ -79,6 +80,7 @@ class ThemePreferences @Inject constructor(
         private val THEME_ENABLED = booleanPreferencesKey("custom_theme_enabled")
         private val PRIMARY_COLOR = intPreferencesKey("custom_primary_color")
         private val SECONDARY_COLOR = intPreferencesKey("custom_secondary_color")
+        private val SURFACE_CONTAINER_COLOR = intPreferencesKey("custom_surface_container_color")
         private val BACKGROUND_COLOR = intPreferencesKey("custom_background_color")
         private val ON_PRIMARY_COLOR = intPreferencesKey("custom_on_primary_color")
         private val ON_SURFACE_COLOR = intPreferencesKey("custom_on_surface_color")
@@ -129,7 +131,7 @@ class ThemePreferences @Inject constructor(
             onPrimaryColor = prefs[ON_PRIMARY_COLOR] ?: 0xFFFFFFFF.toInt(),
             onSurfaceColor = prefs[ON_SURFACE_COLOR] ?: 0xFFE1BEE7.toInt(),
             accentColor = prefs[ACCENT_COLOR] ?: 0xFFFF8A65.toInt(),
-            
+            surfaceContainerColor = prefs[SURFACE_CONTAINER_COLOR] ?: 0xFF1E1E1E.toInt(),
             tertiaryColor = prefs[TERTIARY_COLOR] ?: 0xFF7D5260.toInt(),
             onSecondaryColor = prefs[ON_SECONDARY_COLOR] ?: 0xFFFFFFFF.toInt(),
             secondaryContainerColor = prefs[SECONDARY_CONTAINER_COLOR] ?: 0xFFE8DEF8.toInt(),
@@ -179,7 +181,7 @@ class ThemePreferences @Inject constructor(
             prefs[ON_PRIMARY_COLOR] = config.onPrimaryColor
             prefs[ON_SURFACE_COLOR] = config.onSurfaceColor
             prefs[ACCENT_COLOR] = config.accentColor
-            
+            prefs[SURFACE_CONTAINER_COLOR] = config.surfaceContainerColor
             prefs[TERTIARY_COLOR] = config.tertiaryColor
             prefs[ON_SECONDARY_COLOR] = config.onSecondaryColor
             prefs[SECONDARY_CONTAINER_COLOR] = config.secondaryContainerColor
@@ -224,7 +226,7 @@ class ThemePreferences @Inject constructor(
             prefs.remove(ON_PRIMARY_COLOR)
             prefs.remove(ON_SURFACE_COLOR)
             prefs.remove(ACCENT_COLOR)
-            
+            prefs.remove(SURFACE_CONTAINER_COLOR)
             prefs.remove(TERTIARY_COLOR)
             prefs.remove(ON_SECONDARY_COLOR)
             prefs.remove(SECONDARY_CONTAINER_COLOR)

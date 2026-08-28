@@ -129,6 +129,10 @@ fun CustomThemeScreen(
             colorPickerTarget == viewModel::updatePrimaryContainerColor -> config.primaryContainerColor
             colorPickerTarget == viewModel::updateOnPrimaryContainerColor -> config.onPrimaryContainerColor
             
+            
+            /*Parte mais importante da atualizacao qur e a englobacao dos containers
+            》*/colorPickerTarget == viewModel::updateSurfaceContainerColor -> config.surfaceContainerColor
+            
             else -> config.primaryColor
         },
         onColorSelected = { color ->
@@ -574,6 +578,18 @@ ColorPickerRow(
     onColorSelected = { viewModel.updateOnPrimaryContainerColor(it) },
     onCustomColorClick = { 
         colorPickerTarget = viewModel::updateOnPrimaryContainerColor
+        showColorPickerDialog = true
+    },
+    colorScheme = colorScheme
+)
+//container
+ColorPickerRow(
+    label = "Teste surfaceContainerColor",
+    currentColor = config.surfaceContainerColor,
+    colors = MAIN_COLORS,
+    onColorSelected = { viewModel.updateSurfaceContainerColor(it) },
+    onCustomColorClick = { 
+        colorPickerTarget = viewModel::updateSurfaceContainerColor
         showColorPickerDialog = true
     },
     colorScheme = colorScheme

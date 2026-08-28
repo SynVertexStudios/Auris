@@ -70,6 +70,9 @@ fun updateInversePrimaryColor(color: Int) { _config.update { it.copy(inversePrim
 fun updateInverseSurfaceColor(color: Int) { _config.update { it.copy(inverseSurfaceColor = color) } }
 fun updateInverseOnSurfaceColor(color: Int) { _config.update { it.copy(inverseOnSurfaceColor = color) } }
 fun updateScrimColor(color: Int) { _config.update { it.copy(scrimColor = color) } }
+fun updateSurfaceContainerColor(color: Int) { 
+    _config.update { it.copy(surfaceContainerColor = color) } 
+    }
 
     // ===== WALLPAPER =====
     fun setWallpaperType(type: WallpaperType) {
