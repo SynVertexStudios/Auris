@@ -167,7 +167,7 @@ fun EnhancedSongListItem(
 
     val selectionBorderColor = lerpColor(colors.primary.copy(alpha = 0f), colors.primary, selectionVisualProgress)
     val mvContainerColor = lerpColor(colors.onSurface, colors.primaryContainer, highlightProgress)
-    val mvContentColor = lerpColor(colors.surfaceContainerHigh, colors.onPrimaryContainer, highlightProgress)
+    val mvContentColor = lerpColor(colors.surfaceContainer, colors.onPrimaryContainer, highlightProgress)
     val selectionOverlayColor = lerpColor(
         Color.Transparent,
         colors.primary.copy(alpha = 0.7f),

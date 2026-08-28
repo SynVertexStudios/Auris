@@ -172,7 +172,7 @@ private fun ProviderRow(
     val containerColor = when {
         !enabled -> MaterialTheme.colorScheme.surfaceContainerLowest
         isConnected -> MaterialTheme.colorScheme.surfaceContainerHighest
-        else -> MaterialTheme.colorScheme.surfaceContainerHigh
+        else -> MaterialTheme.colorScheme.surfaceContainer
     }
     val titleColor = if (enabled) {
         MaterialTheme.colorScheme.onSurface
