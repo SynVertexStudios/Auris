@@ -42,9 +42,9 @@ fun customColorScheme(
     val inverseOnSurface = onSurface
     val scrim = Color(0x66000000.toInt())
     
-    /*vamos englobar essa cor no geral containers
-    》》*/val surfaceContainer = Color(config.surfaceContainerColor)/*
-    》》*/val surfaceContainerLow = Color(config.surfaceContainerLowColor)
+    //vamos englobar essa cor no geral containers
+    val surfaceContainer = Color(config.surfaceContainerColor)
+    val surfaceContainerLow = Color(config.surfaceContainerLowColor)
     
     return darkColorScheme(
             primary = primary,
