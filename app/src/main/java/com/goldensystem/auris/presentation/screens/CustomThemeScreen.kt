@@ -130,9 +130,9 @@ fun CustomThemeScreen(
             colorPickerTarget == viewModel::updateOnPrimaryContainerColor -> config.onPrimaryContainerColor
             
             
-            /*Parte mais importante da atualizacao que e a englobacao dos containers
-            》*/colorPickerTarget == viewModel::updateSurfaceContainerColor -> config.surfaceContainerColor/*
-            》*/colorPickerTarget == viewModel::updateSurfaceContainerLowColor -> config.surfaceContainerLowColor
+            //Parte mais importante da atualizacao que e a englobacao dos containers
+                colorPickerTarget == viewModel::updateSurfaceContainerColor -> config.surfaceContainerColor
+                colorPickerTarget == viewModel::updateSurfaceContainerLowColor -> config.surfaceContainerLowColor
             
             else -> config.primaryColor
         },
@@ -583,8 +583,8 @@ ColorPickerRow(
     },
     colorScheme = colorScheme
 )
-/*Começo do container nova vercao 1.0.2
- 》*/ColorPickerRow(
+//Começo do container nova vercao 1.0.20
+ColorPickerRow(
     label = "Teste surfaceContainerColor",
     currentColor = config.surfaceContainerColor,
     colors = MAIN_COLORS,
@@ -594,8 +594,8 @@ ColorPickerRow(
         showColorPickerDialog = true
     },
     colorScheme = colorScheme
-)/*
- 》*/ColorPickerRow(
+)   
+ColorPickerRow(
     label = "Teste surfaceContainerLow",
     currentColor = config.surfaceContainerLowColor,
     colors = MAIN_COLORS,
