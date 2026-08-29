@@ -77,30 +77,27 @@ data class PresetColors(
 
 val COLOR_PRESETS = listOf(
     ColorPreset(
-        name = "Rosa",
-        icon = Icons.Rounded.Favorite,
-
-        // Tema escuro
-        darkPrimaryColor = 0xFFE91E63.toInt(),
-        darkSecondaryColor = 0xFFE91E63.toInt(),
-        darkBackgroundColor = 0xFF2A000E.toInt(),
+        name = "Azul",
+        icon = Icons.Rounded.WaterDrop,
+        darkPrimaryColor = 0xFF0D5AA1.toInt(),
+        darkSecondaryColor = 0xFF1E88E5.toInt(),
+        darkBackgroundColor = 0xFF00101C.toInt(),
         darkOnPrimaryColor = 0xFFFFFFFF.toInt(),
-        darkOnSurfaceColor = 0xFFE91E63.toInt(),
-        darkAccentColor = 0xFFFF4081.toInt(),
-        darkSurfaceContainerColor = 0xFF3D0015.toInt(),
-        darkSurfaceContainerLowColor = 0xFF2A000E.toInt(),
-        darkSurfaceContainerHighColor = 0xFF4A001A.toInt(),
+        darkOnSurfaceColor = 0xFF1B1EDA.toInt(),
+        darkAccentColor = 0xFF2979FF.toInt(),
+        darkSurfaceContainerColor = 0xFF001E35.toInt(),
+        darkSurfaceContainerLowColor = 0xFF00101C.toInt(),
+        darkSurfaceContainerHighColor = 0xFF002C4A.toInt(),
 
-        // Tema claro
-        lightPrimaryColor = 0xFFE91E63.toInt(),
-        lightSecondaryColor = 0xFFF48FB1.toInt(),
-        lightBackgroundColor = 0xFFFFF0F5.toInt(),
+        lightPrimaryColor = 0xFF1565C0.toInt(),
+        lightSecondaryColor = 0xFF90CAF9.toInt(),
+        lightBackgroundColor = 0xFFF5F9FF.toInt(),
         lightOnPrimaryColor = 0xFFFFFFFF.toInt(),
-        lightOnSurfaceColor = 0xFF880E4F.toInt(),
-        lightAccentColor = 0xFFFF4081.toInt(),
-        lightSurfaceContainerColor = 0xFFFFE5EC.toInt(),
-        lightSurfaceContainerLowColor = 0xFFFFF0F5.toInt(),
-        lightSurfaceContainerHighColor = 0xFFFFD6E5.toInt()
+        lightOnSurfaceColor = 0xFF0D47A1.toInt(),
+        lightAccentColor = 0xFF2962FF.toInt(),
+        lightSurfaceContainerColor = 0xFFE3F2FD.toInt(),
+        lightSurfaceContainerLowColor = 0xFFF5F9FF.toInt(),
+        lightSurfaceContainerHighColor = 0xFFD6EAF8.toInt()
     ),
     ColorPreset(
         name = "Vermelho",
@@ -124,6 +121,29 @@ val COLOR_PRESETS = listOf(
         lightSurfaceContainerColor = 0xFFFFE5E5.toInt(),
         lightSurfaceContainerLowColor = 0xFFFFF5F5.toInt(),
         lightSurfaceContainerHighColor = 0xFFFFD6D6.toInt()
+    ),
+    ColorPreset(
+        name = "Ciano",
+        icon = Icons.Rounded.Waves,
+        darkPrimaryColor = 0xFF00F5FF.toInt(),
+        darkSecondaryColor = 0xFF00BCD4.toInt(),
+        darkBackgroundColor = 0xFF00090A.toInt(),
+        darkOnPrimaryColor = 0xFFD5FBFF.toInt(),
+        darkOnSurfaceColor = 0xFF00F5FF.toInt(),
+        darkAccentColor = 0xFF00E5FF.toInt(),
+        darkSurfaceContainerColor = 0xFF001417.toInt(),
+        darkSurfaceContainerLowColor = 0xFF00090A.toInt(),
+        darkSurfaceContainerHighColor = 0xFF002025.toInt(),
+
+        lightPrimaryColor = 0xFF00838F.toInt(),
+        lightSecondaryColor = 0xFF80DEEA.toInt(),
+        lightBackgroundColor = 0xFFF5FFFF.toInt(),
+        lightOnPrimaryColor = 0xFFFFFFFF.toInt(),
+        lightOnSurfaceColor = 0xFF004D40.toInt(),
+        lightAccentColor = 0xFF00BCD4.toInt(),
+        lightSurfaceContainerColor = 0xFFE0F7FA.toInt(),
+        lightSurfaceContainerLowColor = 0xFFF5FFFF.toInt(),
+        lightSurfaceContainerHighColor = 0xFFCCF0F5.toInt()
     ),
     ColorPreset(
         name = "Verde",
@@ -172,27 +192,30 @@ val COLOR_PRESETS = listOf(
         lightSurfaceContainerHighColor = 0xFFEBEBEB.toInt()
     ),
     ColorPreset(
-        name = "Azul",
-        icon = Icons.Rounded.WaterDrop,
-        darkPrimaryColor = 0xFF0D5AA1.toInt(),
-        darkSecondaryColor = 0xFF1E88E5.toInt(),
-        darkBackgroundColor = 0xFF00101C.toInt(),
-        darkOnPrimaryColor = 0xFFFFFFFF.toInt(),
-        darkOnSurfaceColor = 0xFF1B1EDA.toInt(),
-        darkAccentColor = 0xFF2979FF.toInt(),
-        darkSurfaceContainerColor = 0xFF001E35.toInt(),
-        darkSurfaceContainerLowColor = 0xFF00101C.toInt(),
-        darkSurfaceContainerHighColor = 0xFF002C4A.toInt(),
+        name = "Rosa",
+        icon = Icons.Rounded.Favorite,
 
-        lightPrimaryColor = 0xFF1565C0.toInt(),
-        lightSecondaryColor = 0xFF90CAF9.toInt(),
-        lightBackgroundColor = 0xFFF5F9FF.toInt(),
+        // Tema escuro
+        darkPrimaryColor = 0xFFE91E63.toInt(),
+        darkSecondaryColor = 0xFFE91E63.toInt(),
+        darkBackgroundColor = 0xFF2A000E.toInt(),
+        darkOnPrimaryColor = 0xFFFFFFFF.toInt(),
+        darkOnSurfaceColor = 0xFFE91E63.toInt(),
+        darkAccentColor = 0xFFFF4081.toInt(),
+        darkSurfaceContainerColor = 0xFF3D0015.toInt(),
+        darkSurfaceContainerLowColor = 0xFF2A000E.toInt(),
+        darkSurfaceContainerHighColor = 0xFF4A001A.toInt(),
+
+        // Tema claro
+        lightPrimaryColor = 0xFFE91E63.toInt(),
+        lightSecondaryColor = 0xFFF48FB1.toInt(),
+        lightBackgroundColor = 0xFFFFF0F5.toInt(),
         lightOnPrimaryColor = 0xFFFFFFFF.toInt(),
-        lightOnSurfaceColor = 0xFF0D47A1.toInt(),
-        lightAccentColor = 0xFF2962FF.toInt(),
-        lightSurfaceContainerColor = 0xFFE3F2FD.toInt(),
-        lightSurfaceContainerLowColor = 0xFFF5F9FF.toInt(),
-        lightSurfaceContainerHighColor = 0xFFD6EAF8.toInt()
+        lightOnSurfaceColor = 0xFF880E4F.toInt(),
+        lightAccentColor = 0xFFFF4081.toInt(),
+        lightSurfaceContainerColor = 0xFFFFE5EC.toInt(),
+        lightSurfaceContainerLowColor = 0xFFFFF0F5.toInt(),
+        lightSurfaceContainerHighColor = 0xFFFFD6E5.toInt()
     ),
     ColorPreset(
         name = "Roxo",
@@ -262,29 +285,6 @@ val COLOR_PRESETS = listOf(
         lightSurfaceContainerColor = 0xFFFFF3E0.toInt(),
         lightSurfaceContainerLowColor = 0xFFFFF5F0.toInt(),
         lightSurfaceContainerHighColor = 0xFFFFE8CC.toInt()
-    ),
-    ColorPreset(
-        name = "Ciano",
-        icon = Icons.Rounded.Waves,
-        darkPrimaryColor = 0xFF00F5FF.toInt(),
-        darkSecondaryColor = 0xFF00BCD4.toInt(),
-        darkBackgroundColor = 0xFF00090A.toInt(),
-        darkOnPrimaryColor = 0xFFD5FBFF.toInt(),
-        darkOnSurfaceColor = 0xFF00F5FF.toInt(),
-        darkAccentColor = 0xFF00E5FF.toInt(),
-        darkSurfaceContainerColor = 0xFF001417.toInt(),
-        darkSurfaceContainerLowColor = 0xFF00090A.toInt(),
-        darkSurfaceContainerHighColor = 0xFF002025.toInt(),
-
-        lightPrimaryColor = 0xFF00838F.toInt(),
-        lightSecondaryColor = 0xFF80DEEA.toInt(),
-        lightBackgroundColor = 0xFFF5FFFF.toInt(),
-        lightOnPrimaryColor = 0xFFFFFFFF.toInt(),
-        lightOnSurfaceColor = 0xFF004D40.toInt(),
-        lightAccentColor = 0xFF00BCD4.toInt(),
-        lightSurfaceContainerColor = 0xFFE0F7FA.toInt(),
-        lightSurfaceContainerLowColor = 0xFFF5FFFF.toInt(),
-        lightSurfaceContainerHighColor = 0xFFCCF0F5.toInt()
     ),
     ColorPreset(
         name = "Neon",
