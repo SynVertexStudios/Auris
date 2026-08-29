@@ -117,7 +117,7 @@ fun HomeGradientTopBar(
                 FilledIconButton(
                     onClick = onVideoGalleryClick,
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        MaterialTheme.colorScheme.surfaceContainer,
+                        MaterialTheme.colorScheme.surfaceContainerLow,
                         contentColor = MaterialTheme.colorScheme.onSurface
                     )
                 ) {

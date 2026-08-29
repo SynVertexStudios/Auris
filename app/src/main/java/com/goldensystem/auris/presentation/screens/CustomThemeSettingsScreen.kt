@@ -185,7 +185,7 @@ private fun ThemePreviewHeader(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(20.dp)),
-        color = colorScheme.surface,
+        color = colorScheme.surfaceContainer,
         tonalElevation = 2.dp
     ) {
         Column(
@@ -280,7 +280,7 @@ private fun SettingsCardItem(
             .padding(horizontal = 16.dp)
             .clickable { onClick() }
             .clip(RoundedCornerShape(16.dp)),
-        color = MaterialTheme.colorScheme.surface,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         tonalElevation = 1.dp
     ) {
         Row(
