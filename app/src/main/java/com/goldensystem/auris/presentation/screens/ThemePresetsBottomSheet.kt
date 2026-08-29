@@ -38,12 +38,48 @@ fun ThemePresetsBottomSheet(
     onDismiss: () -> Unit
 ) {
     val config by viewModel.customThemeConfig.collectAsStateWithLifecycle()
-    var selectedPresetName by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     var isVisible by remember { mutableStateOf(true) }
     
     // Estado do tema (claro/escuro)
     var isDarkTheme by remember { mutableStateOf(true) }
+
+    // Detecta qual preset está ativo baseado nas cores atuais
+    val currentPresetName by remember(config, isDarkTheme) {
+        derivedStateOf {
+            val currentColors = listOf(
+                config.primaryColor,
+                config.secondaryColor,
+                config.backgroundColor,
+                config.onPrimaryColor,
+                config.onSurfaceColor,
+                config.accentColor,
+                config.surfaceContainerColor,
+                config.surfaceContainerLowColor,
+                config.surfaceContainerHighColor
+            )
+
+            COLOR_PRESETS.find { preset ->
+                val colors = preset.getColors(isDarkTheme)
+                currentColors == listOf(
+                    colors.primaryColor,
+                    colors.secondaryColor,
+                    colors.backgroundColor,
+                    colors.onPrimaryColor,
+                    colors.onSurfaceColor,
+                    colors.accentColor,
+                    colors.surfaceContainerColor,
+                    colors.surfaceContainerLowColor,
+                    colors.surfaceContainerHighColor
+                )
+            }?.name
+        }
+    }
+
+    var selectedPresetName by remember { mutableStateOf<String?>(null) }
+    
+    // Se não houver seleção manual, usa o preset detectado
+    val displayPresetName = selectedPresetName ?: currentPresetName
 
     ModalBottomSheet(
         onDismissRequest = {
@@ -165,7 +201,7 @@ fun ThemePresetsBottomSheet(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(COLOR_PRESETS) { preset ->
-                        val isSelected = selectedPresetName == preset.name
+                        val isSelected = displayPresetName == preset.name
                         val colors = preset.getColors(isDarkTheme)
 
                         val containerColor =
@@ -250,35 +286,6 @@ fun ThemePresetsBottomSheet(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                TextButton(
-                    onClick = {
-                        scope.launch {
-                            isVisible = false
-                            delay(300)
-                            viewModel.resetToDefault()
-                            viewModel.saveCustomTheme()
-                            onDismiss()
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                ) {
-                    Icon(
-                        Icons.Rounded.RestartAlt,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Text(
-                        stringResource(
-                            R.string.custom_theme_reset_to_default
-                        )
-                    )
-                }
             }
         }
     }

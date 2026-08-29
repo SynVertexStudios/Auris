@@ -873,7 +873,8 @@ fun LibraryScreen(
                                 text = stringResource(R.string.presentation_batch_d_library_title),
                                 fontFamily = GoogleSansRounded,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onPrimary,
+                              
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontSize = 40.sp,
                                 letterSpacing = 1.sp
                             )
