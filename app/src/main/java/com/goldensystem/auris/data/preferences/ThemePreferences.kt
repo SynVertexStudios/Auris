@@ -58,6 +58,7 @@ data class CustomThemeConfig(
     // ===== Containers =====
     val surfaceContainerColor: Int = 0xFF1E1E1E.toInt(),
     val surfaceContainerLowColor: Int = 0xFF1C1C1C.toInt(),
+     val surfaceContainerHighColor: Int = 0xFF2A2A2A.toInt(),
     
     // ===== WALLPAPER =====
     val wallpaperType: WallpaperType = WallpaperType.SOLID,
@@ -116,6 +117,7 @@ class ThemePreferences @Inject constructor(
         // NOVAS CHAVES QUE FALTAVAM
         private val PRIMARY_CONTAINER_COLOR = intPreferencesKey("custom_primary_container_color")
         private val ON_PRIMARY_CONTAINER_COLOR = intPreferencesKey("custom_on_primary_container_color")
+        private val SURFACE_CONTAINER_HIGH_COLOR = intPreferencesKey("custom_surface_container_high_color")
         
         // Wallpaper
         private val WALLPAPER_TYPE = stringPreferencesKey("wallpaper_type")
@@ -158,6 +160,7 @@ class ThemePreferences @Inject constructor(
             inverseOnSurfaceColor = prefs[INVERSE_ON_SURFACE_COLOR] ?: 0xFFF4EFF4.toInt(),
             scrimColor = prefs[SCRIM_COLOR] ?: 0xFF000000.toInt(),
             surfaceContainerLowColor = prefs[SURFACE_CONTAINER_LOW_COLOR] ?: 0xFF1C1C1C.toInt(),
+            surfaceContainerHighColor = prefs[SURFACE_CONTAINER_HIGH_COLOR] ?: 0xFF2A2A2A.toInt(),
             
             // NOVAS CORES QUE FALTAVAM
             primaryContainerColor = prefs[PRIMARY_CONTAINER_COLOR] ?: 0xFF6750A4.toInt(),
@@ -209,6 +212,7 @@ class ThemePreferences @Inject constructor(
             prefs[INVERSE_ON_SURFACE_COLOR] = config.inverseOnSurfaceColor
             prefs[SCRIM_COLOR] = config.scrimColor
             prefs[SURFACE_CONTAINER_LOW_COLOR] = config.surfaceContainerLowColor
+            prefs[SURFACE_CONTAINER_HIGH_COLOR] = config.surfaceContainerHighColor
             
             // NOVAS CORES QUE FALTAVAM
             prefs[PRIMARY_CONTAINER_COLOR] = config.primaryContainerColor
@@ -255,6 +259,7 @@ class ThemePreferences @Inject constructor(
             prefs.remove(INVERSE_ON_SURFACE_COLOR)
             prefs.remove(SCRIM_COLOR)
             prefs.remove(SURFACE_CONTAINER_LOW_COLOR)
+            prefs.remove(SURFACE_CONTAINER_HIGH_COLOR)
             
             // NOVAS CORES QUE FALTAVAM
             prefs.remove(PRIMARY_CONTAINER_COLOR)

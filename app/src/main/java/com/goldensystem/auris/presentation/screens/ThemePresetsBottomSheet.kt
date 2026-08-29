@@ -193,6 +193,7 @@ fun ThemePresetsBottomSheet(
                                 viewModel.updateAccentColor(colors.accentColor)
                                 viewModel.updateSurfaceContainerColor(colors.surfaceContainerColor)
                                 viewModel.updateSurfaceContainerLowColor(colors.surfaceContainerLowColor)
+                                viewModel.updateSurfaceContainerHighColor(colors.surfaceContainerHighColor)
 
                                 scope.launch {
                                     isVisible = false

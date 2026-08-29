@@ -128,6 +128,7 @@ fun CustomThemeScreen(
                   // ⬇️⬇️⬇️ NOVAS CORES QUE FALTAVAM ⬇️⬇️⬇️
             colorPickerTarget == viewModel::updatePrimaryContainerColor -> config.primaryContainerColor
             colorPickerTarget == viewModel::updateOnPrimaryContainerColor -> config.onPrimaryContainerColor
+            colorPickerTarget == viewModel::updateSurfaceContainerHighColor -> config.surfaceContainerHighColor
             
             
             //Parte mais importante da atualizacao que e a englobacao dos containers
@@ -602,6 +603,17 @@ ColorPickerRow(
     onColorSelected = { viewModel.updateSurfaceContainerLowColor(it) },
     onCustomColorClick = { 
         colorPickerTarget = viewModel::updateSurfaceContainerLowColor
+        showColorPickerDialog = true
+    },
+    colorScheme = colorScheme
+)
+ColorPickerRow(
+    label = "Teste surfaceContainerHigh",
+    currentColor = config.surfaceContainerHighColor,
+    colors = MAIN_COLORS,
+    onColorSelected = { viewModel.updateSurfaceContainerHighColor(it) },
+    onCustomColorClick = { 
+        colorPickerTarget = viewModel::updateSurfaceContainerHighColor
         showColorPickerDialog = true
     },
     colorScheme = colorScheme
