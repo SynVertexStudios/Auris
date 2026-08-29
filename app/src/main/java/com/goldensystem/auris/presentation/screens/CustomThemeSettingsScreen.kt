@@ -27,6 +27,7 @@ import androidx.compose.material.icons.rounded.Wallpaper
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -40,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,6 +59,8 @@ import com.goldensystem.auris.data.preferences.WallpaperType
 import com.goldensystem.auris.presentation.navigation.Screen
 import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
 import com.goldensystem.auris.ui.theme.customColorScheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +72,8 @@ fun CustomThemeSettingsScreen(
     val colorScheme = remember(config) { customColorScheme(config, true) }
     var showPresetsSheet by remember { mutableStateOf(false) }
     var isWarningExpanded by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    var isResetting by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -87,6 +93,26 @@ fun CustomThemeSettingsScreen(
                         Icon(
                             Icons.Rounded.Close,
                             contentDescription = stringResource(R.string.auth_cd_back),
+                            tint = colorScheme.onSurface
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                isResetting = true
+                                viewModel.resetToDefault()
+                                viewModel.saveCustomTheme()
+                                delay(300)
+                                isResetting = false
+                            }
+                        },
+                        enabled = !isResetting
+                    ) {
+                        Icon(
+                            Icons.Rounded.RestartAlt,
+                            contentDescription = stringResource(R.string.custom_theme_reset_to_default),
                             tint = colorScheme.onSurface
                         )
                     }
