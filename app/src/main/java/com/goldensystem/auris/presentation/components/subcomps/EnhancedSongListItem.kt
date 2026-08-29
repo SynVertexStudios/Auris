@@ -348,7 +348,7 @@ fun EnhancedSongListItem(
                         AutoScrollingTextOnDemand(
                             text = song.title,
                             style = MaterialTheme.typography.bodyLarge,
-                            gradientEdgeColor = containerColor,
+                            gradientEdgeColor = MaterialTheme.colorScheme.onPrimary, 
                             expansionFractionProvider = { 1f },
                         )
 

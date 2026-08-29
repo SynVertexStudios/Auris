@@ -287,29 +287,6 @@ val COLOR_PRESETS = listOf(
         lightSurfaceContainerHighColor = 0xFFCCF0F5.toInt()
     ),
     ColorPreset(
-        name = "Cinza",
-        icon = Icons.Rounded.GraphicEq,
-        darkPrimaryColor = 0xFF626262.toInt(),
-        darkSecondaryColor = 0xFFD3D3D3.toInt(),
-        darkBackgroundColor = 0xFF4C4C4C.toInt(),
-        darkOnPrimaryColor = 0xFFC6C6C6.toInt(),
-        darkOnSurfaceColor = 0xFFCDCDCD.toInt(),
-        darkAccentColor = 0xFF757575.toInt(),
-        darkSurfaceContainerColor = 0xFF5A5A5A.toInt(),
-        darkSurfaceContainerLowColor = 0xFF4C4C4C.toInt(),
-        darkSurfaceContainerHighColor = 0xFF6A6A6A.toInt(),
-
-        lightPrimaryColor = 0xFF757575.toInt(),
-        lightSecondaryColor = 0xFFE0E0E0.toInt(),
-        lightBackgroundColor = 0xFFFFFFFF.toInt(),
-        lightOnPrimaryColor = 0xFFFFFFFF.toInt(),
-        lightOnSurfaceColor = 0xFF424242.toInt(),
-        lightAccentColor = 0xFF9E9E9E.toInt(),
-        lightSurfaceContainerColor = 0xFFF5F5F5.toInt(),
-        lightSurfaceContainerLowColor = 0xFFFFFFFF.toInt(),
-        lightSurfaceContainerHighColor = 0xFFEBEBEB.toInt()
-    ),
-    ColorPreset(
         name = "Neon",
         icon = Icons.Rounded.Bolt,
         darkPrimaryColor = 0xFF00FF84.toInt(),
