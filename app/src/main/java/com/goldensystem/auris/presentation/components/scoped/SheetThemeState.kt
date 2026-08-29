@@ -153,7 +153,7 @@ internal fun rememberSheetThemeState(
     val playerAreaBackground = if (isAlbumArtTheme && hasAlbumArt) {
     miniPlayerScheme.primaryContainer  // Mantém a cor da capa
 } else {
-    MaterialTheme.colorScheme.primary  // MUDA PRA PRIMARY COLOR! SEM TRANSPARÊNCIA!
+    MaterialTheme.colorScheme.surfaceContainer  // MUDA PRA  COR DE COBTAINER! SEM TRANSPARÊNCIA!
 }
 
     // NOTE: miniAlpha and effectivePlayerAreaElevation are no longer computed here.

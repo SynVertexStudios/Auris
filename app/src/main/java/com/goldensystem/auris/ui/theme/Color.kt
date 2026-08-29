@@ -11,8 +11,6 @@ val AurisWhite = Color(0xFFFFFFFF)
 val AurisBlack = Color(0xFF000000)
 val AurisSurface = Color(0xFF2A1F40)
 
-// No arquivo Color.kt, substitua o bloco "Colores para tema claro (si se implementa)" por:
-
 // Cores para tema claro (Amarelo Dourado e Preto)
 val LightBackground = Color(0xFFFFFFFF)         // Fundo branco puro
 val LightSurface = Color(0xFFFFF8E1)            // Superfície amarelo bem claro
