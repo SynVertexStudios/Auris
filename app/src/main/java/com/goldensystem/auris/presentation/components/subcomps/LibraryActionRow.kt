@@ -152,8 +152,8 @@ fun LibraryActionRow(
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     // Determine button colors based on shuffle state (not for playlist tab)
-                    val buttonContainerColor = MaterialTheme.colorScheme.tertiaryContainer
-                    val buttonContentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    val buttonContainerColor = MaterialTheme.colorScheme.surfaceContainer
+                    val buttonContentColor = MaterialTheme.colorScheme.onPrimary
                     
                     FilledTonalButton(
                         onClick = onMainActionClick,
@@ -231,7 +231,7 @@ fun LibraryActionRow(
                                     bottomEnd = 26.dp
                                 ),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                    containerColor = MaterialTheme.colorScheme.secondary,
                                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                                 ),
                                 elevation = ButtonDefaults.buttonElevation(

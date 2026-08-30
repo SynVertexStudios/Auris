@@ -410,8 +410,8 @@ fun YourMixHeader(
         LargeExtendedFloatingActionButton(
             modifier = Modifier.align(Alignment.BottomEnd).padding(end = 12.dp),
             onClick = onPlayShuffled,
-            containerColor = if (isShuffleEnabled) colors.primary else colors.tertiaryContainer,
-            contentColor = if (isShuffleEnabled) colors.onPrimary else colors.onTertiaryContainer,
+            containerColor = if (isShuffleEnabled) colors.primary else colors.surfaceContainer,
+            contentColor = if (isShuffleEnabled) colors.onPrimary else colors.onPrimary,
             shape = AbsoluteSmoothCornerShape(
                 cornerRadiusTL = buttonCorners, smoothnessAsPercentTR = 60,
                 cornerRadiusBR = buttonCorners, smoothnessAsPercentTL = 60,
