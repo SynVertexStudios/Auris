@@ -230,6 +230,7 @@ fun ThemePresetsBottomSheet(
                                 viewModel.updateSurfaceContainerColor(colors.surfaceContainerColor)
                                 viewModel.updateSurfaceContainerLowColor(colors.surfaceContainerLowColor)
                                 viewModel.updateSurfaceContainerHighColor(colors.surfaceContainerHighColor)
+                                viewModel.updateSurfaceContainerLowestColor(colors.surfaceContainerLowestColor)
 
                                 scope.launch {
                                     isVisible = false

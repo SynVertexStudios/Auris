@@ -46,6 +46,7 @@ fun customColorScheme(
     val surfaceContainer = Color(config.surfaceContainerColor)
     val surfaceContainerLow = Color(config.surfaceContainerLowColor)
     val surfaceContainerHigh = Color(config.surfaceContainerHighColor)
+    val surfaceContainerLowest = Color(config.surfaceContainerLowestColor)
     
     return darkColorScheme(
             primary = primary,
@@ -61,6 +62,7 @@ fun customColorScheme(
             surfaceContainer = surfaceContainer,
             surfaceContainerLow = surfaceContainerLow,
             surfaceContainerHigh = surfaceContainerHigh,
+            surfaceContainerLowest = surfaceContainerLowest,
             surfaceVariant = surfaceVariant,
             onSurfaceVariant = onSurfaceVariant,
             primaryContainer = primaryContainer,

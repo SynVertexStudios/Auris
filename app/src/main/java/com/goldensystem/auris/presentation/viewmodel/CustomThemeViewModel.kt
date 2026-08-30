@@ -94,6 +94,9 @@ fun updateSurfaceContainerLowColor(color: Int) {
 fun updateSurfaceContainerHighColor(color: Int) { 
     _config.update { it.copy(surfaceContainerHighColor = color) } 
     }
+fun updateSurfaceContainerLowestColor(color: Int) { 
+    _config.update { it.copy(surfaceContainerLowestColor = color) } 
+}
 
     // ===== WALLPAPER =====
     fun setWallpaperType(type: WallpaperType) {

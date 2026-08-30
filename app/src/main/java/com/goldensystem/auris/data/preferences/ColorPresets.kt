@@ -22,6 +22,7 @@ data class ColorPreset(
     val darkSurfaceContainerColor: Int,
     val darkSurfaceContainerLowColor: Int,
     val darkSurfaceContainerHighColor: Int,
+    val darkSurfaceContainerLowestColor: Int,
 
     // Cores para tema claro
     val lightPrimaryColor: Int,
@@ -32,7 +33,8 @@ data class ColorPreset(
     val lightAccentColor: Int,
     val lightSurfaceContainerColor: Int,
     val lightSurfaceContainerLowColor: Int,
-    val lightSurfaceContainerHighColor: Int
+    val lightSurfaceContainerHighColor: Int,
+    val lightSurfaceContainerLowestColor: Int
 ) {
     fun getColors(isDark: Boolean): PresetColors {
         return if (isDark) {
@@ -45,7 +47,8 @@ data class ColorPreset(
                 accentColor = darkAccentColor,
                 surfaceContainerColor = darkSurfaceContainerColor,
                 surfaceContainerLowColor = darkSurfaceContainerLowColor,
-                surfaceContainerHighColor = darkSurfaceContainerHighColor
+                surfaceContainerHighColor = darkSurfaceContainerHighColor,
+                surfaceContainerLowestColor = darkSurfaceContainerLowestColor
             )
         } else {
             PresetColors(
@@ -57,7 +60,8 @@ data class ColorPreset(
                 accentColor = lightAccentColor,
                 surfaceContainerColor = lightSurfaceContainerColor,
                 surfaceContainerLowColor = lightSurfaceContainerLowColor,
-                surfaceContainerHighColor = lightSurfaceContainerHighColor
+                surfaceContainerHighColor = lightSurfaceContainerHighColor,
+                surfaceContainerLowestColor = lightSurfaceContainerLowestColor
             )
         }
     }
@@ -72,7 +76,8 @@ data class PresetColors(
     val accentColor: Int,
     val surfaceContainerColor: Int,
     val surfaceContainerLowColor: Int,
-    val surfaceContainerHighColor: Int
+    val surfaceContainerHighColor: Int,
+    val surfaceContainerLowestColor: Int
 )
 
 val COLOR_PRESETS = listOf(
@@ -88,6 +93,7 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerColor = 0xFF001E35.toInt(),
         darkSurfaceContainerLowColor = 0xFF00101C.toInt(),
         darkSurfaceContainerHighColor = 0xFF002C4A.toInt(),
+        darkSurfaceContainerLowestColor = 0xFF000A14.toInt(),
 
         lightPrimaryColor = 0xFF1565C0.toInt(),
         lightSecondaryColor = 0xFF90CAF9.toInt(),
@@ -97,7 +103,8 @@ val COLOR_PRESETS = listOf(
         lightAccentColor = 0xFF2962FF.toInt(),
         lightSurfaceContainerColor = 0xFFE3F2FD.toInt(),
         lightSurfaceContainerLowColor = 0xFFF5F9FF.toInt(),
-        lightSurfaceContainerHighColor = 0xFFD6EAF8.toInt()
+        lightSurfaceContainerHighColor = 0xFFD6EAF8.toInt(),
+        lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
     ColorPreset(
         name = "Vermelho",
@@ -111,6 +118,7 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerColor = 0xFF1F0000.toInt(),
         darkSurfaceContainerLowColor = 0xFF0E0000.toInt(),
         darkSurfaceContainerHighColor = 0xFF2F0000.toInt(),
+        darkSurfaceContainerLowestColor = 0xFF070000.toInt(),
 
         lightPrimaryColor = 0xFFD32F2F.toInt(),
         lightSecondaryColor = 0xFFFFCDD2.toInt(),
@@ -120,7 +128,8 @@ val COLOR_PRESETS = listOf(
         lightAccentColor = 0xFFFF1744.toInt(),
         lightSurfaceContainerColor = 0xFFFFE5E5.toInt(),
         lightSurfaceContainerLowColor = 0xFFFFF5F5.toInt(),
-        lightSurfaceContainerHighColor = 0xFFFFD6D6.toInt()
+        lightSurfaceContainerHighColor = 0xFFFFD6D6.toInt(),
+        lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
     ColorPreset(
         name = "Ciano",
@@ -134,6 +143,7 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerColor = 0xFF001417.toInt(),
         darkSurfaceContainerLowColor = 0xFF00090A.toInt(),
         darkSurfaceContainerHighColor = 0xFF002025.toInt(),
+        darkSurfaceContainerLowestColor = 0xFF000406.toInt(),
 
         lightPrimaryColor = 0xFF00838F.toInt(),
         lightSecondaryColor = 0xFF80DEEA.toInt(),
@@ -143,7 +153,8 @@ val COLOR_PRESETS = listOf(
         lightAccentColor = 0xFF00BCD4.toInt(),
         lightSurfaceContainerColor = 0xFFE0F7FA.toInt(),
         lightSurfaceContainerLowColor = 0xFFF5FFFF.toInt(),
-        lightSurfaceContainerHighColor = 0xFFCCF0F5.toInt()
+        lightSurfaceContainerHighColor = 0xFFCCF0F5.toInt(),
+        lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
     ColorPreset(
         name = "Verde",
@@ -157,6 +168,7 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerColor = 0xFF001A00.toInt(),
         darkSurfaceContainerLowColor = 0xFF000E00.toInt(),
         darkSurfaceContainerHighColor = 0xFF002600.toInt(),
+        darkSurfaceContainerLowestColor = 0xFF000700.toInt(),
 
         lightPrimaryColor = 0xFF2E7D32.toInt(),
         lightSecondaryColor = 0xFFA5D6A7.toInt(),
@@ -166,7 +178,8 @@ val COLOR_PRESETS = listOf(
         lightAccentColor = 0xFF00C853.toInt(),
         lightSurfaceContainerColor = 0xFFE8F5E9.toInt(),
         lightSurfaceContainerLowColor = 0xFFF5FFF5.toInt(),
-        lightSurfaceContainerHighColor = 0xFFDCEEDD.toInt()
+        lightSurfaceContainerHighColor = 0xFFDCEEDD.toInt(),
+        lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
     ColorPreset(
         name = "Preto",
@@ -180,6 +193,7 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerColor = 0xFF1A1A1A.toInt(),
         darkSurfaceContainerLowColor = 0xFF000000.toInt(),
         darkSurfaceContainerHighColor = 0xFF2A2A2A.toInt(),
+        darkSurfaceContainerLowestColor = 0xFF000000.toInt(),
 
         lightPrimaryColor = 0xFF616161.toInt(),
         lightSecondaryColor = 0xFFBDBDBD.toInt(),
@@ -189,13 +203,12 @@ val COLOR_PRESETS = listOf(
         lightAccentColor = 0xFF9E9E9E.toInt(),
         lightSurfaceContainerColor = 0xFFF5F5F5.toInt(),
         lightSurfaceContainerLowColor = 0xFFFFFFFF.toInt(),
-        lightSurfaceContainerHighColor = 0xFFEBEBEB.toInt()
+        lightSurfaceContainerHighColor = 0xFFEBEBEB.toInt(),
+        lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
     ColorPreset(
         name = "Rosa",
         icon = Icons.Rounded.Favorite,
-
-        // Tema escuro
         darkPrimaryColor = 0xFFE91E63.toInt(),
         darkSecondaryColor = 0xFFE91E63.toInt(),
         darkBackgroundColor = 0xFF2A000E.toInt(),
@@ -205,17 +218,18 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerColor = 0xFF3D0015.toInt(),
         darkSurfaceContainerLowColor = 0xFF2A000E.toInt(),
         darkSurfaceContainerHighColor = 0xFF4A001A.toInt(),
+        darkSurfaceContainerLowestColor = 0xFF150007.toInt(),
 
-        // Tema claro
-        lightPrimaryColor = 0xFFE91E63.toInt(),
+        lightPrimaryColor = 0xFFFFAFCA.toInt(),
         lightSecondaryColor = 0xFFF48FB1.toInt(),
-        lightBackgroundColor = 0xFFFFF0F5.toInt(),
+        lightBackgroundColor = 0xFFFFFFFF.toInt(),
         lightOnPrimaryColor = 0xFFFFFFFF.toInt(),
-        lightOnSurfaceColor = 0xFF880E4F.toInt(),
+        lightOnSurfaceColor = 0xFFFF50A8.toInt(),
         lightAccentColor = 0xFFFF4081.toInt(),
-        lightSurfaceContainerColor = 0xFFFFE5EC.toInt(),
-        lightSurfaceContainerLowColor = 0xFFFFF0F5.toInt(),
-        lightSurfaceContainerHighColor = 0xFFFFD6E5.toInt()
+        lightSurfaceContainerColor = 0xFFFFD9E3.toInt(),
+        lightSurfaceContainerLowColor = 0xFFFFE8F0.toInt(),
+        lightSurfaceContainerHighColor = 0xFFFFEBF2.toInt(),
+        lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
     ColorPreset(
         name = "Roxo",
@@ -229,6 +243,7 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerColor = 0xFF25002D.toInt(),
         darkSurfaceContainerLowColor = 0xFF150018.toInt(),
         darkSurfaceContainerHighColor = 0xFF350042.toInt(),
+        darkSurfaceContainerLowestColor = 0xFF0A000C.toInt(),
 
         lightPrimaryColor = 0xFF7B1FA2.toInt(),
         lightSecondaryColor = 0xFFCE93D8.toInt(),
@@ -238,7 +253,8 @@ val COLOR_PRESETS = listOf(
         lightAccentColor = 0xFFD500F9.toInt(),
         lightSurfaceContainerColor = 0xFFF3E5F5.toInt(),
         lightSurfaceContainerLowColor = 0xFFFBF5FF.toInt(),
-        lightSurfaceContainerHighColor = 0xFFEDDDF2.toInt()
+        lightSurfaceContainerHighColor = 0xFFEDDDF2.toInt(),
+        lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
     ColorPreset(
         name = "Amarelo",
@@ -252,6 +268,7 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerColor = 0xFF141400.toInt(),
         darkSurfaceContainerLowColor = 0xFF090900.toInt(),
         darkSurfaceContainerHighColor = 0xFF1F1F00.toInt(),
+        darkSurfaceContainerLowestColor = 0xFF040400.toInt(),
 
         lightPrimaryColor = 0xFFF9A825.toInt(),
         lightSecondaryColor = 0xFFFFF59D.toInt(),
@@ -261,7 +278,8 @@ val COLOR_PRESETS = listOf(
         lightAccentColor = 0xFFFFAB00.toInt(),
         lightSurfaceContainerColor = 0xFFFFF8E1.toInt(),
         lightSurfaceContainerLowColor = 0xFFFFFFF5.toInt(),
-        lightSurfaceContainerHighColor = 0xFFFFF0C0.toInt()
+        lightSurfaceContainerHighColor = 0xFFFFF0C0.toInt(),
+        lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
     ColorPreset(
         name = "Laranja",
@@ -275,6 +293,7 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerColor = 0xFF1F1400.toInt(),
         darkSurfaceContainerLowColor = 0xFF0F0A00.toInt(),
         darkSurfaceContainerHighColor = 0xFF2F1E00.toInt(),
+        darkSurfaceContainerLowestColor = 0xFF080500.toInt(),
 
         lightPrimaryColor = 0xFFE65100.toInt(),
         lightSecondaryColor = 0xFFFFCC80.toInt(),
@@ -284,7 +303,8 @@ val COLOR_PRESETS = listOf(
         lightAccentColor = 0xFFFF6E40.toInt(),
         lightSurfaceContainerColor = 0xFFFFF3E0.toInt(),
         lightSurfaceContainerLowColor = 0xFFFFF5F0.toInt(),
-        lightSurfaceContainerHighColor = 0xFFFFE8CC.toInt()
+        lightSurfaceContainerHighColor = 0xFFFFE8CC.toInt(),
+        lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
     ColorPreset(
         name = "Neon",
@@ -298,6 +318,7 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerColor = 0xFF2A2A2A.toInt(),
         darkSurfaceContainerLowColor = 0xFF1A1A1A.toInt(),
         darkSurfaceContainerHighColor = 0xFF3A3A3A.toInt(),
+        darkSurfaceContainerLowestColor = 0xFF0D0D0D.toInt(),
 
         lightPrimaryColor = 0xFF00C853.toInt(),
         lightSecondaryColor = 0xFF00E5FF.toInt(),
@@ -307,6 +328,7 @@ val COLOR_PRESETS = listOf(
         lightAccentColor = 0xFFFF4081.toInt(),
         lightSurfaceContainerColor = 0xFFE8F5E9.toInt(),
         lightSurfaceContainerLowColor = 0xFFF5FFF5.toInt(),
-        lightSurfaceContainerHighColor = 0xFFD9EDDA.toInt()
+        lightSurfaceContainerHighColor = 0xFFD9EDDA.toInt(),
+        lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
 )
