@@ -411,7 +411,7 @@ fun YourMixHeader(
             modifier = Modifier.align(Alignment.BottomEnd).padding(end = 12.dp),
             onClick = onPlayShuffled,
             containerColor = if (isShuffleEnabled) colors.primary else colors.surfaceContainer,
-            contentColor = if (isShuffleEnabled) colors.onPrimary else colors.onPrimary,
+            contentColor = if (isShuffleEnabled) colors.onPrimary else colors.onSurface,
             shape = AbsoluteSmoothCornerShape(
                 cornerRadiusTL = buttonCorners, smoothnessAsPercentTR = 60,
                 cornerRadiusBR = buttonCorners, smoothnessAsPercentTL = 60,
