@@ -498,7 +498,8 @@ playerViewModel.updateCastSheetVisibility(false)
 
 val activePlayerSchemePair by playerViewModel.activePlayerColorSchemePair.collectAsStateWithLifecycle()
 val themedAlbumArtUri by playerViewModel.currentThemedAlbumArtUri.collectAsStateWithLifecycle()
-val isDarkTheme = LocalAurisDarkTheme.current
+val backgroundColor = MaterialTheme.colorScheme.background  // ou a cor que você usa como fundo
+val isDarkTheme = !backgroundColor.isLight()  // Se não for claro, é escuro
 val currentSong = infrequentPlayerState.currentSong
 val sheetThemeState = rememberSheetThemeState(
 activePlayerSchemePair = activePlayerSchemePair,
@@ -744,3 +745,9 @@ pendingOverlay = pendingSaveQueueOverlay,
 onDismissOverlay = { sheetModalOverlayController.dismissSaveQueueOverlay() }
 )
 }
+fun Color.isLight(): Boolean {
+    val luminance = (0.299 * red + 0.587 * green + 0.114 * blue)
+    return luminance > 0.5
+}
+
+fun Color.isDark(): Boolean = !isLight()
