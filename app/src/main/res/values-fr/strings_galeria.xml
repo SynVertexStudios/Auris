@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="gallery_title">Auris Vidéos</string>
-    <string name="gallery_permission_title">Autorisation requise</string>
-    <string name="gallery_permission_message">Pour afficher vos vidéos, Auris doit accéder au stockage de l’appareil.</string>
-    <string name="gallery_permission_button">Autoriser l’accès</string>
+    <string name="gallery_title">Vidéos</string>
+    <string name="gallery_permission_title">Autorisation nécessaire</string>
+    <string name="gallery_permission_message">Pour afficher vos vidéos, Auris doit accéder au stockage de l\'appareil.</string>
+    <string name="gallery_permission_button">Autoriser l\'accès</string>
     <string name="gallery_search_hint">Rechercher des vidéos…</string>
-    <string name="gallery_tab_all">Toutes</string>
-    <string name="gallery_tab_recent">Récentes</string>
+    <string name="gallery_tab_all">Tous</string>
+    <string name="gallery_tab_recent">Récents</string>
     <string name="gallery_tab_folders">Dossiers</string>
     <string name="gallery_sort">Trier</string>
     <string name="gallery_retry">Réessayer</string>
     <string name="gallery_empty">Aucune vidéo trouvée</string>
-    <string name="gallery_empty_search">Aucun résultat pour votre recherche</string>
+    <string name="gallery_empty_search">Aucun résultat pour la recherche</string>
     <string name="gallery_new">Nouveau</string>
-    <string name="gallery_featured">★ À LA UNE</string>
+    <string name="gallery_featured">★ EN VEDETTE</string>
     <string name="gallery_back">Retour</string>
     <string name="gallery_folder_fallback">Dossier</string>
     <string name="gallery_video_count_suffix">vidéos</string>
