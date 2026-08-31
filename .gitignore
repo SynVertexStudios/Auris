@@ -41,4 +41,5 @@ idversion.json
 
 # Release signing
 *.keystore
+*.jks*.keystore
 *.jks
