@@ -4,7 +4,42 @@
   <!-- ============================================ -->
   <!-- STRINGS GERAIS / COMUNS                      -->
   <!-- ============================================ -->
+<!-- Cores de Container (Nova Versão) -->
+<string name="custom_theme_container_colors">Cores de Superfície</string>
+<string name="custom_theme_surface_container">Superfície Container</string>
+<string name="custom_theme_surface_container_low">Superfície Container Baixo</string>
+<string name="custom_theme_surface_container_high">Superfície Container Alto</string>
+<string name="custom_theme_surface_container_lowest">Superfície Container Mais Baixo</string>
+
+<!-- Cores Avançadas -->
+<string name="custom_theme_advanced_colors">Cores Avançadas</string>
+<string name="custom_theme_tertiary">Terciária</string>
+<string name="custom_theme_on_secondary">Sobre Secundária</string>
+<string name="custom_theme_secondary_container">Container Secundário</string>
+<string name="custom_theme_on_secondary_container">Sobre Container Secundário</string>
+<string name="custom_theme_tertiary_container">Container Terciário</string>
+<string name="custom_theme_on_tertiary_container">Sobre Container Terciário</string>
+<string name="custom_theme_on_background">Sobre Fundo</string>
+<string name="custom_theme_surface">Superfície</string>
+<string name="custom_theme_surface_variant">Variação da Superfície</string>
+<string name="custom_theme_on_surface_variant">Sobre Variação da Superfície</string>
+<string name="custom_theme_error">Erro</string>
+<string name="custom_theme_on_error">Sobre Erro</string>
+<string name="custom_theme_error_container">Container de Erro</string>
+<string name="custom_theme_on_error_container">Sobre Container de Erro</string>
+<string name="custom_theme_outline">Contorno</string>
+<string name="custom_theme_outline_variant">Variação do Contorno</string>
+<string name="custom_theme_surface_tint">Tom da Superfície</string>
+<string name="custom_theme_inverse_primary">Primária Inversa</string>
+<string name="custom_theme_inverse_surface">Superfície Inversa</string>
+<string name="custom_theme_inverse_on_surface">Sobre Superfície Inversa</string>
+<string name="custom_theme_scrim">Cortina</string>
+<string name="custom_theme_primary_container">Container Primário</string>
+<string name="custom_theme_on_primary_container">Sobre Container Primário</string>
   
+  <string name="custom_theme_auto_from_wallpaper">Tema de acordo com o papel de parede</string>
+<string name="custom_theme_auto_from_wallpaper_subtitle">O tema será aplicado automaticamente baseado na cor do wallpaper</string>
+<string name="custom_theme_apply_from_wallpaper">Aplicar tema do papel de parede</string>
   <string name="auth_cd_close">Fechar</string>
   <string name="cd_open">Abrir</string>
   <string name="cd_select_all">Selecionar tudo</string>
