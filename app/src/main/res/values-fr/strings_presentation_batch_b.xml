@@ -20,7 +20,7 @@
 
     <!-- PlaylistDetailScreen -->
     <string name="presentation_batch_b_sort_songs">Trier les chansons</string>
-    <string name="presentation_batch_b_more_options">Plus d\'options</string>
+    <string name="presentation_batch_b_more_options">Plus d'options</string>
     <string name="presentation_batch_b_play_it">Écouter</string>
     <string name="presentation_batch_b_add_songs">Ajouter des chansons</string>
     <string name="presentation_batch_b_add">Ajouter</string>
@@ -57,7 +57,7 @@
     <string name="presentation_batch_b_new_genre">Nouveau genre</string>
     <string name="presentation_batch_b_add_custom_genre_title">Ajouter un genre personnalisé</string>
     <string name="presentation_batch_b_genre_name_label">Nom du genre</string>
-    <string name="presentation_batch_b_select_icon">Sélectionner l\'icône</string>
+    <string name="presentation_batch_b_select_icon">Sélectionner l'icône</string>
 
     <!-- RecentlyPlayedScreen -->
     <string name="presentation_batch_b_recently_played_title">Écoutés récemment</string>
@@ -65,7 +65,7 @@
     <string name="presentation_batch_b_recent_empty_title">Aucune écoute récente dans %1$s</string>
     <string name="presentation_batch_b_recent_empty_subtitle">Changez la période ou écoutez plus de chansons pour remplir cette chronologie.</string>
     <string name="presentation_batch_b_queue_recently_played">Écoutés récemment</string>
-    <string name="presentation_batch_b_date_today">Aujourd\'hui</string>
+    <string name="presentation_batch_b_date_today">Aujourd'hui</string>
     <string name="presentation_batch_b_date_yesterday">Hier</string>
 
     <!-- NavBarCornerRadiusScreen -->

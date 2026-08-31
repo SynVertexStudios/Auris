@@ -11,37 +11,37 @@
 
     <!-- Titre du dialogue de copie non autorisée -->
     <string name="piracy_dialog_title">⚠️ Copie non autorisée</string>
-    <string name="piracy_dialog_message">Il semble que vous utilisiez une version modifiée d\'Auris.\n\nTéléchargez la version originale pour garantir votre sécurité.</string>
+    <string name="piracy_dialog_message">Il semble que vous utilisiez une version modifiée d'Auris.\n\nTéléchargez la version originale pour garantir votre sécurité.</string>
     <string name="piracy_button_download">📥 Télécharger la version officielle</string>
-    <string name="piracy_button_exit">Fermer l\'application</string>
-    <string name="piracy_download_title">Téléchargement d\'Auris Officiel</string>
-    <string name="piracy_download_description">Installez pour continuer à utiliser l\'application originale.</string>
+    <string name="piracy_button_exit">Fermer l'application</string>
+    <string name="piracy_download_title">Téléchargement d'Auris Officiel</string>
+    <string name="piracy_download_description">Installez pour continuer à utiliser l'application originale.</string>
     <string name="piracy_download_completed">Téléchargement terminé. Installation...</string>
     <string name="piracy_install_error">Aucun installateur disponible</string>
-    <string name="piracy_apk_install_error">Erreur lors de l\'installation de l\'APK : %s</string>
+    <string name="piracy_apk_install_error">Erreur lors de l'installation de l'APK : %s</string>
     <string name="piracy_download_interrupted">Téléchargement interrompu</string>
-    <string name="piracy_checking">Vérification de l\'intégrité de l\'application...</string>
+    <string name="piracy_checking">Vérification de l'intégrité de l'application...</string>
     <string name="piracy_original_ok">Application originale vérifiée.</string>
 
     <!-- Paroles - lignes d'exemple pour l'aperçu sur l'écran de configuration -->
-    <string name="lyrics_preview_line_1">Les paroles s\'affichent comme ceci</string>
-    <string name="lyrics_preview_line_2">Merci d\'utiliser Auris</string>
+    <string name="lyrics_preview_line_1">Les paroles s'affichent comme ceci</string>
+    <string name="lyrics_preview_line_2">Merci d'utiliser Auris</string>
     <string name="lyrics_preview_line_3"></string>
     <string name="lyrics_preview_line_4">HUNNN Paroles... BOUM</string>
     <string name="lyrics_preview_line_5">Ne téléchargez pas Auris depuis des sources inconnues</string>
 
     <!-- Navigation / misc -->
     <string name="nav_error_genre_id_missing">Erreur : ID de genre manquant</string>
-    <string name="easter_egg_thank_you">Merci d\'utiliser Auris !</string>
+    <string name="easter_egg_thank_you">Merci d'utiliser Auris !</string>
 
     <!-- Word delimiter config -->
     <string name="word_delimiter_section_title">Délimiteurs de Mot Actuels</string>
-    <string name="word_delimiter_section_subtitle">Ces mots-clés divisent les noms d\'artistes lorsqu\'ils sont entourés d\'espaces. Correspond sans tenir compte de la casse. Appuyez pour supprimer.</string>
+    <string name="word_delimiter_section_subtitle">Ces mots-clés divisent les noms d'artistes lorsqu'ils sont entourés d'espaces. Correspond sans tenir compte de la casse. Appuyez pour supprimer.</string>
     <string name="word_delimiter_empty">Aucun délimiteur de mot configuré</string>
     <string name="word_delimiter_add_title">Ajouter un Nouveau Délimiteur de Mot</string>
     <string name="word_delimiter_hint">ex., feat. ou ft.</string>
     <string name="word_delimiter_help_title">Comment fonctionnent les délimiteurs de mot</string>
-    <string name="word_delimiter_help_body">Les délimiteurs de mot sont comparés sans tenir compte de la casse avec des espaces autour.\n\nLes délimiteurs d\'un seul caractère (comme "x") nécessitent des espaces des deux côtés pour éviter les fausses correspondances.\n\nExemples :\n  "Drake feat. Rihanna" -&gt; Drake, Rihanna\n  "Marshmello x Bastille" -&gt; Marshmello, Bastille\n  "A vs. B" -&gt; A, B</string>
+    <string name="word_delimiter_help_body">Les délimiteurs de mot sont comparés sans tenir compte de la casse avec des espaces autour.\n\nLes délimiteurs d'un seul caractère (comme "x") nécessitent des espaces des deux côtés pour éviter les fausses correspondances.\n\nExemples :\n  "Drake feat. Rihanna" -&gt; Drake, Rihanna\n  "Marshmello x Bastille" -&gt; Marshmello, Bastille\n  "A vs. B" -&gt; A, B</string>
     <string name="word_delimiters_screen_title">Délimiteurs de Mot</string>
     <string name="word_delimiter_reset_title">Réinitialiser les délimiteurs de mot ?</string>
     <string name="word_delimiter_reset_message">Cela supprimera tous vos délimiteurs de mot personnalisés et rétablira les mots-clés par défaut. Cette action ne peut pas être annulée.</string>
@@ -68,7 +68,7 @@
 
     <!-- Accounts -->
     <string name="accounts_google_drive_soon">Google Drive bientôt.</string>
-    <string name="accounts_unable_open_screen">Impossible d\'ouvrir cet écran pour le moment.</string>
+    <string name="accounts_unable_open_screen">Impossible d'ouvrir cet écran pour le moment.</string>
 
     <!-- Setup -->
     <string name="setup_welcome_prefix">Bienvenue sur </string>
@@ -76,9 +76,9 @@
     <string name="setup_beta_label">Bêta</string>
     <string name="setup_intro_body">Nous allons tout configurer pour vous.</string>
     <string name="setup_checking_backup">Vérification du paquet de sauvegarde…</string>
-    <string name="setup_theme_title">Thème de l\'App</string>
-    <string name="setup_theme_subtitle">Choisissez l\'apparence que vous souhaitez avant de commencer à explorer votre bibliothèque.</string>
-    <string name="setup_theme_footer">Vous pouvez modifier cela plus tard dans Paramètres &gt; Apparence &gt; Thème de l\'App.</string>
+    <string name="setup_theme_title">Thème de l'App</string>
+    <string name="setup_theme_subtitle">Choisissez l'apparence que vous souhaitez avant de commencer à explorer votre bibliothèque.</string>
+    <string name="setup_theme_footer">Vous pouvez modifier cela plus tard dans Paramètres &gt; Apparence &gt; Thème de l'App.</string>
     <string name="setup_recommended">Recommandé</string>
     <string name="setup_library_layout_title">Disposition de la Bibliothèque</string>
     <string name="setup_library_layout_subtitle">Choisissez votre façon préférée de naviguer dans la bibliothèque.</string>
@@ -96,21 +96,21 @@
     <string name="setup_backup_created_format">Créé %1$s</string>
     <string name="setup_backup_from_version">Sauvegarde de %1$s</string>
     <string name="unknown_version">Version inconnue</string>
-    <string name="setup_lets_go">C\'est Parti !</string>
+    <string name="setup_lets_go">C'est Parti !</string>
     <string name="setup_step_format">Étape %1$d sur %2$d</string>
-    <string name="setup_app_navigation_title">Navigation de l\'App</string>
+    <string name="setup_app_navigation_title">Navigation de l'App</string>
     <string name="setup_app_navigation_subtitle">Choisissez le style de la barre de navigation inférieure.</string>
     <string name="setup_navbar_default_style">Style par Défaut</string>
     <string name="setup_navbar_footer">Vous pouvez modifier cela plus tard dans Paramètres &gt; Apparence &gt; Style de la Barre de Navigation.</string>
-    <string name="skip_for_now">Passer pour l\'instant</string>
+    <string name="skip_for_now">Passer pour l'instant</string>
     <string name="skip_not_now">Passer / Pas maintenant</string>
     <string name="restoring">Restauration</string>
     <string name="restore_selected">Restaurer la sélection</string>
     <string name="customize_corner_radius">Personnaliser le Rayon des Coins</string>
-    <string name="toast_grant_permission_first">Veuillez d\'abord accorder l\'autorisation nécessaire.</string>
+    <string name="toast_grant_permission_first">Veuillez d'abord accorder l'autorisation nécessaire.</string>
     <string name="toast_grant_all_permissions">Veuillez accorder toutes les autorisations nécessaires.</string>
-    <string name="toast_grant_storage_first">Accordez d\'abord les autorisations de stockage</string>
-    <string name="toast_battery_settings_unavailable">Impossible d\'ouvrir les paramètres de la batterie</string>
+    <string name="toast_grant_storage_first">Accordez d'abord les autorisations de stockage</string>
+    <string name="toast_battery_settings_unavailable">Impossible d'ouvrir les paramètres de la batterie</string>
 
     <!-- Content descriptions -->
     <string name="cd_expand_menu">Développer le menu</string>
@@ -126,32 +126,32 @@
     <string name="setup_excluded_folders_description">Tous les dossiers sont analysés par défaut. Choisissez les emplacements que vous souhaitez ignorer lors de la construction de votre bibliothèque.</string>
     <string name="setup_choose_folders_ignore">Choisir les dossiers à ignorer</string>
     <string name="setup_permission_media_title">Autorisation Multimédia</string>
-    <string name="setup_permission_media_description">Auris a besoin d\'accéder à vos fichiers audio pour construire votre bibliothèque musicale.</string>
+    <string name="setup_permission_media_description">Auris a besoin d'accéder à vos fichiers audio pour construire votre bibliothèque musicale.</string>
     <string name="setup_permission_granted">Autorisation Accordée</string>
-    <string name="setup_grant_media_permission">Accorder l\'Autorisation Multimédia</string>
+    <string name="setup_grant_media_permission">Accorder l'Autorisation Multimédia</string>
     <string name="setup_permission_notifications_title">Notifications</string>
-    <string name="setup_permission_notifications_description">Activez les notifications pour contrôler votre musique depuis l\'écran de verrouillage et le panneau de notifications.</string>
+    <string name="setup_permission_notifications_description">Activez les notifications pour contrôler votre musique depuis l'écran de verrouillage et le panneau de notifications.</string>
     <string name="setup_enable_notifications">Activer les Notifications</string>
     <string name="setup_permission_alarms_title">Alertes et Rappels</string>
-    <string name="setup_permission_alarms_description">Optionnel, mais recommandé si vous utilisez la Minuterie de Sommeil et souhaitez qu\'Auris arrête la lecture exactement à l\'heure.</string>
-    <string name="setup_grant_permission_generic">Accorder l\'Autorisation</string>
+    <string name="setup_permission_alarms_description">Optionnel, mais recommandé si vous utilisez la Minuterie de Sommeil et souhaitez qu'Auris arrête la lecture exactement à l'heure.</string>
+    <string name="setup_grant_permission_generic">Accorder l'Autorisation</string>
     <string name="setup_backup_have_title">Avez-vous une sauvegarde ?</string>
-    <string name="setup_backup_have_description">Si vous avez déjà une sauvegarde d\'Auris, restaurez-la maintenant et passez la majeure partie de la configuration restante sur cet appareil.</string>
+    <string name="setup_backup_have_description">Si vous avez déjà une sauvegarde d'Auris, restaurez-la maintenant et passez la majeure partie de la configuration restante sur cet appareil.</string>
     <string name="setup_inspecting_backup">Inspection de la sauvegarde</string>
     <string name="setup_restoring_backup">Restauration de la sauvegarde</string>
     <string name="setup_import_backup">Importer une sauvegarde</string>
     <string name="setup_theme_dark_title">Sombre</string>
-    <string name="setup_theme_dark_description">L\'apparence sombre par défaut de Material 3 pour Auris.</string>
+    <string name="setup_theme_dark_description">L'apparence sombre par défaut de Material 3 pour Auris.</string>
     <string name="setup_theme_light_title">Clair</string>
-    <string name="setup_theme_light_description">Une apparence Material 3 plus lumineuse dans toute l\'application.</string>
+    <string name="setup_theme_light_description">Une apparence Material 3 plus lumineuse dans toute l'application.</string>
     <string name="setup_theme_follow_title">Suivre le système</string>
-    <string name="setup_theme_follow_description">Correspond au paramètre d\'apparence actuel de votre téléphone.</string>
+    <string name="setup_theme_follow_description">Correspond au paramètre d'apparence actuel de votre téléphone.</string>
     <string name="setup_compact_mode_pill_hint">Utilisation de la navigation par pilule minimaliste</string>
-    <string name="setup_compact_mode_tab_hint">Utilisation de la ligne d\'onglets par défaut</string>
+    <string name="setup_compact_mode_tab_hint">Utilisation de la ligne d'onglets par défaut</string>
     <string name="setup_preview_songs_label">Chansons</string>
     <string name="setup_battery_optimization_title">Optimisation de la Batterie</string>
-    <string name="setup_battery_optimization_description">Certains appareils Android ferment les applications en arrière-plan de manière agressive. Désactivez l\'optimisation de la batterie pour Auris afin d\'éviter les interruptions inattendues de la lecture.</string>
-    <string name="setup_disable_battery_optimization">Désactiver l\'Optimisation</string>
+    <string name="setup_battery_optimization_description">Certains appareils Android ferment les applications en arrière-plan de manière agressive. Désactivez l'optimisation de la batterie pour Auris afin d'éviter les interruptions inattendues de la lecture.</string>
+    <string name="setup_disable_battery_optimization">Désactiver l'Optimisation</string>
     <string name="setup_nav_floating_pill_description">Pilule flottante aux coins arrondis</string>
     <string name="setup_nav_full_width_description">Barre par défaut pleine largeur</string>
 
@@ -163,26 +163,26 @@
     <string name="home_your_mix_title">Votre\nMix</string>
     <string name="your_mix_song">Votre liste de musique quotidienne</string>
     <string name="cd_shuffle_play">Lecture Aléatoire</string>
-    <string name="cd_album_art_for_title">Pochette de l\'album pour %1$s</string>
+    <string name="cd_album_art_for_title">Pochette de l'album pour %1$s</string>
     <string name="cd_options">Options</string>
     <string name="genre_quick_fill">Remplissage Rapide de Genre</string>
     <string name="cd_generic_artist">Artiste générique</string>
-    <string name="cd_play_album">Lire l\'album</string>
-    <string name="cd_shuffle_play_album">Lire l\'album en aléatoire</string>
+    <string name="cd_play_album">Lire l'album</string>
+    <string name="cd_shuffle_play_album">Lire l'album en aléatoire</string>
     <string name="album_cover_for">Pochette de %1$s</string>
     <string name="album_detail_meta_line">%1$s · %2$s</string>
     <string name="mashup_cd_play_pause">Lire/Pause</string>
     <string name="cd_song_cover">Pochette de la chanson</string>
 
     <!-- Crash report dialog -->
-    <string name="crash_report_title">Oups ! Quelque chose s\'est mal passé</string>
-    <string name="crash_report_subtitle">L\'application a planté lors de votre dernière session. Aidez-nous à résoudre ce problème en partageant le rapport de plantage.</string>
+    <string name="crash_report_title">Oups ! Quelque chose s'est mal passé</string>
+    <string name="crash_report_subtitle">L'application a planté lors de votre dernière session. Aidez-nous à résoudre ce problème en partageant le rapport de plantage.</string>
     <string name="crash_report_date_line">Date : %1$s</string>
     <string name="crash_report_error_label">Erreur :</string>
     <string name="crash_report_stack_preview_label">Trace de la pile (aperçu) :</string>
     <string name="crash_report_clipboard_label">Journal de plantage</string>
     <string name="toast_crash_log_copied">Journal de plantage copié dans le presse-papiers</string>
-    <string name="crash_report_share_subject">Rapport de plantage d\'Auris</string>
+    <string name="crash_report_share_subject">Rapport de plantage d'Auris</string>
     <string name="crash_report_share_chooser">Partager le rapport de plantage</string>
     <string name="action_copy">Copier</string>
     <string name="action_share">Partager</string>
@@ -194,7 +194,7 @@
     <string name="recent_searches">Recherches récentes</string>
     <string name="clear_all">Tout effacer</string>
     <string name="cd_search_history_icon">Historique</string>
-    <string name="cd_delete_search_history_item">Supprimer l\'élément de l\'historique de recherche</string>
+    <string name="cd_delete_search_history_item">Supprimer l'élément de l'historique de recherche</string>
     <string name="cd_no_search_results">Aucun résultat</string>
     <string name="search_no_results_for_query">Aucun résultat pour "%1$s"</string>
     <string name="search_nothing_found">Rien trouvé</string>
@@ -219,7 +219,7 @@
     <string name="about_contributors_section_title">Contributeurs open source</string>
     <string name="about_contributors_section_subtitle">Liste en direct des contributeurs GitHub.</string>
     <string name="about_signal_open_source">Open source</string>
-    <string name="about_signal_community_first">La communauté d\'abord</string>
+    <string name="about_signal_community_first">La communauté d'abord</string>
     <string name="about_signal_material3">Material 3 expressif</string>
     <string name="cd_open_github_profile">Ouvrir le profil GitHub</string>
     <string name="cd_open_telegram">Ouvrir Telegram</string>
@@ -233,10 +233,10 @@
     <string name="dash_title_playlists">Listes de lecture</string>
     <string name="dash_music_folders">Dossiers de musique</string>
     <string name="dash_action_sync">Synchroniser</string>
-    <string name="dash_playlists_empty_title">Aucune liste de lecture synchronisée pour l\'instant</string>
+    <string name="dash_playlists_empty_title">Aucune liste de lecture synchronisée pour l'instant</string>
     <string name="dash_playlists_empty_hint_subsonic">Appuyez sur synchroniser pour récupérer vos listes de lecture</string>
     <string name="dash_playlists_empty_hint_jellyfin">Appuyez sur synchroniser pour récupérer vos listes de lecture Jellyfin</string>
-    <string name="dash_no_folders_yet">Aucun dossier ajouté pour l\'instant</string>
+    <string name="dash_no_folders_yet">Aucun dossier ajouté pour l'instant</string>
     <string name="dash_tap_plus_add_drive_folder">Appuyez sur + pour ajouter un dossier Drive</string>
     <string name="dash_quick_actions">Actions rapides</string>
     <string name="dash_quick_actions_subsonic_subtitle">Gérez les serveurs compatibles Navidrome, Airsonic et autres Subsonic.</string>
@@ -260,11 +260,11 @@
     <string name="qq_created_and_collected">Créées et collectées</string>
     <string name="qq_created_playlists">Listes de lecture créées</string>
     <string name="qq_collected_playlists">Listes de lecture collectées</string>
-    <string name="cd_user_avatar">Avatar de l\'utilisateur</string>
+    <string name="cd_user_avatar">Avatar de l'utilisateur</string>
     <string name="toast_playlist_created">Liste de lecture créée avec succès</string>
-    <string name="toast_set_ai_provider_api_key_first">Configurez d\'abord la clé API de votre fournisseur d\'IA</string>
-    <string name="toast_set_gemini_api_key_first">Configurez d\'abord votre clé API Gemini</string>
-    <string name="toast_added_to_queue">Ajouté à la file d\'attente</string>
+    <string name="toast_set_ai_provider_api_key_first">Configurez d'abord la clé API de votre fournisseur d'IA</string>
+    <string name="toast_set_gemini_api_key_first">Configurez d'abord votre clé API Gemini</string>
+    <string name="toast_added_to_queue">Ajouté à la file d'attente</string>
     <string name="toast_playing_next">Lecture suivante</string>
     <string name="error_share_song_format">Impossible de partager la chanson : %1$s</string>
 </resources>

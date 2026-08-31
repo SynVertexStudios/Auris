@@ -3,15 +3,15 @@
     <!-- Chaînes de l'écran À propos (contributeurs) -->
     <string name="contributor_theo_display_name">Theo Vilardo</string>
     <string name="contributor_theo_role">Créateur</string>
-    <string name="contributor_theo_detail">C\'est le créateur original de PixelPlayer.</string>
+    <string name="contributor_theo_detail">C'est le créateur original de PixelPlayer.</string>
 
     <string name="contributor_auris_display_name">Saymon Silva Pereira</string>
-    <string name="contributor_auris_role">Mainteneur d\'Auris</string>
-    <string name="contributor_auris_detail">Créateur d\'Auris.</string>
+    <string name="contributor_auris_role">Mainteneur d'Auris</string>
+    <string name="contributor_auris_detail">Créateur d'Auris.</string>
 
     <string name="contributor_lostf1sh_display_name">@lostf1sh</string>
     <string name="contributor_lostf1sh_role">Contributeur le plus actif</string>
-    <string name="contributor_lostf1sh_detail">A énormément contribué aux fonctionnalités, à l\'architecture et à la fiabilité.</string>
+    <string name="contributor_lostf1sh_detail">A énormément contribué aux fonctionnalités, à l'architecture et à la fiabilité.</string>
     <string name="contributor_lostf1sh_badge">Plus Grand Impact</string>
 
     <string name="contributor_cromaguy_display_name">@cromaguy</string>
@@ -26,7 +26,7 @@
     
     <!-- About Screen - Golden System -->
     <string name="contributor_golden_role">Entreprise</string>
-    <string name="contributor_golden_detail">Entreprise responsable du développement et de la maintenance d\'Auris</string>
+    <string name="contributor_golden_detail">Entreprise responsable du développement et de la maintenance d'Auris</string>
 
     <!-- Descriptions des Réseaux Sociaux -->
     <string name="cd_open_instagram">Ouvrir Instagram</string>
@@ -34,17 +34,17 @@
     
     <!-- aurisbuttonsheet -->
     <!-- Thème Personnalisé -->
-    <string name="custom_theme_subtitle">Personnalisez les couleurs et les fonds d\'écran de l\'application</string>
+    <string name="custom_theme_subtitle">Personnalisez les couleurs et les fonds d'écran de l'application</string>
     <string name="custom_theme_open">Ouvrir le Thème Personnalisé</string>
     <!-- Galerie Vidéo -->
     <string name="video_gallery_title">Vidéos</string>
-    <string name="video_gallery_subtitle">Regardez des vidéos directement dans l\'application</string>
+    <string name="video_gallery_subtitle">Regardez des vidéos directement dans l'application</string>
     <string name="video_gallery_open">Ouvrir la Galerie Vidéo</string>
     
     <!-- About Sheet - Nouvelles Fonctionnalités -->
     <string name="aurissheet_newfeatures">Nouvelles Fonctionnalités</string>
-    <string name="aurissheet_custom_theme_subtitle">Personnalisez les couleurs et les fonds d\'écran</string>
-    <string name="aurissheet_video_subtitle">Regardez des vidéos dans l\'application</string>
+    <string name="aurissheet_custom_theme_subtitle">Personnalisez les couleurs et les fonds d'écran</string>
+    <string name="aurissheet_video_subtitle">Regardez des vidéos dans l'application</string>
     <string name="aurissheet_open">Ouvrir</string>
     <!-- YouTube -->
     <string name="about_youtube_title">YouTube</string>

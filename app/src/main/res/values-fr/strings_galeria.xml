@@ -2,8 +2,8 @@
 <resources>
     <string name="gallery_title">Vidéos</string>
     <string name="gallery_permission_title">Autorisation nécessaire</string>
-    <string name="gallery_permission_message">Pour afficher vos vidéos, Auris doit accéder au stockage de l\'appareil.</string>
-    <string name="gallery_permission_button">Autoriser l\'accès</string>
+    <string name="gallery_permission_message">Pour afficher vos vidéos, Auris doit accéder au stockage de l'appareil.</string>
+    <string name="gallery_permission_button">Autoriser l'accès</string>
     <string name="gallery_search_hint">Rechercher des vidéos…</string>
     <string name="gallery_tab_all">Tous</string>
     <string name="gallery_tab_recent">Récents</string>
