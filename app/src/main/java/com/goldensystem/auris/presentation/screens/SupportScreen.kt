@@ -102,14 +102,15 @@ fun SupportScreen(
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-               MaterialTheme.colorScheme.background,
-                .padding(paddingValues)
+        import androidx.compose.foundation.background  // ⬅️ ADICIONE ESTE IMPORT
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background) .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Header
             Card(
