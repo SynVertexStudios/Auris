@@ -3,6 +3,7 @@ package com.goldensystem.auris.presentation.screens
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.foundation.background
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
