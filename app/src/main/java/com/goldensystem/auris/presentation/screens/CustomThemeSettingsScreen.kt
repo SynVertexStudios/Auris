@@ -154,12 +154,12 @@ fun CustomThemeSettingsScreen(
                 )
             }
 
-            // Seção: Wallpaper
+            /* Seção: Wallpaper
             item {
                 SettingsGroupHeader(
                     title = stringResource(R.string.custom_theme_wallpaper_section)
                 )
-            }
+            }*/
 
             item {
                 SettingsCardItem(
