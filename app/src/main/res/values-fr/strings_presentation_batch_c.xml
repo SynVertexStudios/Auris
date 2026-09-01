@@ -39,7 +39,7 @@
     <string name="ai_playlist_headline_daily_mix">Mix du jour</string>
     <string name="ai_playlist_subtitle_journey_ready">Votre voyage sonore est prêt</string>
     <string name="ai_playlist_subtitle_generator">Générateur de playlist IA</string>
-    <string name="ai_playlist_description">Décrivez l'ambiance, l'humeur ou l'activité et laissez l'IA composer la playlist parfaite depuis votre bibliothèque.</string>
+    <string name="ai_playlist_description">Décrivez l\'ambiance, l\'humeur ou l\'activité et laissez l\'IA composer la playlist parfaite depuis votre bibliothèque.</string>
     <string name="ai_playlist_section_size">Taille de la playlist</string>
     <string name="ai_playlist_min_songs">Titres min</string>
     <string name="ai_playlist_max_songs">Titres max</string>
