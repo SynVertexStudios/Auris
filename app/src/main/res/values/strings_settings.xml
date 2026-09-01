@@ -2,7 +2,7 @@
 <resources>
 
 
-
+<string name ="custom_theme_advance_section">Advanced</string>
 <string name="custom_theme_auto_from_wallpaper">Theme according to wallpaper</string>
 <string name="custom_theme_auto_from_wallpaper_subtitle">The theme will be applied automatically based on the wallpaper color</string>
 <string name="custom_theme_apply_from_wallpaper">Apply theme from wallpaper</string>

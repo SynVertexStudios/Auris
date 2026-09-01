@@ -5,6 +5,7 @@
   <!-- STRINGS GERAIS / COMUNS                      -->
   <!-- ============================================ -->
 <!-- Cores de Container (Nova Versão) -->
+ <string name="custom_theme_advance_section">Avançado</string>
 <string name="custom_theme_container_colors">Cores de Superfície</string>
 <string name="custom_theme_surface_container">Superfície Container</string>
 <string name="custom_theme_surface_container_low">Superfície Container Baixo</string>

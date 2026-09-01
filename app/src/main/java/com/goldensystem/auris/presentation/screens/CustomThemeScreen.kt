@@ -361,7 +361,7 @@ fun CustomThemeScreen(
             // ================================================
             // SEÇÃO AVANÇADO
             // ================================================
-            Card(
+            /*Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
@@ -656,7 +656,7 @@ fun CustomThemeScreen(
                         colorScheme = colorScheme
                     )
                 }
-            }
+            }*/
 
             Spacer(modifier = Modifier.height(32.dp))
         }

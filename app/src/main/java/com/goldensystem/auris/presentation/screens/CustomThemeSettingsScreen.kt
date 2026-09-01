@@ -154,17 +154,6 @@ fun CustomThemeSettingsScreen(
                 )
             }
 
-            item {
-                SettingsCardItem(
-                    icon = Icons.Rounded.ColorLens,
-                    title = stringResource(R.string.custom_theme_edit_colors),
-                    subtitle = stringResource(R.string.custom_theme_edit_colors_subtitle),
-                    onClick = {
-                        navController.navigate(Screen.CustomTheme.route)
-                    }
-                )
-            }
-
             // Seção: Wallpaper
             item {
                 SettingsGroupHeader(
@@ -183,6 +172,23 @@ fun CustomThemeSettingsScreen(
                     },
                     onClick = {
                         navController.navigate(Screen.Wallpaper.route)
+                    }
+                )
+            }
+            
+            item {
+                SettingsGroupHeader(
+                    title = stringResource(R.string.custom_theme_advance_section)
+                )
+            }
+            
+            item {
+                SettingsCardItem(
+                    icon = Icons.Rounded.ColorLens,
+                    title = stringResource(R.string.custom_theme_edit_colors),
+                    subtitle = stringResource(R.string.custom_theme_edit_colors_subtitle),
+                    onClick = {
+                        navController.navigate(Screen.CustomTheme.route)
                     }
                 )
             }
