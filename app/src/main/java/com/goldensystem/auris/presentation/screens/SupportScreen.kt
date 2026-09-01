@@ -4,6 +4,7 @@ package com.goldensystem.auris.presentation.screens
 import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
