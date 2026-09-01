@@ -4,6 +4,7 @@ package com.goldensystem.auris.presentation.navigation
 
 import com.goldensystem.auris.di.AiEntryPoint
 import com.goldensystem.auris.data.ai.AiPlaylistGenerator
+import com.goldensystem.auris.presentation.screens.SupportScreen
 import com.goldensystem.auris.data.repository.MusicRepository
 import dagger.hilt.android.EntryPointAccessors
 import com.goldensystem.auris.presentation.screens.WordDelimiterConfigScreen
@@ -724,6 +725,20 @@ composable(
                 ScreenWrapper(navController = navController, playerViewModel = playerViewModel) {
                     VideoPlayerScreen(
                         onBack = { navController.popBackStack() }
+                    )
+                }
+            }
+            //SupportScreen
+            composable(
+                Screen.Support.route,
+                enterTransition = { enterTransition() },
+                exitTransition = { exitTransition() },
+                popEnterTransition = { popEnterTransition() },
+                popExitTransition = { popExitTransition() },
+          ) {
+            ScreenWrapper(navController = navController, playerViewModel = playerViewModel) {
+                    SupportScreen(
+                    navController = navController
                     )
                 }
             }

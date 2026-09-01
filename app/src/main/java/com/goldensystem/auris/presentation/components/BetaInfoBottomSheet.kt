@@ -224,7 +224,8 @@ fun BetaInfoBottomSheet(
                         containerColor = MaterialTheme.colorScheme.error,
                         contentColor = MaterialTheme.colorScheme.onError
                     ),
-                    onClick = { launchUrl(context, feedbackUrl) }
+                    onClick = { 
+            navController?.navigate(Screen.Support.route) }
                 )
             }
 
@@ -262,7 +263,8 @@ fun BetaInfoBottomSheet(
 
         // ---------- FAB FLUTUANTE ----------
         Button(
-            onClick = { launchUrl(context, feedbackUrl) },
+            onClick = { launchUrl(
+            navController?.navigate(Screen.Support.route) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(24.dp)
