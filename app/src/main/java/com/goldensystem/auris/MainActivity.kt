@@ -696,7 +696,7 @@ Trace.endSection()
                 "video_player",
                 Screen.CustomTheme.route,
                 Screen.CustomThemeSettings.route,
-                Screen.Wallpaper.route
+                Screen.Wallpaper.route,
                 Screen.Support.route
             )
         }
