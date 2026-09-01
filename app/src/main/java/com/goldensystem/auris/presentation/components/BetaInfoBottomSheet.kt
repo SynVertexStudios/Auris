@@ -263,7 +263,7 @@ fun BetaInfoBottomSheet(
 
         // ---------- FAB FLUTUANTE ----------
         Button(
-            onClick = { launchUrl(
+            onClick = {
             navController?.navigate(Screen.Support.route) },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
