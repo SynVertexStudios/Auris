@@ -105,7 +105,7 @@ fun SupportScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorScheme.background)
+               MaterialTheme.colorScheme.background,
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
