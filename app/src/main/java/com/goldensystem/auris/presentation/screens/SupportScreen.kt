@@ -102,8 +102,6 @@ fun SupportScreen(
             )
         }
     ) { paddingValues ->
-        import androidx.compose.foundation.background  // ⬅️ ADICIONE ESTE IMPORT
-
     Column(
         modifier = Modifier
             .fillMaxSize()
