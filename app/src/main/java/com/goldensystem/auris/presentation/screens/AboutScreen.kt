@@ -2,20 +2,9 @@ package com.goldensystem.auris.presentation.screens
 
 import android.content.ActivityNotFoundException
 import android.content.Context
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.material.icons.rounded.ExpandLess
-import androidx.compose.material.icons.rounded.ExpandMore
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.material.icons.rounded.Share
-import androidx.compose.material.icons.rounded.BugReport
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.content.Intent
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.Spring
@@ -24,6 +13,11 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.rememberTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -33,8 +27,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -54,15 +46,19 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Campaign
-import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.BugReport
+import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Public
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.Update
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -74,7 +70,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -101,8 +97,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
 import coil.compose.AsyncImagePainter
@@ -121,7 +120,9 @@ import kotlinx.coroutines.launch
 import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
 import kotlin.math.roundToInt
 
-// ---------- Dados de Contribuidores (apenas mantenedores) ----------
+// ============================================================
+// MODELOS
+// ============================================================
 
 private data class Contributor(
     val id: String,
@@ -131,16 +132,17 @@ private data class Contributor(
     val badge: String? = null,
     val avatarUrl: String? = null,
     val iconRes: Int? = null,
-    val githubUrl: String? = null,
-    val telegramUrl: String? = null,
     val instagramUrl: String? = null,
     val tiktokUrl: String? = null,
+    val githubUrl: String? = null,
+    val telegramUrl: String? = null,
 )
 
-// ---------- Tela Principal ----------
+// ============================================================
+// TELA PRINCIPAL
+// ============================================================
 
 @androidx.annotation.OptIn(UnstableApi::class)
-@Suppress("UNUSED_PARAMETER")
 @Composable
 fun AboutScreen(
     navController: NavController,
@@ -150,30 +152,42 @@ fun AboutScreen(
     val context = LocalContext.current
     val customThemeViewModel: CustomThemeViewModel = hiltViewModel()
     val config by customThemeViewModel.customThemeConfig.collectAsStateWithLifecycle()
-    
-    val versionName: String = try {
-        val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-        packageInfo.versionName ?: "N/A"
-    } catch (_: Exception) {
-        "N/A"
+
+    val versionName = remember(context) {
+        try {
+            context.packageManager
+                .getPackageInfo(context.packageName, 0)
+                .versionName
+                ?: "N/A"
+        } catch (_: Exception) {
+            "N/A"
+        }
     }
 
-    // URLs
-    val officialWebsite = "https://synvertexstudios.github.io/Auris-website/data/home.html"
-    val youtubeUrl = "https://www.youtube.com/@AurisMusicPlayer"
-    val instagramUrl = "https://www.instagram.com/aurismp"
-    val tiktokUrl = "https://www.tiktok.com/@auris_music_player"
+    val officialWebsite =
+        "https://synvertexstudios.github.io/Auris-website/data/home.html"
 
-    // ---------- Dados dos mantenedores ----------
+    val youtubeUrl =
+        "https://www.youtube.com/@AurisMusicPlayer"
+
+    val instagramUrl =
+        "https://www.instagram.com/aurismp"
+
+    val tiktokUrl =
+        "https://www.tiktok.com/@auris_music_player"
+
+    // --------------------------------------------------------
+    // MANTENEDORES
+    // --------------------------------------------------------
+
     val goldenSystem = Contributor(
         id = "goldensystem",
         displayName = "Golden System",
         role = stringResource(R.string.contributor_golden_role),
         detail = stringResource(R.string.contributor_golden_detail),
-        avatarUrl = "https://raw.githubusercontent.com/synvertexstudios/Auris/main/app/src/main/res/drawable/goldensystem_icon.png",
+        avatarUrl =
+            "https://raw.githubusercontent.com/synvertexstudios/Auris/main/app/src/main/res/drawable/goldensystem_icon.png",
         iconRes = R.drawable.ic_music_placeholder,
-        githubUrl = null,
-        telegramUrl = null,
         instagramUrl = "https://www.instagram.com/goldensystem.enterprise",
         tiktokUrl = "https://www.tiktok.com/@goldensystem.enterprise",
     )
@@ -183,68 +197,124 @@ fun AboutScreen(
         displayName = stringResource(R.string.contributor_auris_display_name),
         role = stringResource(R.string.contributor_auris_role),
         detail = stringResource(R.string.contributor_auris_detail),
-        avatarUrl = "https://raw.githubusercontent.com/synvertexstudios/Auris/refs/heads/main/app/src/main/res/drawable/ic_guarafox_ft.png",
+        avatarUrl =
+            "https://raw.githubusercontent.com/synvertexstudios/Auris/refs/heads/main/app/src/main/res/drawable/ic_guarafox_ft.png",
         iconRes = R.drawable.ic_music_placeholder,
         githubUrl = "https://github.com/synvertexstudios",
-        telegramUrl = null,
-        instagramUrl = null,
-        tiktokUrl = null,
     )
 
-    // ---------- Animações de entrada ----------
-    val transitionState = remember { MutableTransitionState(false) }
+    // --------------------------------------------------------
+    // ANIMAÇÃO DE ENTRADA
+    // --------------------------------------------------------
+
+    val transitionState = remember {
+        MutableTransitionState(false)
+    }
+
     LaunchedEffect(Unit) {
         transitionState.targetState = true
     }
-    val transition = rememberTransition(transitionState, label = "AboutAppearTransition")
+
+    val transition = rememberTransition(
+        transitionState,
+        label = "AboutScreenTransition",
+    )
 
     val contentAlpha by transition.animateFloat(
-        label = "ContentAlpha",
-        transitionSpec = { tween(durationMillis = 500) },
-    ) { if (it) 1f else 0f }
+        label = "AboutContentAlpha",
+        transitionSpec = {
+            tween(
+                durationMillis = 450,
+                easing = FastOutSlowInEasing,
+            )
+        },
+    ) {
+        if (it) 1f else 0f
+    }
 
     val contentOffset by transition.animateDp(
-        label = "ContentOffset",
-        transitionSpec = { tween(durationMillis = 400, easing = FastOutSlowInEasing) },
-    ) { if (it) 0.dp else 40.dp }
+        label = "AboutContentOffset",
+        transitionSpec = {
+            tween(
+                durationMillis = 450,
+                easing = FastOutSlowInEasing,
+            )
+        },
+    ) {
+        if (it) 0.dp else 28.dp
+    }
+
+    // --------------------------------------------------------
+    // COLLAPSING TOP BAR
+    // --------------------------------------------------------
 
     val density = LocalDensity.current
     val coroutineScope = rememberCoroutineScope()
-    val lazyListState = rememberLazyListState()
+    val listState = rememberLazyListState()
 
     val statusBarHeight = WindowInsets.statusBars
         .asPaddingValues()
         .calculateTopPadding()
+
     val minTopBarHeight = 64.dp + statusBarHeight
     val maxTopBarHeight = 170.dp
 
-    val minTopBarHeightPx = with(density) { minTopBarHeight.toPx() }
-    val maxTopBarHeightPx = with(density) { maxTopBarHeight.toPx() }
+    val minTopBarHeightPx = with(density) {
+        minTopBarHeight.toPx()
+    }
 
-    val topBarHeight = remember { Animatable(maxTopBarHeightPx) }
-    var collapseFraction by remember { mutableStateOf(0f) }
+    val maxTopBarHeightPx = with(density) {
+        maxTopBarHeight.toPx()
+    }
+
+    val topBarHeight = remember {
+        androidx.compose.animation.core.Animatable(
+            maxTopBarHeightPx,
+        )
+    }
+
+    var collapseFraction by remember {
+        mutableStateOf(0f)
+    }
 
     LaunchedEffect(topBarHeight.value) {
-        collapseFraction = 1f - (
-            (topBarHeight.value - minTopBarHeightPx) / (maxTopBarHeightPx - minTopBarHeightPx)
-            ).coerceIn(0f, 1f)
+        collapseFraction =
+            1f - (
+                (topBarHeight.value - minTopBarHeightPx) /
+                    (maxTopBarHeightPx - minTopBarHeightPx)
+                ).coerceIn(0f, 1f)
     }
 
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+
+            override fun onPreScroll(
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset {
                 val delta = available.y
-                val isScrollingDown = delta < 0
+
+                val scrollingUp = delta < 0
 
                 if (
-                    !isScrollingDown &&
-                    (lazyListState.firstVisibleItemIndex > 0 || lazyListState.firstVisibleItemScrollOffset > 0)
+                    !scrollingUp &&
+                    (
+                        listState.firstVisibleItemIndex > 0 ||
+                            listState.firstVisibleItemScrollOffset > 0
+                        )
                 ) {
                     return Offset.Zero
                 }
 
                 val previousHeight = topBarHeight.value
-                val newHeight = (previousHeight + delta).coerceIn(minTopBarHeightPx, maxTopBarHeightPx)
+
+                val newHeight = (
+                    previousHeight + delta
+                    ).coerceIn(
+                    minTopBarHeightPx,
+                    maxTopBarHeightPx,
+                )
+
                 val consumed = newHeight - previousHeight
 
                 if (consumed.roundToInt() != 0) {
@@ -253,241 +323,334 @@ fun AboutScreen(
                     }
                 }
 
-                val canConsumeScroll = !(isScrollingDown && newHeight == minTopBarHeightPx)
-                return if (canConsumeScroll) Offset(0f, consumed) else Offset.Zero
-            }
-        }
-    }
+                val shouldConsume =
+                    !(scrollingUp && newHeight == minTopBarHeightPx)
 
-    LaunchedEffect(lazyListState.isScrollInProgress) {
-        if (!lazyListState.isScrollInProgress) {
-            val shouldExpand = topBarHeight.value > (minTopBarHeightPx + maxTopBarHeightPx) / 2
-            val canExpand =
-                lazyListState.firstVisibleItemIndex == 0 && lazyListState.firstVisibleItemScrollOffset == 0
-            val targetValue = if (shouldExpand && canExpand) maxTopBarHeightPx else minTopBarHeightPx
-
-            if (topBarHeight.value != targetValue) {
-                coroutineScope.launch {
-                    topBarHeight.animateTo(targetValue, spring(stiffness = Spring.StiffnessMedium))
+                return if (shouldConsume) {
+                    Offset(0f, consumed)
+                } else {
+                    Offset.Zero
                 }
             }
         }
     }
 
-    // ===== WRAPPER COM WALLPAPER =====
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (!listState.isScrollInProgress) {
+            val middle =
+                (minTopBarHeightPx + maxTopBarHeightPx) / 2f
+
+            val shouldExpand =
+                topBarHeight.value > middle
+
+            val canExpand =
+                listState.firstVisibleItemIndex == 0 &&
+                    listState.firstVisibleItemScrollOffset == 0
+
+            val target =
+                if (shouldExpand && canExpand) {
+                    maxTopBarHeightPx
+                } else {
+                    minTopBarHeightPx
+                }
+
+            if (topBarHeight.value != target) {
+                coroutineScope.launch {
+                    topBarHeight.animateTo(
+                        target,
+                        spring(
+                            stiffness = Spring.StiffnessMedium,
+                            dampingRatio = 0.88f,
+                        ),
+                    )
+                }
+            }
+        }
+    }
+
+    // ========================================================
+    // UI
+    // ========================================================
+
     WallpaperBackground(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
     ) {
+
         Box(
             modifier = Modifier
-                .nestedScroll(nestedScrollConnection)
                 .fillMaxSize()
+                .nestedScroll(nestedScrollConnection)
                 .graphicsLayer {
                     alpha = contentAlpha
                     translationY = contentOffset.toPx()
                 },
         ) {
-            val currentTopBarHeightDp = with(density) { topBarHeight.value.toDp() }
+
+            val currentTopBarHeight =
+                with(density) {
+                    topBarHeight.value.toDp()
+                }
+
             LazyColumn(
-                state = lazyListState,
-                contentPadding = PaddingValues(
-                    top = currentTopBarHeightDp + 8.dp,
-                    bottom = MiniPlayerHeight +
-                        WindowInsets.navigationBars
-                            .asPaddingValues()
-                            .calculateBottomPadding() + 12.dp,
-                ),
+                state = listState,
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
+                contentPadding = PaddingValues(
+                    top = currentTopBarHeight + 10.dp,
+                    bottom =
+                        MiniPlayerHeight +
+                            WindowInsets.navigationBars
+                                .asPaddingValues()
+                                .calculateBottomPadding() +
+                            24.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                // ---------- Card principal (Auris) ----------
-                item(key = "hero_card") {
+
+                // ====================================================
+                // HERO
+                // ====================================================
+
+                item(key = "hero") {
                     AboutHeroCard(
                         versionName = versionName,
                         onVersionLongPress = {
-                            navController.navigateSafely(Screen.EasterEgg.route)
+                            navController.navigateSafely(
+                                Screen.EasterEgg.route,
+                            )
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
-                            .padding(top = 8.dp),
+                            .padding(top = 6.dp),
                     )
                 }
 
-                // ---------- Seção: Changelog ----------
+                // ====================================================
+                // CHANGLEOG
+                // ====================================================
+
                 item(key = "changelog") {
-                ExpandableSection(
-                    title = stringResource(R.string.about_changelog_title),
-                    icon = Icons.Rounded.Info,
-                    iconTint = MaterialTheme.colorScheme.primary,
-                    initiallyExpanded = false
-                ) {
-                    Text(
-                        text = stringResource(R.string.about_changelog_text),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-                // ---------- Seção: Site Oficial ----------
-                item(key = "official_website") {
-                ActionCard(
-                    icon = Icons.Rounded.Language,
-                    iconTint = MaterialTheme.colorScheme.primary,
-                    title = stringResource(R.string.about_official_website_title),
-                    subtitle = stringResource(R.string.about_official_website_subtitle),
-                    buttonText = stringResource(R.string.about_official_website_button),
-                    onClick = { launchUrl(context, officialWebsite) }
-                )
-            }
-
-                // ---------- Seção: YouTube ----------
-                item(key = "youtube") {
-                ActionCard(
-                    iconRes = R.drawable.ic_youtube,
-                    iconTint = Color.Red,
-                    title = stringResource(R.string.about_youtube_title),
-                    subtitle = stringResource(R.string.about_youtube_subtitle),
-                    buttonText = stringResource(R.string.about_youtube_button),
-                    onClick = { launchUrl(context, youtubeUrl) }
-                )
-            }
-
-                // ---------- Seção: Redes Sociais (Instagram e TikTok) ----------
-                 item(key = "social_media") {
-                ExpandableSection(
-                    title = stringResource(R.string.about_social_media_title),
-                    icon = Icons.Rounded.Share,
-                    iconTint = MaterialTheme.colorScheme.secondary,
-                    initiallyExpanded = false
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SocialButton(
-                            iconRes = R.drawable.ic_instagram,
-                            label = stringResource(R.string.about_instagram),
-                            onClick = { launchUrl(context, instagramUrl) }
-                        )
-                        SocialButton(
-                            iconRes = R.drawable.ic_tiktok,
-                            label = stringResource(R.string.about_tiktok),
-                            onClick = { launchUrl(context, tiktokUrl) }
+                    ExpandableSection(
+                        title = stringResource(
+                            R.string.about_changelog_title,
+                        ),
+                        icon = Icons.Rounded.Update,
+                        iconTint = MaterialTheme.colorScheme.primary,
+                    ) {
+                        Text(
+                            text = stringResource(
+                                R.string.about_changelog_text,
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 21.sp,
                         )
                     }
                 }
-            }
 
-                // ---------- Seção: Feedback ----------
-                item(key = "feedback") {
-                ActionCard(
-                    icon = Icons.Rounded.BugReport,
-                    iconTint = MaterialTheme.colorScheme.error,
-                    title = stringResource(R.string.about_feedback_title),
-                    subtitle = stringResource(R.string.about_feedback_subtitle),
-                    buttonText = stringResource(R.string.about_feedback_button),
-                    buttonColors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
-                    ),
-                    onClick = { 
-            navController?.navigate(Screen.Support.route) }
-                )
-            }
+                // ====================================================
+                // SITE
+                // ====================================================
 
-                // ---------- Mantenedores ----------
-                item(key = "maintainer_title") {
-                    AboutSectionHeader(
-                        title = stringResource(R.string.about_maintainer_title),
-                        subtitle = stringResource(R.string.about_maintainer_subtitle),
-                        modifier = Modifier.padding(top = 24.dp),
+                item(key = "website") {
+                    AboutActionCard(
+                        icon = Icons.Rounded.Language,
+                        iconTint = MaterialTheme.colorScheme.primary,
+                        title = stringResource(
+                            R.string.about_official_website_title,
+                        ),
+                        subtitle = stringResource(
+                            R.string.about_official_website_subtitle,
+                        ),
+                        buttonText = stringResource(
+                            R.string.about_official_website_button,
+                        ),
+                        onClick = {
+                            launchUrl(
+                                context,
+                                officialWebsite,
+                            )
+                        },
                     )
                 }
 
-                item(key = "maintainer_card_golden") {
+                // ====================================================
+                // YOUTUBE
+                // ====================================================
+
+                item(key = "youtube") {
+                    AboutActionCard(
+                        iconRes = R.drawable.ic_youtube,
+                        iconTint = Color.Red,
+                        title = stringResource(
+                            R.string.about_youtube_title,
+                        ),
+                        subtitle = stringResource(
+                            R.string.about_youtube_subtitle,
+                        ),
+                        buttonText = stringResource(
+                            R.string.about_youtube_button,
+                        ),
+                        onClick = {
+                            launchUrl(
+                                context,
+                                youtubeUrl,
+                            )
+                        },
+                    )
+                }
+
+                // ====================================================
+                // REDES SOCIAIS
+                // ====================================================
+
+                item(key = "social") {
+                    ExpandableSection(
+                        title = stringResource(
+                            R.string.about_social_media_title,
+                        ),
+                        icon = Icons.Rounded.Share,
+                        iconTint = MaterialTheme.colorScheme.secondary,
+                    ) {
+
+                        SocialButton(
+                            iconRes = R.drawable.ic_instagram,
+                            label = stringResource(
+                                R.string.about_instagram,
+                            ),
+                            onClick = {
+                                launchUrl(
+                                    context,
+                                    instagramUrl,
+                                )
+                            },
+                        )
+
+                        SocialButton(
+                            iconRes = R.drawable.ic_tiktok,
+                            label = stringResource(
+                                R.string.about_tiktok,
+                            ),
+                            onClick = {
+                                launchUrl(
+                                    context,
+                                    tiktokUrl,
+                                )
+                            },
+                        )
+                    }
+                }
+
+                // ====================================================
+                // FEEDBACK
+                // ====================================================
+
+                item(key = "feedback") {
+                    FeedbackCard(
+                        onClick = {
+                            navController.navigateSafely(
+                                Screen.Support.route,
+                            )
+                        },
+                    )
+                }
+
+                // ====================================================
+                // MANTENEDORES HEADER
+                // ====================================================
+
+                item(key = "maintainers_header") {
+                    SectionHeader(
+                        title = stringResource(
+                            R.string.about_maintainer_title,
+                        ),
+                        subtitle = stringResource(
+                            R.string.about_maintainer_subtitle,
+                        ),
+                        modifier = Modifier.padding(
+                            top = 18.dp,
+                            bottom = 2.dp,
+                        ),
+                    )
+                }
+
+                // ====================================================
+                // MANTENEDOR 1
+                // ====================================================
+
+                item(key = "golden_system") {
                     ContributorCard(
                         contributor = goldenSystem,
-                        shape = expressiveListShape(index = 0, count = 2),
+                        shape = expressiveListShape(
+                            index = 0,
+                            count = 2,
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp),
-                        onCardClick = null,
                     )
                 }
 
-                item(key = "maintainer_card_saymon") {
+                // ====================================================
+                // MANTENEDOR 2
+                // ====================================================
+
+                item(key = "auris_maintainer") {
                     ContributorCard(
                         contributor = aurisMaintainer,
-                        shape = expressiveListShape(index = 1, count = 2),
+                        shape = expressiveListShape(
+                            index = 1,
+                            count = 2,
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .padding(top = 3.dp),
-                        onCardClick = null,
+                            .padding(horizontal = 16.dp),
                     )
                 }
 
-                // ---------- Seção: Copyright ----------
-                item(key = "copyright_section") {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Divider(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 32.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                        )
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        Text(
-                            text = "Copyright (c) 2024 theovilardo",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(vertical = 2.dp)
-                        )
-                        
-                        Text(
-                            text = "Copyright (c) 2026 Saymon Silva Pereira",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(vertical = 2.dp)
-                        )
-                        
-                        Text(
-                            text = "Copyright (c) 2026 Golden System Studios",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(vertical = 2.dp)
-                        )
-                    }
+                // ====================================================
+                // COPYRIGHT
+                // ====================================================
+
+                item(key = "copyright") {
+                    CopyrightSection()
                 }
 
-                item(key = "bottom_spacer") {
-                    Spacer(modifier = Modifier.height(24.dp))
+                item(key = "bottom") {
+                    Spacer(
+                        modifier = Modifier.height(12.dp),
+                    )
                 }
             }
 
+            // ========================================================
+            // TOP BAR
+            // ========================================================
+
             CollapsibleCommonTopBar(
-                title = stringResource(R.string.screen_about),
+                title = stringResource(
+                    R.string.screen_about,
+                ),
                 collapseFraction = collapseFraction,
-                headerHeight = currentTopBarHeightDp,
+                headerHeight = currentTopBarHeight,
                 onBackClick = onNavigationIconClick,
                 expandedTitleStartPadding = 20.dp,
                 collapsedTitleStartPadding = 68.dp,
-                containerColor = if (config.isEnabled) Color.Transparent else MaterialTheme.colorScheme.surface
+                containerColor =
+                    if (config.isEnabled) {
+                        Color.Transparent
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    },
             )
         }
-    } // Fim do WallpaperBackground
+    }
 }
 
-// ---------- Componentes Auxiliares ----------
+// ============================================================
+// HERO CARD
+// ============================================================
 
 @Composable
 private fun AboutHeroCard(
@@ -495,64 +658,102 @@ private fun AboutHeroCard(
     onVersionLongPress: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val heroShape = AbsoluteSmoothCornerShape(30.dp, 60)
     val haptic = LocalHapticFeedback.current
+
+    val shape = AbsoluteSmoothCornerShape(
+        30.dp,
+        60,
+    )
 
     Surface(
         modifier = modifier,
-        shape = heroShape,
+        shape = shape,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 2.dp,
+        tonalElevation = 3.dp,
     ) {
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    brush = Brush.linearGradient(
+                    Brush.linearGradient(
                         listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.14f),
+                            MaterialTheme.colorScheme.primary.copy(
+                                alpha = 0.20f,
+                            ),
+                            MaterialTheme.colorScheme.tertiary.copy(
+                                alpha = 0.12f,
+                            ),
                             MaterialTheme.colorScheme.surfaceContainerLow,
                         ),
                     ),
                 ),
         ) {
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 18.dp, vertical = 16.dp),
+                    .padding(
+                        horizontal = 20.dp,
+                        vertical = 20.dp,
+                    ),
             ) {
+
+                // ----------------------------------------------------
+                // APP HEADER
+                // ----------------------------------------------------
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+
                     Surface(
+                        modifier = Modifier.size(58.dp),
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.primaryContainer,
+                        tonalElevation = 2.dp,
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.auris_base_monochrome),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(10.dp).size(28.dp),
-                        )
+
+                        Box(
+                            contentAlignment = Alignment.Center,
+                        ) {
+
+                            Icon(
+                                painter = painterResource(
+                                    R.drawable.auris_base_monochrome,
+                                ),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(32.dp),
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(
+                        modifier = Modifier.width(14.dp),
+                    )
 
                     Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                        modifier = Modifier.weight(1f),
                     ) {
+
                         Text(
-                            text = stringResource(R.string.about_app_name),
+                            text = stringResource(
+                                R.string.about_app_name,
+                            ),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
                         )
+
+                        Spacer(
+                            modifier = Modifier.height(2.dp),
+                        )
+
                         Text(
-                            text = stringResource(R.string.about_tagline),
+                            text = stringResource(
+                                R.string.about_tagline,
+                            ),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 2,
@@ -561,30 +762,63 @@ private fun AboutHeroCard(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(
+                    modifier = Modifier.height(18.dp),
+                )
+
+                // ----------------------------------------------------
+                // VERSION
+                // ----------------------------------------------------
 
                 Box(
                     modifier = Modifier
                         .clip(CircleShape)
+                        .background(
+                            MaterialTheme.colorScheme.tertiaryContainer,
+                        )
                         .pointerInput(Unit) {
                             detectTapGestures(
                                 onLongPress = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    haptic.performHapticFeedback(
+                                        HapticFeedbackType.LongPress,
+                                    )
                                     onVersionLongPress()
                                 },
                             )
                         },
                 ) {
-                    Text(
-                        text = stringResource(R.string.about_version_format, versionName),
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer,
-                        fontWeight = FontWeight.SemiBold,
-                    )
+
+                    Row(
+                        modifier = Modifier.padding(
+                            horizontal = 13.dp,
+                            vertical = 8.dp,
+                        ),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(7.dp),
+                    ) {
+
+                        Icon(
+                            imageVector = Icons.Rounded.AutoAwesome,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.size(16.dp),
+                        )
+
+                        Text(
+                            text = stringResource(
+                                R.string.about_version_format,
+                                versionName,
+                            ),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(
+                    modifier = Modifier.height(18.dp),
+                )
 
                 CommunitySignalsRow()
             }
@@ -592,40 +826,69 @@ private fun AboutHeroCard(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+// ============================================================
+// COMMUNITY SIGNALS
+// ============================================================
+
 @Composable
 private fun CommunitySignalsRow() {
-    val labels = listOf(
-        stringResource(R.string.about_signal_community_first) to Icons.Rounded.AutoAwesome,
-        stringResource(R.string.about_signal_material3) to Icons.Rounded.Palette,
-        stringResource(R.string.about_signal_update) to Icons.Rounded.AutoAwesome,
+
+    val items = listOf(
+        stringResource(
+            R.string.about_signal_community_first,
+        ) to Icons.Rounded.Public,
+
+        stringResource(
+            R.string.about_signal_material3,
+        ) to Icons.Rounded.Palette,
+
+        stringResource(
+            R.string.about_signal_update,
+        ) to Icons.Rounded.Update,
     )
 
-    FlowRow(
+    Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        labels.forEach { (label, icon) ->
+
+        items.forEach { (label, icon) ->
+
             Surface(
-                shape = AbsoluteSmoothCornerShape(16.dp, 60),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.92f),
+                modifier = Modifier.weight(1f),
+                shape = AbsoluteSmoothCornerShape(
+                    16.dp,
+                    60,
+                ),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(
+                    alpha = 0.88f,
+                ),
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+
+                Column(
+                    modifier = Modifier.padding(
+                        horizontal = 6.dp,
+                        vertical = 9.dp,
+                    ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
+
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(15.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(17.dp),
                     )
+
+                    Spacer(
+                        modifier = Modifier.height(4.dp),
+                    )
+
                     Text(
                         text = label,
-                        style = MaterialTheme.typography.labelMedium,
-                        maxLines = 1,
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
@@ -634,8 +897,12 @@ private fun CommunitySignalsRow() {
     }
 }
 
+// ============================================================
+// SECTION HEADER
+// ============================================================
+
 @Composable
-private fun AboutSectionHeader(
+private fun SectionHeader(
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier,
@@ -643,222 +910,139 @@ private fun AboutSectionHeader(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp),
     ) {
+
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
         )
-        if (subtitle.isNotEmpty()) {
+
+        if (subtitle.isNotBlank()) {
+
+            Spacer(
+                modifier = Modifier.height(3.dp),
+            )
+
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 2.dp),
             )
         }
     }
 }
 
-@Composable
-private fun ChangelogCard(
-    text: String,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
-        color = Color.Transparent, // Fundo transparente
-        tonalElevation = 0.dp, // Sem elevação
-        border = androidx.compose.foundation.BorderStroke(
-            width = 1.5.dp,
-            color = Color.White.copy(alpha = 0.8f) // Borda branca com transparência
-        )
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(16.dp),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
-        )
-    }
-}
-
-@Composable
-private fun ContributorCard(
-    contributor: Contributor,
-    shape: AbsoluteSmoothCornerShape,
-    modifier: Modifier = Modifier,
-    onCardClick: (() -> Unit)? = null,
-) {
-    val clickableModifier = if (onCardClick != null) {
-        Modifier.clickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = LocalIndication.current,
-            role = Role.Button,
-            onClick = onCardClick,
-        )
-    } else {
-        Modifier
-    }
-
-    Surface(
-        modifier = modifier
-            .clip(shape)
-            .then(clickableModifier),
-        shape = shape,
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = 2.dp,
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            ContributorAvatar(
-                name = contributor.displayName,
-                avatarUrl = contributor.avatarUrl,
-                iconRes = contributor.iconRes ?: R.drawable.rounded_person_24,
-            )
-
-            Spacer(Modifier.width(12.dp))
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp),
-            ) {
-                Text(
-                    text = contributor.displayName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                Text(
-                    text = contributor.role,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 1.dp),
-                )
-
-                contributor.detail?.takeIf { it.isNotBlank() }?.let { detail ->
-                    Text(
-                        text = detail,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 4.dp),
-                    )
-                }
-
-                contributor.badge?.let { badge ->
-                    Row(modifier = Modifier.padding(top = 8.dp)) {
-                        ContributorLabel(text = badge)
-                    }
-                }
-            }
-
-            // Ícones sociais personalizados
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                // Para Golden System: mostrar Instagram e TikTok
-                if (contributor.id == "goldensystem") {
-                    SocialIconButton(
-                        painterRes = R.drawable.ic_instagram,
-                        contentDescription = stringResource(R.string.cd_open_instagram),
-                        url = contributor.instagramUrl,
-                    )
-                    SocialIconButton(
-                        painterRes = R.drawable.ic_tiktok,
-                        contentDescription = stringResource(R.string.cd_open_tiktok),
-                        url = contributor.tiktokUrl,
-                    )
-                } 
-                // Para Saymon: não mostrar nenhum ícone
-                else if (contributor.id == "synvertexstudios") {
-                    // Não mostrar nenhum ícone
-                }
-                // Para outros casos (fallback)
-                else {
-                    SocialIconButton(
-                        painterRes = R.drawable.github,
-                        contentDescription = stringResource(R.string.cd_open_github_profile),
-                        url = contributor.githubUrl,
-                    )
-                    SocialIconButton(
-                        painterRes = R.drawable.telegram,
-                        contentDescription = stringResource(R.string.cd_open_telegram),
-                        url = contributor.telegramUrl,
-                    )
-                }
-            }
-        }
-    }
-}
+// ============================================================
+// EXPANDABLE SECTION
+// ============================================================
 
 @Composable
 private fun ExpandableSection(
     title: String,
-    icon: ImageVector,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     iconTint: Color,
     initiallyExpanded: Boolean = false,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
-    var expanded by rememberSaveable { mutableStateOf(initiallyExpanded) }
+    var expanded by rememberSaveable {
+        mutableStateOf(initiallyExpanded)
+    }
+
+    val shape = AbsoluteSmoothCornerShape(
+        22.dp,
+        60,
+    )
 
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = AbsoluteSmoothCornerShape(20.dp, 60),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = shape,
         color = MaterialTheme.colorScheme.surfaceContainer,
-        onClick = { expanded = !expanded }
+        tonalElevation = 1.dp,
+        onClick = {
+            expanded = !expanded
+        },
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+
+        Column(
+            modifier = Modifier.padding(15.dp),
+        ) {
+
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(iconTint.copy(alpha = 0.15f), CircleShape),
-                    contentAlignment = Alignment.Center
+
+                Surface(
+                    modifier = Modifier.size(42.dp),
+                    shape = CircleShape,
+                    color = iconTint.copy(alpha = 0.13f),
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = iconTint,
-                        modifier = Modifier.size(22.dp)
-                    )
+
+                    Box(
+                        contentAlignment = Alignment.Center,
+                    ) {
+
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = iconTint,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
                 }
+
+                Spacer(
+                    modifier = Modifier.width(12.dp),
+                )
+
                 Text(
                     text = title,
+                    modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.weight(1f)
                 )
+
                 Icon(
-                    imageVector = if (expanded) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                    imageVector =
+                        if (expanded) {
+                            Icons.Rounded.ExpandLess
+                        } else {
+                            Icons.Rounded.ExpandMore
+                        },
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
-            AnimatedVisibility(visible = expanded) {
+            AnimatedVisibility(
+                visible = expanded,
+                enter =
+                    fadeIn(
+                        animationSpec = tween(180),
+                    ) +
+                        expandVertically(
+                            animationSpec = tween(250),
+                        ),
+                exit =
+                    fadeOut(
+                        animationSpec = tween(120),
+                    ) +
+                        shrinkVertically(
+                            animationSpec = tween(200),
+                        ),
+            ) {
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(
+                            top = 14.dp,
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     content()
                 }
@@ -867,194 +1051,495 @@ private fun ExpandableSection(
     }
 }
 
-// ---------- COMPONENTE: Card com Ação (Grande) ----------
+// ============================================================
+// ACTION CARD
+// ============================================================
+
 @Composable
-private fun ActionCard(
-    icon: ImageVector? = null,
-    iconRes: Int? = null,
-    iconTint: Color = MaterialTheme.colorScheme.primary,
+private fun AboutActionCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    @DrawableRes iconRes: Int? = null,
+    iconTint: Color,
     title: String,
-    subtitle: String? = null,
+    subtitle: String?,
     buttonText: String,
-    buttonColors: androidx.compose.material3.ButtonColors = ButtonDefaults.buttonColors(),
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = AbsoluteSmoothCornerShape(20.dp, 60),
-        color = MaterialTheme.colorScheme.surfaceContainer
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = AbsoluteSmoothCornerShape(
+            22.dp,
+            60,
+        ),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        tonalElevation = 1.dp,
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+
+        Column(
+            modifier = Modifier.padding(16.dp),
+        ) {
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(iconTint.copy(alpha = 0.15f), CircleShape),
-                    contentAlignment = Alignment.Center
+
+                Surface(
+                    modifier = Modifier.size(44.dp),
+                    shape = CircleShape,
+                    color = iconTint.copy(alpha = 0.13f),
                 ) {
-                    if (icon != null) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = iconTint,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    } else if (iconRes != null) {
-                        Icon(
-                            painter = painterResource(iconRes),
-                            contentDescription = null,
-                            tint = iconTint,
-                            modifier = Modifier.size(22.dp)
-                        )
+
+                    Box(
+                        contentAlignment = Alignment.Center,
+                    ) {
+
+                        when {
+                            icon != null -> {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    tint = iconTint,
+                                    modifier = Modifier.size(23.dp),
+                                )
+                            }
+
+                            iconRes != null -> {
+                                Icon(
+                                    painter = painterResource(iconRes),
+                                    contentDescription = null,
+                                    tint = iconTint,
+                                    modifier = Modifier.size(23.dp),
+                                )
+                            }
+                        }
                     }
                 }
-                
-                Column {
+
+                Spacer(
+                    modifier = Modifier.width(12.dp),
+                )
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                ) {
+
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
-                    subtitle?.let {
+
+                    if (!subtitle.isNullOrBlank()) {
+
+                        Spacer(
+                            modifier = Modifier.height(2.dp),
+                        )
+
                         Text(
-                            text = it,
+                            text = subtitle,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(
+                modifier = Modifier.height(13.dp),
+            )
 
             Button(
                 onClick = onClick,
                 modifier = Modifier.fillMaxWidth(),
-                shape = AbsoluteSmoothCornerShape(14.dp, 60),
-                colors = buttonColors
+                shape = AbsoluteSmoothCornerShape(
+                    15.dp,
+                    60,
+                ),
+                contentPadding = PaddingValues(
+                    vertical = 11.dp,
+                ),
             ) {
-                Text(buttonText)
-            }
-        }
-    }
-}
 
-// ---------- COMPONENTE: Card com Ação (Pequeno - para dentro de seções) ----------
-@Composable
-private fun ActionCardSmall(
-    icon: ImageVector,
-    iconTint: Color = MaterialTheme.colorScheme.primary,
-    title: String,
-    subtitle: String,
-    buttonText: String,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = AbsoluteSmoothCornerShape(16.dp, 60),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .background(iconTint.copy(alpha = 0.15f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
+                Text(
+                    text = buttonText,
+                    fontWeight = FontWeight.SemiBold,
+                )
+
+                Spacer(
+                    modifier = Modifier.width(5.dp),
+                )
+
                 Icon(
-                    imageVector = icon,
+                    imageVector = Icons.Rounded.ChevronRight,
                     contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(18.dp),
                 )
-            }
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
-            OutlinedButton(
-                onClick = onClick,
-                shape = AbsoluteSmoothCornerShape(12.dp, 60),
-                modifier = Modifier.height(32.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Text(buttonText, fontSize = MaterialTheme.typography.labelMedium.fontSize)
             }
         }
     }
 }
 
-// ---------- COMPONENTE: Botão Social ----------
+// ============================================================
+// FEEDBACK CARD
+// ============================================================
+
+@Composable
+private fun FeedbackCard(
+    onClick: () -> Unit,
+) {
+    val error = MaterialTheme.colorScheme.error
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = AbsoluteSmoothCornerShape(
+            22.dp,
+            60,
+        ),
+        color = error.copy(alpha = 0.08f),
+        border = BorderStroke(
+            1.dp,
+            error.copy(alpha = 0.20f),
+        ),
+    ) {
+
+        Column(
+            modifier = Modifier.padding(16.dp),
+        ) {
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+
+                Surface(
+                    modifier = Modifier.size(44.dp),
+                    shape = CircleShape,
+                    color = error.copy(alpha = 0.12f),
+                ) {
+
+                    Box(
+                        contentAlignment = Alignment.Center,
+                    ) {
+
+                        Icon(
+                            imageVector = Icons.Rounded.BugReport,
+                            contentDescription = null,
+                            tint = error,
+                            modifier = Modifier.size(23.dp),
+                        )
+                    }
+                }
+
+                Spacer(
+                    modifier = Modifier.width(12.dp),
+                )
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                ) {
+
+                    Text(
+                        text = stringResource(
+                            R.string.about_feedback_title,
+                        ),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(2.dp),
+                    )
+
+                    Text(
+                        text = stringResource(
+                            R.string.about_feedback_subtitle,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            Spacer(
+                modifier = Modifier.height(13.dp),
+            )
+
+            Button(
+                onClick = onClick,
+                modifier = Modifier.fillMaxWidth(),
+                shape = AbsoluteSmoothCornerShape(
+                    15.dp,
+                    60,
+                ),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                ),
+            ) {
+
+                Icon(
+                    imageVector = Icons.Rounded.BugReport,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+
+                Spacer(
+                    modifier = Modifier.width(7.dp),
+                )
+
+                Text(
+                    text = stringResource(
+                        R.string.about_feedback_button,
+                    ),
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+        }
+    }
+}
+
+// ============================================================
+// SOCIAL BUTTON
+// ============================================================
+
 @Composable
 private fun SocialButton(
-    iconRes: Int,
+    @DrawableRes iconRes: Int,
     label: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     OutlinedButton(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = AbsoluteSmoothCornerShape(14.dp, 60),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.primary
-        )
+        shape = AbsoluteSmoothCornerShape(
+            15.dp,
+            60,
+        ),
+        contentPadding = PaddingValues(
+            vertical = 10.dp,
+        ),
     ) {
+
         Icon(
             painter = painterResource(iconRes),
             contentDescription = null,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(19.dp),
         )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(label)
+
+        Spacer(
+            modifier = Modifier.width(8.dp),
+        )
+
+        Text(
+            text = label,
+            fontWeight = FontWeight.Medium,
+        )
+
+        Spacer(
+            modifier = Modifier.weight(1f),
+        )
+
+        Icon(
+            imageVector = Icons.Rounded.ChevronRight,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+        )
     }
 }
 
-// ---------- UTIL: Abrir URL ----------
-private fun launchUrl(context: Context, url: String) {
-    val intent = Intent(Intent.ACTION_VIEW, url.toUri()).apply {
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    }
-    try {
-        context.startActivity(intent)
-    } catch (_: ActivityNotFoundException) { }
-}
+// ============================================================
+// CONTRIBUTOR CARD
+// ============================================================
+
 @Composable
-private fun ContributorLabel(text: String) {
+private fun ContributorCard(
+    contributor: Contributor,
+    shape: AbsoluteSmoothCornerShape,
+    modifier: Modifier = Modifier,
+    onCardClick: (() -> Unit)? = null,
+) {
+    val clickableModifier =
+        if (onCardClick != null) {
+
+            Modifier.clickable(
+                interactionSource = remember {
+                    MutableInteractionSource()
+                },
+                indication = LocalIndication.current,
+                role = Role.Button,
+                onClick = onCardClick,
+            )
+
+        } else {
+            Modifier
+        }
+
     Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.secondaryContainer,
+        modifier = modifier
+            .clip(shape)
+            .then(clickableModifier),
+        shape = shape,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        tonalElevation = 1.dp,
     ) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = 14.dp,
+                    vertical = 13.dp,
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+
+            ContributorAvatar(
+                name = contributor.displayName,
+                avatarUrl = contributor.avatarUrl,
+                iconRes = contributor.iconRes,
+            )
+
+            Spacer(
+                modifier = Modifier.width(12.dp),
+            )
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 5.dp),
+            ) {
+
+                Text(
+                    text = contributor.displayName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                Text(
+                    text = contributor.role,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                contributor.detail
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { detail ->
+
+                        Spacer(
+                            modifier = Modifier.height(3.dp),
+                        )
+
+                        Text(
+                            text = detail,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+
+                contributor.badge?.let { badge ->
+
+                    Spacer(
+                        modifier = Modifier.height(6.dp),
+                    )
+
+                    ContributorLabel(
+                        text = badge,
+                    )
+                }
+            }
+
+            ContributorSocials(
+                contributor = contributor,
+            )
+        }
+    }
+}
+
+// ============================================================
+// CONTRIBUTOR SOCIALS
+// ============================================================
+
+@Composable
+private fun ContributorSocials(
+    contributor: Contributor,
+) {
+    val context = LocalContext.current
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(1.dp),
+    ) {
+
+        if (contributor.id == "goldensystem") {
+
+            ContributorSocialIcon(
+                painterRes = R.drawable.ic_instagram,
+                contentDescription = stringResource(
+                    R.string.cd_open_instagram,
+                ),
+                onClick = {
+                    contributor.instagramUrl?.let {
+                        launchUrl(context, it)
+                    }
+                },
+            )
+
+            ContributorSocialIcon(
+                painterRes = R.drawable.ic_tiktok,
+                contentDescription = stringResource(
+                    R.string.cd_open_tiktok,
+                ),
+                onClick = {
+                    contributor.tiktokUrl?.let {
+                        launchUrl(context, it)
+                    }
+                },
+            )
+        }
+
+        if (contributor.id == "synvertexstudios") {
+            // Sem redes sociais visíveis.
+        }
+    }
+}
+
+// ============================================================
+// SOCIAL ICON
+// ============================================================
+
+@Composable
+private fun ContributorSocialIcon(
+    @DrawableRes painterRes: Int,
+    contentDescription: String,
+    onClick: () -> Unit,
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier.size(38.dp),
+    ) {
+
+        Icon(
+            painter = painterResource(painterRes),
+            contentDescription = contentDescription,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(21.dp),
         )
     }
 }
+
+// ============================================================
+// AVATAR
+// ============================================================
 
 @Composable
 private fun ContributorAvatar(
@@ -1063,45 +1548,93 @@ private fun ContributorAvatar(
     @DrawableRes iconRes: Int?,
     modifier: Modifier = Modifier,
 ) {
-    val containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-    val iconTint = MaterialTheme.colorScheme.onSurfaceVariant
-    val letterBackground = MaterialTheme.colorScheme.surfaceContainerHighest
-    val letterTint = MaterialTheme.colorScheme.onSurfaceVariant
-    val initial = name.removePrefix("@").firstOrNull()?.uppercase() ?: "?"
-    var cachedBitmap by remember(avatarUrl) { mutableStateOf<ImageBitmap?>(null) }
+    val containerColor =
+        MaterialTheme.colorScheme.surfaceContainerHigh
+
+    val iconTint =
+        MaterialTheme.colorScheme.onSurfaceVariant
+
+    val fallbackBackground =
+        MaterialTheme.colorScheme.primaryContainer
+
+    val fallbackTint =
+        MaterialTheme.colorScheme.onPrimaryContainer
+
+    val initial =
+        name
+            .removePrefix("@")
+            .firstOrNull()
+            ?.uppercase()
+            ?: "?"
+
+    var cachedBitmap by remember(avatarUrl) {
+        mutableStateOf<ImageBitmap?>(null)
+    }
 
     Surface(
-        modifier = modifier.size(48.dp),
+        modifier = modifier.size(52.dp),
         shape = CircleShape,
         color = containerColor,
         tonalElevation = 2.dp,
     ) {
+
         when {
+
             cachedBitmap != null -> {
+
                 Image(
                     bitmap = cachedBitmap!!,
-                    contentDescription = stringResource(R.string.cd_contributor_avatar, name),
+                    contentDescription = stringResource(
+                        R.string.cd_contributor_avatar,
+                        name,
+                    ),
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
                 )
             }
+
             !avatarUrl.isNullOrBlank() -> {
+
                 SmartImage(
-                    model = ImageRequest.Builder(LocalContext.current)
+                    model = ImageRequest.Builder(
+                        LocalContext.current,
+                    )
                         .data(avatarUrl)
                         .crossfade(true)
+                        .size(96)
                         .build(),
-                    contentDescription = stringResource(R.string.cd_contributor_avatar, name),
+
+                    contentDescription = stringResource(
+                        R.string.cd_contributor_avatar,
+                        name,
+                    ),
+
                     modifier = Modifier.fillMaxSize(),
+
                     shape = CircleShape,
+
                     contentScale = ContentScale.Crop,
-                    placeholderResId = iconRes ?: R.drawable.ic_music_placeholder,
-                    errorResId = R.drawable.rounded_broken_image_24,
+
+                    placeholderResId =
+                        iconRes
+                            ?: R.drawable.ic_music_placeholder,
+
+                    errorResId =
+                        R.drawable.rounded_broken_image_24,
+
                     targetSize = Size(96, 96),
+
                     onState = { state ->
-                        if (state is AsyncImagePainter.State.Success) {
-                            val drawable = state.result.drawable
-                            val bitmap = drawable?.toBitmap()?.asImageBitmap()
+
+                        if (
+                            state is AsyncImagePainter.State.Success
+                        ) {
+
+                            val bitmap =
+                                state.result.drawable
+                                    ?.toBitmap()
+                                    ?.asImageBitmap()
+
                             if (bitmap != null) {
                                 cachedBitmap = bitmap
                             }
@@ -1109,32 +1642,46 @@ private fun ContributorAvatar(
                     },
                 )
             }
+
             iconRes != null -> {
+
                 Box(
-                    Modifier
+                    modifier = Modifier
                         .fillMaxSize()
-                        .background(letterBackground),
+                        .background(
+                            fallbackBackground,
+                        ),
                     contentAlignment = Alignment.Center,
                 ) {
+
                     Icon(
                         painter = painterResource(iconRes),
-                        contentDescription = stringResource(R.string.cd_contributor_icon, name),
+                        contentDescription = stringResource(
+                            R.string.cd_contributor_icon,
+                            name,
+                        ),
                         tint = iconTint,
-                        modifier = Modifier.size(28.dp),
+                        modifier = Modifier.size(27.dp),
                     )
                 }
             }
+
             else -> {
+
                 Box(
-                    Modifier
+                    modifier = Modifier
                         .fillMaxSize()
-                        .background(letterBackground),
+                        .background(
+                            fallbackBackground,
+                        ),
                     contentAlignment = Alignment.Center,
                 ) {
+
                     Text(
-                        text = initial.toString(),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = letterTint,
+                        text = initial,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = fallbackTint,
                     )
                 }
             }
@@ -1142,72 +1689,193 @@ private fun ContributorAvatar(
     }
 }
 
+// ============================================================
+// LABEL
+// ============================================================
+
 @Composable
-private fun SocialIconButton(
-    painterRes: Int,
-    contentDescription: String,
-    url: String?,
-    modifier: Modifier = Modifier,
+private fun ContributorLabel(
+    text: String,
 ) {
-    if (url.isNullOrBlank()) return
-    val context = LocalContext.current
-    IconButton(
-        onClick = { openUrl(context, url) },
-        modifier = modifier.size(40.dp),
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.secondaryContainer,
     ) {
-        Icon(
-            painter = painterResource(painterRes),
-            contentDescription = contentDescription,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(24.dp)
+
+        Text(
+            text = text,
+            modifier = Modifier.padding(
+                horizontal = 9.dp,
+                vertical = 4.dp,
+            ),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
 
-private fun expressiveListShape(index: Int, count: Int): AbsoluteSmoothCornerShape {
+// ============================================================
+// COPYRIGHT
+// ============================================================
+
+@Composable
+private fun CopyrightSection() {
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = 32.dp,
+                vertical = 24.dp,
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.outlineVariant.copy(
+                alpha = 0.55f,
+            ),
+        )
+
+        Spacer(
+            modifier = Modifier.height(18.dp),
+        )
+
+        Text(
+            text = "Auris Music Player",
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Spacer(
+            modifier = Modifier.height(7.dp),
+        )
+
+        Text(
+            text = "Copyright (c) 2024 theovilardo",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                alpha = 0.65f,
+            ),
+            textAlign = TextAlign.Center,
+        )
+
+        Text(
+            text = "Copyright (c) 2026 Saymon Silva Pereira",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                alpha = 0.65f,
+            ),
+            textAlign = TextAlign.Center,
+        )
+
+        Text(
+            text = "Copyright (c) 2026 Golden System Studios",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                alpha = 0.65f,
+            ),
+            textAlign = TextAlign.Center,
+        )
+
+        Spacer(
+            modifier = Modifier.height(8.dp),
+        )
+
+        Text(
+            text = "Made with Android & Jetpack Compose",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                alpha = 0.5f,
+            ),
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+// ============================================================
+// FORMATO DAS CARDS DE MANTENEDORES
+// ============================================================
+
+private fun expressiveListShape(
+    index: Int,
+    count: Int,
+): AbsoluteSmoothCornerShape {
+
     val outer = 22.dp
-    val inner = 8.dp
+    val inner = 7.dp
 
     return when {
-        count <= 1 -> AbsoluteSmoothCornerShape(outer, 60)
-        index == 0 -> AbsoluteSmoothCornerShape(
-            cornerRadiusTL = outer,
-            cornerRadiusTR = outer,
-            cornerRadiusBL = inner,
-            cornerRadiusBR = inner,
-            smoothnessAsPercentTL = 60,
-            smoothnessAsPercentTR = 60,
-            smoothnessAsPercentBL = 60,
-            smoothnessAsPercentBR = 60,
-        )
-        index == count - 1 -> AbsoluteSmoothCornerShape(
-            cornerRadiusTL = inner,
-            cornerRadiusTR = inner,
-            cornerRadiusBL = outer,
-            cornerRadiusBR = outer,
-            smoothnessAsPercentTL = 60,
-            smoothnessAsPercentTR = 60,
-            smoothnessAsPercentBL = 60,
-            smoothnessAsPercentBR = 60,
-        )
-        else -> AbsoluteSmoothCornerShape(inner, 60)
+
+        count <= 1 ->
+            AbsoluteSmoothCornerShape(
+                outer,
+                60,
+            )
+
+        index == 0 ->
+            AbsoluteSmoothCornerShape(
+                cornerRadiusTL = outer,
+                cornerRadiusTR = outer,
+                cornerRadiusBL = inner,
+                cornerRadiusBR = inner,
+                smoothnessAsPercentTL = 60,
+                smoothnessAsPercentTR = 60,
+                smoothnessAsPercentBL = 60,
+                smoothnessAsPercentBR = 60,
+            )
+
+        index == count - 1 ->
+            AbsoluteSmoothCornerShape(
+                cornerRadiusTL = inner,
+                cornerRadiusTR = inner,
+                cornerRadiusBL = outer,
+                cornerRadiusBR = outer,
+                smoothnessAsPercentTL = 60,
+                smoothnessAsPercentTR = 60,
+                smoothnessAsPercentBL = 60,
+                smoothnessAsPercentBR = 60,
+            )
+
+        else ->
+            AbsoluteSmoothCornerShape(
+                inner,
+                60,
+            )
     }
 }
 
-private fun openUrl(context: Context, url: String) {
+// ============================================================
+// URL
+// ============================================================
+
+private fun launchUrl(
+    context: Context,
+    url: String,
+) {
     val uri = try {
         url.toUri()
     } catch (_: Throwable) {
         return
     }
 
-    val intent = Intent(Intent.ACTION_VIEW, uri).apply {
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    val intent = Intent(
+        Intent.ACTION_VIEW,
+        uri,
+    ).apply {
+        addFlags(
+            Intent.FLAG_ACTIVITY_NEW_TASK,
+        )
     }
 
     try {
         context.startActivity(intent)
     } catch (_: ActivityNotFoundException) {
-        // Ignore if no handler is available.
+        // Nenhum aplicativo capaz de abrir a URL.
     }
 }
