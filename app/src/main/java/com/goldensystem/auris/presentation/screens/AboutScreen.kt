@@ -2,6 +2,12 @@ package com.goldensystem.auris.presentation.screens
 
 import android.content.ActivityNotFoundException
 import android.content.Context
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.runtime.rememberSaveable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.BugReport
