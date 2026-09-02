@@ -9,10 +9,12 @@ import com.goldensystem.auris.data.preferences.CustomThemeConfig
 import com.goldensystem.auris.data.preferences.ThemePreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -51,8 +53,11 @@ class SupportViewModel @Inject constructor(
         device: String,
         message: String,
         imageUri: Uri?
-    ): Boolean {
-        return try {
+    ): Boolean = withContext(Dispatchers.IO) {
+
+        var tempFile: File? = null
+
+        try {
             val client = OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .writeTimeout(30, TimeUnit.SECONDS)
@@ -70,22 +75,38 @@ class SupportViewModel @Inject constructor(
                 .addFormDataPart("device", device)
                 .addFormDataPart("message", message)
 
-            // Adiciona anexo se existir
+            // ---------------------------------------------------------
+            // Anexo opcional
+            // ---------------------------------------------------------
+
             imageUri?.let { uri ->
-                val inputStream = context.contentResolver.openInputStream(uri)
-                inputStream?.use { stream ->
-                    val tempFile = File(context.cacheDir, "temp_image_${System.currentTimeMillis()}.jpg")
-                    FileOutputStream(tempFile).use { output ->
-                        stream.copyTo(output)
+
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+
+                    tempFile = File(
+                        context.cacheDir,
+                        "temp_image_${System.currentTimeMillis()}.jpg"
+                    )
+
+                    FileOutputStream(tempFile!!).use { outputStream ->
+                        inputStream.copyTo(outputStream)
                     }
-                    val requestBody = tempFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+
+                    val requestBody = tempFile!!.asRequestBody(
+                        "image/jpeg".toMediaTypeOrNull()
+                    )
+
                     multipartBuilder.addFormDataPart(
                         "attachment",
-                        tempFile.name,
+                        tempFile!!.name,
                         requestBody
                     )
                 }
             }
+
+            // ---------------------------------------------------------
+            // Requisição
+            // ---------------------------------------------------------
 
             val requestBody = multipartBuilder.build()
 
@@ -95,17 +116,40 @@ class SupportViewModel @Inject constructor(
                 .addHeader("Accept", "application/json")
                 .build()
 
-            val response = client.newCall(request).execute()
-            val responseBody = response.body?.string()
-            
-            response.isSuccessful && responseBody?.let {
-                val json = JSONObject(it)
-                json.optBoolean("success", false)
-            } ?: false
+            client.newCall(request).execute().use { response ->
+
+                val responseBody = response.body?.string().orEmpty()
+
+                // Sucesso HTTP + {"success":true}
+                if (!response.isSuccessful) {
+                    return@withContext false
+                }
+
+                if (responseBody.isBlank()) {
+                    return@withContext false
+                }
+
+                val json = JSONObject(responseBody)
+
+                return@withContext json.optBoolean(
+                    "success",
+                    false
+                )
+            }
 
         } catch (e: Exception) {
+
             e.printStackTrace()
+
             false
+
+        } finally {
+
+            // Remove o arquivo temporário depois do envio
+            try {
+                tempFile?.delete()
+            } catch (_: Exception) {
+            }
         }
     }
 }
