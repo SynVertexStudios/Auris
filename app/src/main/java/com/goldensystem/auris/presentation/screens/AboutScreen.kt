@@ -3,6 +3,8 @@ package com.goldensystem.auris.presentation.screens
 import android.content.ActivityNotFoundException
 import android.content.Context
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.BugReport
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.content.Intent
 import androidx.annotation.DrawableRes
@@ -321,121 +323,68 @@ fun AboutScreen(
                 }
 
                 // ---------- Seção: Site Oficial ----------
-                item(key = "official_website_section") {
-                    AboutSectionHeader(
-                        title = stringResource(R.string.about_official_website_title),
-                        subtitle = stringResource(R.string.about_official_website_subtitle),
-                        modifier = Modifier.padding(top = 24.dp),
-                    )
-                    OutlinedButton(
-                        onClick = { openUrl(context, officialWebsite) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        shape = RoundedCornerShape(16.dp),
-                       colors = ButtonDefaults.outlinedButtonColors(
-    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-    contentColor = MaterialTheme.colorScheme.primary
-)
-                    ) {
-                        Icon(Icons.Rounded.Language, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.about_official_website_button))
-                    }
-                }
+                item(key = "official_website") {
+                ActionCard(
+                    icon = Icons.Rounded.Language,
+                    iconTint = MaterialTheme.colorScheme.primary,
+                    title = stringResource(R.string.about_official_website_title),
+                    subtitle = stringResource(R.string.about_official_website_subtitle),
+                    buttonText = stringResource(R.string.about_official_website_button),
+                    onClick = { launchUrl(context, officialWebsite) }
+                )
+            }
 
                 // ---------- Seção: YouTube ----------
-                item(key = "youtube_section") {
-                    AboutSectionHeader(
-                        title = stringResource(R.string.about_youtube_title),
-                        subtitle = stringResource(R.string.about_youtube_subtitle),
-                        modifier = Modifier.padding(top = 24.dp),
-                    )
-                    OutlinedButton(
-                        onClick = { openUrl(context, youtubeUrl) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-    contentColor = MaterialTheme.colorScheme.primary
-)
-                    ) {
-                        Icon(painterResource(R.drawable.ic_youtube), contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.about_youtube_button))
-                    }
-                }
+                item(key = "youtube") {
+                ActionCard(
+                    iconRes = R.drawable.ic_youtube,
+                    iconTint = Color.Red,
+                    title = stringResource(R.string.about_youtube_title),
+                    subtitle = stringResource(R.string.about_youtube_subtitle),
+                    buttonText = stringResource(R.string.about_youtube_button),
+                    onClick = { launchUrl(context, youtubeUrl) }
+                )
+            }
 
                 // ---------- Seção: Redes Sociais (Instagram e TikTok) ----------
-                item(key = "social_media_section") {
-                    AboutSectionHeader(
-                        title = stringResource(R.string.about_social_media_title),
-                        subtitle = "",
-                        modifier = Modifier.padding(top = 24.dp),
-                    )
-                    
-                    // Instagram
-                    OutlinedButton(
-                        onClick = { openUrl(context, instagramUrl) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-    contentColor = MaterialTheme.colorScheme.primary
-)
-                    ) {
-                        Icon(painterResource(R.drawable.ic_instagram), contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.about_instagram))
-                    }
-                    
-                    // TikTok
-                    OutlinedButton(
-                        onClick = { openUrl(context, tiktokUrl) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-    contentColor = MaterialTheme.colorScheme.primary
-)
-                    ) {
-                        Icon(painterResource(R.drawable.ic_tiktok), contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.about_tiktok))
+                 item(key = "social_media") {
+                ExpandableSection(
+                    title = stringResource(R.string.about_social_media_title),
+                    icon = Icons.Rounded.Share,
+                    iconTint = MaterialTheme.colorScheme.secondary,
+                    initiallyExpanded = false
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SocialButton(
+                            iconRes = R.drawable.ic_instagram,
+                            label = stringResource(R.string.about_instagram),
+                            onClick = { launchUrl(context, instagramUrl) }
+                        )
+                        SocialButton(
+                            iconRes = R.drawable.ic_tiktok,
+                            label = stringResource(R.string.about_tiktok),
+                            onClick = { launchUrl(context, tiktokUrl) }
+                        )
                     }
                 }
+            }
 
                 // ---------- Seção: Feedback ----------
-                item(key = "feedback_section") {
-                    AboutSectionHeader(
-                        title = stringResource(R.string.about_feedback_title),
-                        subtitle = stringResource(R.string.about_feedback_subtitle),
-                        modifier = Modifier.padding(top = 24.dp),
-                    )
-                    OutlinedButton(
-                        onClick = {
-                            navController?.navigate(Screen.Support.route) 
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-    contentColor = MaterialTheme.colorScheme.primary
-)
-                    ) {
-                        Icon(Icons.Rounded.Campaign, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.about_feedback_button))
-                    }
-                }
+                item(key = "feedback") {
+                ActionCard(
+                    icon = Icons.Rounded.BugReport,
+                    iconTint = MaterialTheme.colorScheme.error,
+                    title = stringResource(R.string.about_feedback_title),
+                    subtitle = stringResource(R.string.about_feedback_subtitle),
+                    buttonText = stringResource(R.string.about_feedback_button),
+                    buttonColors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    ),
+                    onClick = { 
+            navController?.navigate(Screen.Support.route) }
+                )
+            }
 
                 // ---------- Mantenedores ----------
                 item(key = "maintainer_title") {
@@ -526,6 +475,27 @@ fun AboutScreen(
                 collapsedTitleStartPadding = 68.dp,
                 containerColor = if (config.isEnabled) Color.Transparent else MaterialTheme.colorScheme.surface
             )
+        Button(
+            onClick = {
+            navController?.navigate(Screen.Support.route) },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(24.dp)
+                .height(56.dp),
+            shape = AbsoluteSmoothCornerShape(18.dp, 60),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.github),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.about_feedback_button))
+        }
         }
     } // Fim do WallpaperBackground
 }
