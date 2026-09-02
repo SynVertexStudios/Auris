@@ -308,19 +308,20 @@ fun AboutScreen(
                 }
 
                 // ---------- Seção: Changelog ----------
-                item(key = "changelog_section") {
-                    AboutSectionHeader(
-                        title = stringResource(R.string.about_changelog_title),
-                        subtitle = stringResource(R.string.about_version_format, versionName),
-                        modifier = Modifier.padding(top = 24.dp),
-                    )
-                    ChangelogCard(
+                item(key = "changelog") {
+                ExpandableSection(
+                    title = stringResource(R.string.about_changelog_title),
+                    icon = Icons.Rounded.Info,
+                    iconTint = MaterialTheme.colorScheme.primary,
+                    initiallyExpanded = false
+                ) {
+                    Text(
                         text = stringResource(R.string.about_changelog_text),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
 
                 // ---------- Seção: Site Oficial ----------
                 item(key = "official_website") {
@@ -475,27 +476,6 @@ fun AboutScreen(
                 collapsedTitleStartPadding = 68.dp,
                 containerColor = if (config.isEnabled) Color.Transparent else MaterialTheme.colorScheme.surface
             )
-        Button(
-            onClick = {
-            navController?.navigate(Screen.Support.route) },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(24.dp)
-                .height(56.dp),
-            shape = AbsoluteSmoothCornerShape(18.dp, 60),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.github),
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(stringResource(R.string.about_feedback_button))
-        }
         }
     } // Fim do WallpaperBackground
 }
