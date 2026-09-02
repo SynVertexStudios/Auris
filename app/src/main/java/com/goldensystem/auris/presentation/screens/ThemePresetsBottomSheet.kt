@@ -21,7 +21,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -31,12 +30,6 @@ import com.goldensystem.auris.data.preferences.COLOR_PRESETS
 import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
-// Função auxiliar para verificar se uma cor é escura
-private fun isColorDark(color: Color): Boolean {
-    val luminance = (0.299 * color.red + 0.587 * color.green + 0.114 * color.blue)
-    return luminance <= 0.5
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,18 +41,8 @@ fun ThemePresetsBottomSheet(
     val scope = rememberCoroutineScope()
     var isVisible by remember { mutableStateOf(true) }
     
-    // Estado do tema (claro/escuro) - detecta automaticamente baseado nas cores atuais
-    var isDarkTheme by remember {
-        mutableStateOf(
-            // Detecta se o tema atual é escuro baseado na cor de fundo
-            isColorDark(config.backgroundColor)
-        )
-    }
-
-    // Atualiza isDarkTheme quando config mudar (ex: quando o usuário selecionar um preset)
-    LaunchedEffect(config) {
-        isDarkTheme = isColorDark(config.backgroundColor)
-    }
+    // Estado do tema (claro/escuro)
+    var isDarkTheme by remember { mutableStateOf(true) }
 
     // Detecta qual preset está ativo baseado nas cores atuais
     val currentPresetName by remember(config, isDarkTheme) {
@@ -154,27 +137,7 @@ fun ThemePresetsBottomSheet(
                     // Botão para alternar tema claro/escuro
                     FilledIconButton(
                         onClick = {
-                            // Alterna o tema
                             isDarkTheme = !isDarkTheme
-                            
-                            // Aplica o preset atual com o novo tema
-                            val currentPreset = COLOR_PRESETS.find { 
-                                it.name == displayPresetName 
-                            } ?: COLOR_PRESETS.first()
-                            
-                            val colors = currentPreset.getColors(isDarkTheme)
-                            
-                            // Aplica as cores do preset com o novo tema
-                            viewModel.updatePrimaryColor(colors.primaryColor)
-                            viewModel.updateSecondaryColor(colors.secondaryColor)
-                            viewModel.updateBackgroundColor(colors.backgroundColor)
-                            viewModel.updateOnPrimaryColor(colors.onPrimaryColor)
-                            viewModel.updateOnSurfaceColor(colors.onSurfaceColor)
-                            viewModel.updateAccentColor(colors.accentColor)
-                            viewModel.updateSurfaceContainerColor(colors.surfaceContainerColor)
-                            viewModel.updateSurfaceContainerLowColor(colors.surfaceContainerLowColor)
-                            viewModel.updateSurfaceContainerHighColor(colors.surfaceContainerHighColor)
-                            viewModel.updateSurfaceContainerLowestColor(colors.surfaceContainerLowestColor)
                         },
                         modifier = Modifier.size(40.dp),
                         colors = IconButtonDefaults.filledIconButtonColors(
@@ -257,8 +220,7 @@ fun ThemePresetsBottomSheet(
                             onClick = {
                                 selectedPresetName = preset.name
 
-                                // Aplica as cores do preset com o tema atual (claro ou escuro)
-                                val colors = preset.getColors(isDarkTheme)
+                                // Aplica as cores do preset (claro ou escuro)
                                 viewModel.updatePrimaryColor(colors.primaryColor)
                                 viewModel.updateSecondaryColor(colors.secondaryColor)
                                 viewModel.updateBackgroundColor(colors.backgroundColor)
