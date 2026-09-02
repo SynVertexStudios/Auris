@@ -203,6 +203,17 @@ fun AboutScreen(
         iconRes = R.drawable.ic_music_placeholder,
         githubUrl = "https://github.com/synvertexstudios",
     )
+    
+    val aurisMaintainer2 = Contributor(
+        id = "synvertexstudiosr",
+        displayName = stringResource(R.string.contributor_regiane_display_name),
+        role = stringResource(R.string.contributor_regiane_role),
+        detail = stringResource(R.string.contributor_regiane_detail),
+        avatarUrl =
+            "https://raw.githubusercontent.com/synvertexstudios/Auris/assets/avatar/avatar24",
+        iconRes = R.drawable.ic_music_placeholder,
+        githubUrl = "https://github.com/synvertexstudios",
+    )
 
     // --------------------------------------------------------
     // ANIMAÇÃO DE ENTRADA
@@ -600,6 +611,23 @@ fun AboutScreen(
                 item(key = "auris_maintainer") {
                     ContributorCard(
                         contributor = aurisMaintainer,
+                        shape = expressiveListShape(
+                            index = 1,
+                            count = 2,
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                    )
+                }
+                
+                                // ====================================================
+                // MANTENEDOR 3
+                // ====================================================
+                
+                item(key = "auris_maintainer2") {
+                    ContributorCard(
+                        contributor = aurisMaintainer2,
                         shape = expressiveListShape(
                             index = 1,
                             count = 2,

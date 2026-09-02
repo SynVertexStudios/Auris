@@ -5,10 +5,16 @@
     <string name="contributor_theo_role">Criador</string>
     <string name="contributor_theo_detail">Esse é o criador original do PixelPlayer.</string>
 
-    <string name="contributor_auris_display_name">Saymon Silva Pereira</string>
+    <string name="contributor_auris_display_name">SYN Vertex</string>
     <string name="contributor_auris_role">Mantenedor do Auris</string>
     <string name="contributor_auris_detail">Criador do Auris.</string>
 
+
+  <string name="contributor_auris_regiane_name">Nebulosa</string>
+    <string name="contributor_auris_regiane">Contribuidora do Auris</string>
+    <string name="contributor_auris_regiane"></string>
+
+  
     <string name="contributor_lostf1sh_display_name">@lostf1sh</string>
     <string name="contributor_lostf1sh_role">Contribuidor mais ativo</string>
     <string name="contributor_lostf1sh_detail">Contribuiu enormemente em recursos, arquitetura e confiabilidade.</string>

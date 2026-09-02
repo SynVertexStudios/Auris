@@ -12,7 +12,12 @@
           "package_name": "com.goldensystem.auris"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "352494419760-a9n365ps07jk2u2v2radbadnkgstbgju.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAbAEuY7nfXlMuGAgMQ8hHFQq7V9DmyP3Q"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "352494419760-a9n365ps07jk2u2v2radbadnkgstbgju.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     },
@@ -31,7 +41,12 @@
           "package_name": "com.goldensystem.auris.beta"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "352494419760-a9n365ps07jk2u2v2radbadnkgstbgju.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAbAEuY7nfXlMuGAgMQ8hHFQq7V9DmyP3Q"
@@ -39,7 +54,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "352494419760-a9n365ps07jk2u2v2radbadnkgstbgju.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
