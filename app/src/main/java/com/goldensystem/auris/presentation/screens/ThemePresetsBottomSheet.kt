@@ -32,13 +32,13 @@ import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-// Função auxiliar para detectar se a cor é clara ou escura
-fun Color.isLight(): Boolean {
+// Funções auxiliares para detectar se a cor é clara ou escura
+fun Color.isLightColor(): Boolean {
     val luminance = (0.299 * red + 0.587 * green + 0.114 * blue)
     return luminance > 0.5
 }
 
-fun Color.isDark(): Boolean = !isLight()
+fun Color.isDarkColor(): Boolean = !isLightColor()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,13 +54,13 @@ fun ThemePresetsBottomSheet(
     var isDarkTheme by remember {
         mutableStateOf(
             // Detecta se o tema atual é escuro baseado na cor de fundo
-            config.backgroundColor.isDark()
+            config.backgroundColor.isDarkColor()
         )
     }
 
     // Atualiza isDarkTheme quando config mudar (ex: quando o usuário selecionar um preset)
     LaunchedEffect(config) {
-        isDarkTheme = config.backgroundColor.isDark()
+        isDarkTheme = config.backgroundColor.isDarkColor()
     }
 
     // Detecta qual preset está ativo baseado nas cores atuais
