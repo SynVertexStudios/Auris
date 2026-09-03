@@ -1173,7 +1173,7 @@ private fun installApk(
 
 private fun openWebsite(context: Context) {
     val websiteUrl =
-        "https://synvertexstudios.github.io/Auris-website/"
+        "https://synvertexstudios.github.io/Auris-website/download"
 
     try {
         val intent = Intent(
