@@ -10,9 +10,9 @@
     <string name="contributor_auris_detail">Criador do Auris.</string>
 
 
-  <string name="contributor_auris_regiane_name">Nebulosa</string>
-    <string name="contributor_auris_regiane">Contribuidora do Auris</string>
-    <string name="contributor_auris_regiane"></string>
+  <string name="contributor_regiane_display_name">Nebulosa</string>
+    <string name="contributor_regiane_role">Contribuidora do Auris</string>
+    <string name="contributor_regiane_detail"></string>
 
   
     <string name="contributor_lostf1sh_display_name">@lostf1sh</string>
