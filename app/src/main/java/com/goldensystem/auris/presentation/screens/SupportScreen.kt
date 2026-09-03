@@ -126,9 +126,9 @@ fun SupportScreen(
         try {
             context.packageManager
                 .getPackageInfo(context.packageName, 0)
-                .versionName ?: "Desconhecida"
+                .versionName ?: stringResource(R.string.support_unknown)
         } catch (_: Exception) {
-            "Desconhecida"
+            stringResource(R.string.support_unknown)
         }
     }
 
@@ -146,16 +146,16 @@ fun SupportScreen(
 
     val categories = remember {
         listOf(
-            "Problema / Bug",
-            "Dúvida",
-            "Sugestão",
-            "Problema com reprodução",
-            "Compatibilidade",
-            "Tradução / Idioma",
-            "Download / Instalação",
-            "Conta / Sincronização",
-            "Desempenho",
-            "Outro"
+            stringResource(R.string.support_category_bug),
+            stringResource(R.string.support_category_doubt),
+            stringResource(R.string.support_category_suggestion),
+            stringResource(R.string.support_category_playback_issue),
+            stringResource(R.string.support_category_compatibility),
+            stringResource(R.string.support_category_translation),
+            stringResource(R.string.support_category_download),
+            stringResource(R.string.support_category_account),
+            stringResource(R.string.support_category_performance),
+            stringResource(R.string.support_category_other)
         )
     }
 
@@ -187,14 +187,14 @@ fun SupportScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Suporte",
+                            text = stringResource(R.string.support_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = colorScheme.onSurface
                         )
 
                         Text(
-                            text = "Estamos aqui para ajudar",
+                            text = stringResource(R.string.support_subtitle),
                             style = MaterialTheme.typography.labelSmall,
                             color = colorScheme.onSurfaceVariant
                         )
@@ -210,7 +210,7 @@ fun SupportScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Close,
-                            contentDescription = "Fechar",
+                            contentDescription = stringResource(R.string.support_close),
                             tint = colorScheme.onSurface
                         )
                     }
@@ -278,7 +278,7 @@ fun SupportScreen(
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = "Central de Suporte",
+                                text = stringResource(R.string.support_center_title),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = colorScheme.onPrimaryContainer
@@ -287,7 +287,7 @@ fun SupportScreen(
                             Spacer(modifier = Modifier.height(3.dp))
 
                             Text(
-                                text = "Fale diretamente com a equipe do Auris.",
+                                text = stringResource(R.string.support_center_description),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = colorScheme.onPrimaryContainer.copy(alpha = 0.78f)
                             )
@@ -315,7 +315,7 @@ fun SupportScreen(
                             Spacer(modifier = Modifier.width(8.dp))
 
                             Text(
-                                text = "Quanto mais detalhes você fornecer, mais fácil será resolver o problema.",
+                                text = stringResource(R.string.support_info_message),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                             )
@@ -347,14 +347,14 @@ fun SupportScreen(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "Enviar mensagem",
+                            text = stringResource(R.string.support_send_message_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = colorScheme.onSurface
                         )
 
                         Text(
-                            text = "Preencha os campos abaixo.",
+                            text = stringResource(R.string.support_send_message_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = colorScheme.onSurfaceVariant
                         )
@@ -375,10 +375,10 @@ fun SupportScreen(
                             }
                         },
                         label = {
-                            Text("Nome")
+                            Text(stringResource(R.string.support_name_label))
                         },
                         placeholder = {
-                            Text("Como podemos chamar você?")
+                            Text(stringResource(R.string.support_name_placeholder))
                         },
                         leadingIcon = {
                             Icon(
@@ -410,10 +410,10 @@ fun SupportScreen(
                             }
                         },
                         label = {
-                            Text("E-mail")
+                            Text(stringResource(R.string.support_email_label))
                         },
                         placeholder = {
-                            Text("seu@email.com")
+                            Text(stringResource(R.string.support_email_placeholder))
                         },
                         leadingIcon = {
                             Icon(
@@ -455,23 +455,23 @@ fun SupportScreen(
                             readOnly = true,
 
                             label = {
-                                Text("Categoria")
+                                Text(stringResource(R.string.support_category_label))
                             },
 
                             placeholder = {
-                                Text("Selecione o assunto")
+                                Text(stringResource(R.string.support_category_placeholder))
                             },
 
                             leadingIcon = {
                                 Icon(
                                     imageVector = when {
-                                        category.contains("Bug", true) ->
+                                        category.contains(stringResource(R.string.support_category_bug), true) ->
                                             Icons.Rounded.BugReport
 
-                                        category.contains("Sugestão", true) ->
+                                        category.contains(stringResource(R.string.support_category_suggestion), true) ->
                                             Icons.Rounded.Lightbulb
 
-                                        category.contains("Idioma", true) ->
+                                        category.contains(stringResource(R.string.support_category_translation), true) ->
                                             Icons.Rounded.Language
 
                                         else ->
@@ -525,16 +525,16 @@ fun SupportScreen(
                                     leadingIcon = {
                                         Icon(
                                             imageVector = when {
-                                                option.contains("Bug", true) ->
+                                                option.contains(stringResource(R.string.support_category_bug), true) ->
                                                     Icons.Rounded.BugReport
 
-                                                option.contains("Sugestão", true) ->
+                                                option.contains(stringResource(R.string.support_category_suggestion), true) ->
                                                     Icons.Rounded.Lightbulb
 
-                                                option.contains("Idioma", true) ->
+                                                option.contains(stringResource(R.string.support_category_translation), true) ->
                                                     Icons.Rounded.Language
 
-                                                option.contains("Compatibilidade", true) ->
+                                                option.contains(stringResource(R.string.support_category_compatibility), true) ->
                                                     Icons.Rounded.Devices
 
                                                 else ->
@@ -580,13 +580,11 @@ fun SupportScreen(
                         },
 
                         label = {
-                            Text("Mensagem")
+                            Text(stringResource(R.string.support_message_label))
                         },
 
                         placeholder = {
-                            Text(
-                                "Descreva o problema, dúvida ou sugestão com o máximo de detalhes possível..."
-                            )
+                            Text(stringResource(R.string.support_message_placeholder))
                         },
 
                         modifier = Modifier
@@ -638,14 +636,14 @@ fun SupportScreen(
 
                             Column {
                                 Text(
-                                    text = "Anexo",
+                                    text = stringResource(R.string.support_attachment_title),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.SemiBold,
                                     color = colorScheme.onSurface
                                 )
 
                                 Text(
-                                    text = "Opcional • JPG, PNG ou imagem equivalente",
+                                    text = stringResource(R.string.support_attachment_subtitle),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = colorScheme.onSurfaceVariant
                                 )
@@ -669,7 +667,7 @@ fun SupportScreen(
 
                                 Spacer(modifier = Modifier.width(8.dp))
 
-                                Text("Selecionar imagem")
+                                Text(stringResource(R.string.support_select_image_button))
                             }
 
                         } else {
@@ -695,7 +693,7 @@ fun SupportScreen(
                                             .crossfade(true)
                                             .build(),
 
-                                        contentDescription = "Imagem anexada",
+                                        contentDescription = stringResource(R.string.support_attached_image_description),
 
                                         modifier = Modifier
                                             .size(64.dp)
@@ -710,13 +708,13 @@ fun SupportScreen(
                                         modifier = Modifier.weight(1f)
                                     ) {
                                         Text(
-                                            text = "Imagem anexada",
+                                            text = stringResource(R.string.support_attached_image_title),
                                             fontWeight = FontWeight.SemiBold,
                                             color = colorScheme.onSurface
                                         )
 
                                         Text(
-                                            text = "A imagem será enviada junto com sua mensagem.",
+                                            text = stringResource(R.string.support_attached_image_subtitle),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = colorScheme.onSurfaceVariant
                                         )
@@ -730,7 +728,7 @@ fun SupportScreen(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Rounded.Close,
-                                            contentDescription = "Remover imagem"
+                                            contentDescription = stringResource(R.string.support_remove_image)
                                         )
                                     }
                                 }
@@ -770,26 +768,26 @@ fun SupportScreen(
                                 Spacer(modifier = Modifier.width(8.dp))
 
                                 Text(
-                                    text = "Informações técnicas",
+                                    text = stringResource(R.string.support_technical_info_title),
                                     fontWeight = FontWeight.SemiBold,
                                     color = colorScheme.onSurface
                                 )
                             }
 
                             Text(
-                                text = "Dispositivo: $device",
+                                text = stringResource(R.string.support_technical_device, device),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = colorScheme.onSurfaceVariant
                             )
 
                             Text(
-                                text = "Android: $androidVersion",
+                                text = stringResource(R.string.support_technical_android, androidVersion),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = colorScheme.onSurfaceVariant
                             )
 
                             Text(
-                                text = "Versão do Auris: $appVersion",
+                                text = stringResource(R.string.support_technical_version, appVersion),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = colorScheme.onSurfaceVariant
                             )
@@ -863,13 +861,13 @@ fun SupportScreen(
                             // Validação
                             when {
                                 name.isBlank() -> {
-                                    sendStatus = "Informe seu nome."
+                                    sendStatus = stringResource(R.string.support_error_name)
                                     isSuccess = false
                                     return@Button
                                 }
 
                                 email.isBlank() -> {
-                                    sendStatus = "Informe seu e-mail."
+                                    sendStatus = stringResource(R.string.support_error_email)
                                     isSuccess = false
                                     return@Button
                                 }
@@ -878,33 +876,32 @@ fun SupportScreen(
                                     .matcher(email.trim())
                                     .matches() -> {
 
-                                    sendStatus = "Informe um e-mail válido."
+                                    sendStatus = stringResource(R.string.support_error_email_invalid)
                                     isSuccess = false
                                     return@Button
                                 }
 
                                 category.isBlank() -> {
-                                    sendStatus = "Selecione uma categoria."
+                                    sendStatus = stringResource(R.string.support_error_category)
                                     isSuccess = false
                                     return@Button
                                 }
 
                                 message.isBlank() -> {
-                                    sendStatus = "Escreva uma mensagem."
+                                    sendStatus = stringResource(R.string.support_error_message)
                                     isSuccess = false
                                     return@Button
                                 }
 
                                 message.trim().length < 10 -> {
-                                    sendStatus =
-                                        "Descreva um pouco mais o problema para podermos ajudar."
+                                    sendStatus = stringResource(R.string.support_error_message_short)
                                     isSuccess = false
                                     return@Button
                                 }
                             }
 
                             isSending = true
-                            sendStatus = "Enviando sua mensagem..."
+                            sendStatus = stringResource(R.string.support_sending)
                             isSuccess = false
 
                             scope.launch {
@@ -925,9 +922,7 @@ fun SupportScreen(
 
                                     if (success) {
 
-                                        sendStatus =
-                                            "Mensagem enviada com sucesso! Responderemos em breve."
-
+                                        sendStatus = stringResource(R.string.support_success)
                                         isSuccess = true
 
                                         name = ""
@@ -938,17 +933,13 @@ fun SupportScreen(
 
                                     } else {
 
-                                        sendStatus =
-                                            "Não foi possível enviar sua mensagem. Tente novamente."
-
+                                        sendStatus = stringResource(R.string.support_error_send_failed)
                                         isSuccess = false
                                     }
 
                                 } catch (e: Exception) {
 
-                                    sendStatus =
-                                        "Ocorreu um erro ao enviar. Verifique sua conexão e tente novamente."
-
+                                    sendStatus = stringResource(R.string.support_error_send_exception)
                                     isSuccess = false
                                 }
 
@@ -981,7 +972,7 @@ fun SupportScreen(
                             Spacer(modifier = Modifier.width(10.dp))
 
                             Text(
-                                text = "Enviando...",
+                                text = stringResource(R.string.support_sending_button),
                                 fontWeight = FontWeight.SemiBold
                             )
 
@@ -996,7 +987,7 @@ fun SupportScreen(
                             Spacer(modifier = Modifier.width(9.dp))
 
                             Text(
-                                text = "Enviar mensagem",
+                                text = stringResource(R.string.support_send_button),
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -1024,7 +1015,7 @@ fun SupportScreen(
                         Spacer(modifier = Modifier.width(5.dp))
 
                         Text(
-                            text = "Obrigado por ajudar a melhorar o Auris.",
+                            text = stringResource(R.string.support_footer_text),
                             style = MaterialTheme.typography.labelSmall,
                             color = colorScheme.onSurfaceVariant
                         )

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<!-- Suporte -->
+<string name="support_title">Suporte</string>
+<string name="support_subtitle">Estamos aqui para ajudar</string>
+<string name="support_close">Fechar</string>
+<string name="support_unknown">Desconhecida</string>
+<string name="support_center_title">Central de Suporte</string>
+<string name="support_center_description">Fale diretamente com a equipe do Auris.</string>
+<string name="support_info_message">Quanto mais detalhes você fornecer, mais fácil será resolver o problema.</string>
+<string name="support_send_message_title">Enviar mensagem</string>
+<string name="support_send_message_subtitle">Preencha os campos abaixo.</string>
+<string name="support_name_label">Nome</string>
+<string name="support_name_placeholder">Como podemos chamar você?</string>
+<string name="support_email_label">E-mail</string>
+<string name="support_email_placeholder">seu@email.com</string>
+<string name="support_category_label">Categoria</string>
+<string name="support_category_placeholder">Selecione o assunto</string>
+<string name="support_message_label">Mensagem</string>
+<string name="support_message_placeholder">Descreva o problema, dúvida ou sugestão com o máximo de detalhes possível...</string>
+<string name="support_attachment_title">Anexo</string>
+<string name="support_attachment_subtitle">Opcional • JPG, PNG ou imagem equivalente</string>
+<string name="support_select_image_button">Selecionar imagem</string>
+<string name="support_attached_image_description">Imagem anexada</string>
+<string name="support_attached_image_title">Imagem anexada</string>
+<string name="support_attached_image_subtitle">A imagem será enviada junto com sua mensagem.</string>
+<string name="support_remove_image">Remover imagem</string>
+<string name="support_technical_info_title">Informações técnicas</string>
+<string name="support_technical_device">Dispositivo: %s</string>
+<string name="support_technical_android">Android: %s</string>
+<string name="support_technical_version">Versão do Auris: %s</string>
+<string name="support_footer_text">Obrigado por ajudar a melhorar o Auris.</string>
+<string name="support_error_name">Informe seu nome.</string>
+<string name="support_error_email">Informe seu e-mail.</string>
+<string name="support_error_email_invalid">Informe um e-mail válido.</string>
+<string name="support_error_category">Selecione uma categoria.</string>
+<string name="support_error_message">Escreva uma mensagem.</string>
+<string name="support_error_message_short">Descreva um pouco mais o problema para podermos ajudar.</string>
+<string name="support_sending">Enviando sua mensagem...</string>
+<string name="support_success">Mensagem enviada com sucesso! Responderemos em breve.</string>
+<string name="support_error_send_failed">Não foi possível enviar sua mensagem. Tente novamente.</string>
+<string name="support_error_send_exception">Ocorreu um erro ao enviar. Verifique sua conexão e tente novamente.</string>
+<string name="support_sending_button">Enviando...</string>
+<string name="support_send_button">Enviar mensagem</string>
+
+<!-- Categorias -->
+<string name="support_category_bug">Problema / Bug</string>
+<string name="support_category_doubt">Dúvida</string>
+<string name="support_category_suggestion">Sugestão</string>
+<string name="support_category_playback_issue">Problema com reprodução</string>
+<string name="support_category_compatibility">Compatibilidade</string>
+<string name="support_category_translation">Tradução / Idioma</string>
+<string name="support_category_download">Download / Instalação</string>
+<string name="support_category_account">Conta / Sincronização</string>
+<string name="support_category_performance">Desempenho</string>
+<string name="support_category_other">Outro</string>
+</resources>
