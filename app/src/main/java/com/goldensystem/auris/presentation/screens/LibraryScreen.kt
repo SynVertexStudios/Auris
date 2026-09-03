@@ -439,49 +439,57 @@ fun LibraryScreen(
     playlistViewModel: PlaylistViewModel = hiltViewModel(),
     libraryViewModel: LibraryViewModel = hiltViewModel(),
     songInfoBottomSheetViewModel: SongInfoBottomSheetViewModel = hiltViewModel(),
-    telegramDashboardViewModel: TelegramDashboardViewModel = hiltViewModel()  // ← NOVO
+    telegramDashboardViewModel: TelegramDashboardViewModel = hiltViewModel()
 ) {
-
-    // Estado para sincronização do Telegram
-    val isTelegramSyncing by telegramDashboardViewModel.isRefreshing.collectAsStateWithLifecycle()
-    val telegramChannels by telegramDashboardViewModel.channels.collectAsStateWithLifecycle()
-    val isTelegramConnected by remember(telegramChannels) {
-    derivedStateOf { telegramChannels.isNotEmpty() }}
-    // La recolección de estados de alto nivel se mantiene mínima.
-    val context = LocalContext.current // Added context
+    // ============================================================
+    // 1. PRIMEIRO: Todas as variáveis básicas
+    // ============================================================
+    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val customThemeViewModel: CustomThemeViewModel = hiltViewModel()
     val config by customThemeViewModel.customThemeConfig.collectAsStateWithLifecycle()
     val lastTabIndex by playerViewModel.lastLibraryTabIndexFlow.collectAsStateWithLifecycle()
-    val favoriteIds by playerViewModel.favoriteSongIds.collectAsStateWithLifecycle() // Reintroducir favoriteIds aquí
-    val scope = rememberCoroutineScope() // Mantener si se usa para acciones de UI
-    // Depois de `val scope = rememberCoroutineScope()`, adicione:
-
-// 🔄 Função de refresh que sincroniza TUDO (local + Telegram)
-val refreshAll: () -> Unit = remember(scope, syncManager, telegramDashboardViewModel, telegramChannels) {
-    {
-        // Sincroniza biblioteca local
-        syncManager.incrementalSync()
-        
-        // Sincroniza Telegram se tiver canais
-        if (telegramChannels.isNotEmpty()) {
-            scope.launch {
-                telegramChannels.forEach { channel ->
-                    telegramDashboardViewModel.refreshChannel(channel)
+    val favoriteIds by playerViewModel.favoriteSongIds.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    val syncManager = playerViewModel.syncManager  // ← syncManager declarado AQUI
+    
+    // ============================================================
+    // 2. DEPOIS: Estados do Telegram (usam syncManager? Não, são independentes)
+    // ============================================================
+    val telegramChannels by telegramDashboardViewModel.channels.collectAsStateWithLifecycle()
+    val isTelegramSyncing by telegramDashboardViewModel.isRefreshing.collectAsStateWithLifecycle()
+    val isTelegramConnected by remember(telegramChannels) {
+        derivedStateOf { telegramChannels.isNotEmpty() }
+    }
+    
+    // ============================================================
+    // 3. AGORA: refreshAll (syncManager já existe)
+    // ============================================================
+    val refreshAll: () -> Unit = remember(scope, syncManager, telegramDashboardViewModel, telegramChannels) {
+        {
+            // Sincroniza biblioteca local
+            syncManager.incrementalSync()
+            
+            // Sincroniza Telegram se tiver canais
+            if (telegramChannels.isNotEmpty()) {
+                scope.launch {
+                    telegramChannels.forEach { channel ->
+                        telegramDashboardViewModel.refreshChannel(channel)
+                    }
                 }
             }
         }
     }
-}
-    val syncManager = playerViewModel.syncManager
+    
+    // ============================================================
+    // 4. RESTO DO CÓDIGO (isRefreshing, etc)
+    // ============================================================
     var isRefreshing by remember { mutableStateOf(false) }
-    // The pull-to-refresh spinner is reserved for user gestures. Automatic sync
-    // and long-running refresh work move through the slim linear indicator under
-    // LibraryActionRow so the list stays put.
     val isFetchingChanges by syncManager.isFetchingChanges
         .collectAsStateWithLifecycle(initialValue = false)
     val isSyncing by syncManager.isSyncing
         .collectAsStateWithLifecycle(initialValue = false)
+        
     // NOTE: syncProgress is NOT collected here. It is collected inside LibrarySyncOverlay
     // to avoid triggering recomposition of the entire LibraryScreen on every progress tick.
 

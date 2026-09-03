@@ -87,7 +87,7 @@
     <string name="cor_gold_metal">Gold</string>
     <string name="cor_silver_metal">Silver</string>
 
-    <!-- EXTRA: usadas no ColorPresets.kt -->
+    <!-- Usadas no ColorPresets.kt -->
     <string name="cor_cyan">Cyan</string>
     <string name="cor_neon">Neon</string>
 </resources>
