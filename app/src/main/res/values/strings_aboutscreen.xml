@@ -71,14 +71,7 @@
     <string name="about_signal_update">Frequent updates</string>
 
     <!-- Here we add the latest Auris version updates. PAY CLOSE ATTENTION to the use of \n• and be very careful when formatting. -->
-    <string name="about_changelog_text">
-• Improvements to the Custom Theme feature.\n
-• Support for larger wallpapers.\n
-• Performance improvements.\n
-• You can now add wallpapers to Auris. Simply go to Settings > Appearance, select Custom Theme, and use the customization area to make the app your own.\n
-• Visit the official website below to discover more Auris features and updates.\n\n
-Thank you for choosing Auris! ❤️
-</string>
+    <string name="about_changelog_text">• Improvements to the Custom Theme feature.\n• Support for larger wallpapers.\n• Performance improvements.\n• You can now add wallpapers to Auris. Simply go to Settings &gt; Appearance, select Custom Theme, and use the customization area to make the app your own.\n• Visit the official website below to discover more Auris features and updates.\n\nThank you for choosing Auris! ❤️</string>
 
     <!-- Auris screen? (Expanded AboutScreen) BE VERY CAREFUL, THESE LINES ARE NO LONGER USED. The "about_changelog_title" string is now used instead. -->
     <string name="about_changelog_title">What's New</string>

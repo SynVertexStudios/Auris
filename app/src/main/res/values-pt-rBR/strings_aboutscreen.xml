@@ -78,14 +78,7 @@
     
     
       <!-- Aqui em baixo agente coloca as novidades da versao atual do auris, peste muita ATENCAO no uso de \n•, e muinto cuidado ao formatar -->
-  <string name="about_changelog_text">
-• Melhora na função do Tema Personalizado.\n
-• Suporte a papéis de parede mais amplos.\n
-• Melhorias de desempenho.\n
-• Agora você pode adicionar papéis de parede ao Auris. Basta acessar Configurações > Aparência, selecionar o Tema Personalizado e usar a área de personalização para deixar o aplicativo do seu jeito.\n
-• Acesse o site oficial abaixo para conhecer mais recursos e novidades do Auris.\n\n
-Obrigado por escolher o Auris! ❤️
-</string>
+<string name="about_changelog_text">• Melhorias na função de Tema Personalizado.\n• Suporte a papéis de parede mais amplos.\n• Melhorias de desempenho.\n• Agora você pode adicionar papéis de parede ao Auris. Basta acessar Configurações &gt; Aparência, selecionar o Tema Personalizado e usar a área de personalização para deixar o aplicativo do seu jeito.\n• Acesse o site oficial abaixo para conhecer mais recursos e novidades do Auris.\n\nObrigado por escolher o Auris! ❤️</string>
     <!-- ^^^^^^^^^^^^^^^^^^^^^^^^^^^
         fim das novidades da versao -->
     
