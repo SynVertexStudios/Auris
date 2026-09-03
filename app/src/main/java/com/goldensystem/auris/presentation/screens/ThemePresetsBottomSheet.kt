@@ -76,7 +76,7 @@ fun ThemePresetsBottomSheet(
         }
     }
 
-    var selectedPresetName by remember { mutableStateOf<String?>(null) }
+    var selectedPresetName by remember { mutableStateOf<Int?>(null) }
     
     // Se não houver seleção manual, usa o preset detectado
     val displayPresetName = selectedPresetName ?: currentPresetName
@@ -262,7 +262,7 @@ fun ThemePresetsBottomSheet(
                                 Spacer(modifier = Modifier.width(12.dp))
 
                                 Text(
-                                    text = preset.name,
+                                    text = stringResource(preset.name),  // ← ARRUMADO!
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = if (isSelected)
                                         FontWeight.Bold
