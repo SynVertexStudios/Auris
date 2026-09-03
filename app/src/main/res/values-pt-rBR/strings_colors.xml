@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Básicas e Neutras -->
+    <string name="cor_vermelho">Vermelho</string>
+    <string name="cor_amarelo">Amarelo</string>
+    <string name="cor_azul">Azul</string>
+    <string name="cor_verde">Verde</string>
+    <string name="cor_laranja">Laranja</string>
+    <string name="cor_roxo">Roxo</string>
+    <string name="cor_violeta">Violeta</string>
+    <string name="cor_preto">Preto</string>
+    <string name="cor_branco">Branco</string>
+    <string name="cor_cinza">Cinza</string>
+    <string name="cor_marrom">Marrom</string>
+    <string name="cor_castanho">Castanho</string>
+    <string name="cor_rosa">Rosa</string>
+    <string name="cor_bege">Bege</string>
+    <string name="cor_lilas">Lilás</string>
+
+    <!-- Claras -->
+    <string name="cor_rosa_palido">Rosa pálido</string>
+    <string name="cor_amarelo_claro">Amarelo claro</string>
+    <string name="cor_azul_ceu">Azul céu</string>
+    <string name="cor_verde_menta">Verde menta</string>
+    <string name="cor_cinza_claro">Cinza claro</string>
+    <string name="cor_marfim">Marfim</string>
+    <string name="cor_creme">Creme</string>
+    <string name="cor_azul_bebe">Azul bebê</string>
+
+    <!-- Escuras -->
+    <string name="cor_vermelho_vinho">Vermelho vinho</string>
+    <string name="cor_bordo">Bordô</string>
+    <string name="cor_azul_marinho">Azul marinho</string>
+    <string name="cor_azul_meia_noite">Azul meia-noite</string>
+    <string name="cor_verde_floresta">Verde floresta</string>
+    <string name="cor_verde_oliva">Verde oliva</string>
+    <string name="cor_cinza_carvao">Cinza carvão</string>
+    <string name="cor_roxo_profundo">Roxo profundo</string>
+    <string name="cor_marrom_escuro">Marrom escuro</string>
+
+    <!-- Vibrantes e Especiais -->
+    <string name="cor_dourado">Dourado</string>
+    <string name="cor_prateado">Prateado</string>
+    <string name="cor_turquesa">Turquesa</string>
+    <string name="cor_azul_agua">Azul água</string>
+    <string name="cor_agua_marinha">Água-marinha</string>
+    <string name="cor_ambar">Âmbar</string>
+    <string name="cor_magenta">Magenta</string>
+
+    <!-- Vermelhos -->
+    <string name="cor_vermelho_escuro">Vermelho escuro</string>
+    <string name="cor_vermelho_alaranjado">Vermelho alaranjado</string>
+    <string name="cor_vermelho_arroxeado">Vermelho arroxeado</string>
+    <string name="cor_carmim">Carmim</string>
+    <string name="cor_cereja">Cereja</string>
+
+    <!-- Amarelos -->
+    <string name="cor_amarelo_esverdeado">Amarelo esverdeado</string>
+    <string name="cor_amarelo_alaranjado">Amarelo alaranjado</string>
+    <string name="cor_amarelo_ouro">Amarelo ouro</string>
+    <string name="cor_amarelo_queimado">Amarelo queimado</string>
+
+    <!-- Azuis -->
+    <string name="cor_azul_escuro">Azul escuro</string>
+    <string name="cor_azul_esverdeado">Azul esverdeado</string>
+    <string name="cor_azul_petroleo">Azul petróleo</string>
+    <string name="cor_azul_turquesa">Azul turquesa</string>
+    <string name="cor_azul_celeste">Azul celeste</string>
+    <string name="cor_anil">Anil</string>
+
+    <!-- Verdes -->
+    <string name="cor_verde_claro">Verde claro</string>
+    <string name="cor_verde_escuro">Verde escuro</string>
+    <string name="cor_verde_limao">Verde limão</string>
+
+    <!-- Roxos/Violetas -->
+    <string name="cor_violeta_azulado">Violeta azulado</string>
+    <string name="cor_purpura">Púrpura</string>
+    <string name="cor_lavanda">Lavanda</string>
+
+    <!-- Laranjas -->
+    <string name="cor_pessego">Pêssego</string>
+    <string name="cor_salmao">Salmão</string>
+
+    <!-- Neutros e Terrosos -->
+    <string name="cor_caramelo">Caramelo</string>
+    <string name="cor_ouro">Ouro</string>
+    <string name="cor_prata">Prata</string>
+    <!-- EXTRA: usadas no ColorPresets.kt -->
+    <string name="cor_cyan">Ciano</string>
+    <string name="cor_neon">Neon</string>
+</resources>

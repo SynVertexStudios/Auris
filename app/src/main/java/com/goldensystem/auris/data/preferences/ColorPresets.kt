@@ -5,13 +5,14 @@ package com.goldensystem.auris.data.preferences
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.goldensystem.auris.R
 
 // ============================================================
 // PREDEFINIÇÕES DE CORES
 // ============================================================
 
 data class ColorPreset(
-    val name: String,
+    val nameResId: Int,  // ← USA R.string.cor_xxx
     val icon: ImageVector,
 
     // Cores para tema escuro
@@ -84,15 +85,10 @@ data class PresetColors(
 
 val COLOR_PRESETS = listOf(
 
-
     // AZUL
-
-
     ColorPreset(
-        name = "Azul",
+        nameResId = R.string.cor_blue,
         icon = Icons.Rounded.WaterDrop,
-
-        // DARK
         darkPrimaryColor = 0xFF0D5AA1.toInt(),
         darkSecondaryColor = 0xFF1E88E5.toInt(),
         darkBackgroundColor = 0xFF00101C.toInt(),
@@ -103,8 +99,6 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerLowColor = 0xFF00101C.toInt(),
         darkSurfaceContainerHighColor = 0xFF002C4A.toInt(),
         darkSurfaceContainerLowestColor = 0xFF000A14.toInt(),
-
-        // LIGHT
         lightPrimaryColor = 0xFF608DC0.toInt(),
         lightSecondaryColor = 0xFF1976D2.toInt(),
         lightBackgroundColor = 0xFFF5F9FF.toInt(),
@@ -117,15 +111,10 @@ val COLOR_PRESETS = listOf(
         lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
 
-
     // VERMELHO
-
-
     ColorPreset(
-        name = "Vermelho",
+        nameResId = R.string.cor_red,
         icon = Icons.Rounded.Whatshot,
-
-        // DARK
         darkPrimaryColor = 0xFFD32F2F.toInt(),
         darkSecondaryColor = 0xFFF44336.toInt(),
         darkBackgroundColor = 0xFF0E0000.toInt(),
@@ -136,8 +125,6 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerLowColor = 0xFF0E0000.toInt(),
         darkSurfaceContainerHighColor = 0xFF2F0000.toInt(),
         darkSurfaceContainerLowestColor = 0xFF070000.toInt(),
-
-        // LIGHT
         lightPrimaryColor = 0xFFFF7E7E.toInt(),
         lightSecondaryColor = 0xFFD32F2F.toInt(),
         lightBackgroundColor = 0xFFFFF5F5.toInt(),
@@ -150,15 +137,10 @@ val COLOR_PRESETS = listOf(
         lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
 
-
     // CIANO
-
-
     ColorPreset(
-        name = "Ciano",
+        nameResId = R.string.cor_cyan,
         icon = Icons.Rounded.Waves,
-
-        // DARK
         darkPrimaryColor = 0xFF00F5FF.toInt(),
         darkSecondaryColor = 0xFF00BCD4.toInt(),
         darkBackgroundColor = 0xFF00090A.toInt(),
@@ -169,8 +151,6 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerLowColor = 0xFF00090A.toInt(),
         darkSurfaceContainerHighColor = 0xFF002025.toInt(),
         darkSurfaceContainerLowestColor = 0xFF000406.toInt(),
-
-        // LIGHT
         lightPrimaryColor = 0xFF65C8D3.toInt(),
         lightSecondaryColor = 0xFF0097A7.toInt(),
         lightBackgroundColor = 0xFFF2FCFD.toInt(),
@@ -183,15 +163,10 @@ val COLOR_PRESETS = listOf(
         lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
 
-
     // VERDE
-
-
     ColorPreset(
-        name = "Verde",
+        nameResId = R.string.cor_green,
         icon = Icons.Rounded.Park,
-
-        // DARK
         darkPrimaryColor = 0xFF2E7D61.toInt(),
         darkSecondaryColor = 0xFF43A047.toInt(),
         darkBackgroundColor = 0xFF000E00.toInt(),
@@ -202,8 +177,6 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerLowColor = 0xFF000E00.toInt(),
         darkSurfaceContainerHighColor = 0xFF002600.toInt(),
         darkSurfaceContainerLowestColor = 0xFF000700.toInt(),
-
-        // LIGHT
         lightPrimaryColor = 0xFF7BDD80.toInt(),
         lightSecondaryColor = 0xFF388E3C.toInt(),
         lightBackgroundColor = 0xFFF4FBF5.toInt(),
@@ -216,15 +189,10 @@ val COLOR_PRESETS = listOf(
         lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
 
-
     // PRETO
-
-
     ColorPreset(
-        name = "Preto",
+        nameResId = R.string.cor_black,
         icon = Icons.Rounded.DarkMode,
-
-        // DARK
         darkPrimaryColor = 0xFF4D4D4D.toInt(),
         darkSecondaryColor = 0xFF424242.toInt(),
         darkBackgroundColor = 0xFF000000.toInt(),
@@ -235,8 +203,6 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerLowColor = 0xFF000000.toInt(),
         darkSurfaceContainerHighColor = 0xFF2A2A2A.toInt(),
         darkSurfaceContainerLowestColor = 0xFF000000.toInt(),
-
-        // LIGHT
         lightPrimaryColor = 0xFF828282.toInt(),
         lightSecondaryColor = 0xFF616161.toInt(),
         lightBackgroundColor = 0xFFF7F7F7.toInt(),
@@ -249,15 +215,10 @@ val COLOR_PRESETS = listOf(
         lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
 
-
     // ROSA
-
-
     ColorPreset(
-        name = "Rosa",
+        nameResId = R.string.cor_pink,
         icon = Icons.Rounded.Favorite,
-
-        // DARK
         darkPrimaryColor = 0xFFE91E63.toInt(),
         darkSecondaryColor = 0xFFE91E63.toInt(),
         darkBackgroundColor = 0xFF2A000E.toInt(),
@@ -268,8 +229,6 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerLowColor = 0xFF2A000E.toInt(),
         darkSurfaceContainerHighColor = 0xFF4A001A.toInt(),
         darkSurfaceContainerLowestColor = 0xFF150007.toInt(),
-
-        // LIGHT
         lightPrimaryColor = 0xFFFF7EB1.toInt(),
         lightSecondaryColor = 0xFFD81B60.toInt(),
         lightBackgroundColor = 0xFFFFF4F8.toInt(),
@@ -282,15 +241,10 @@ val COLOR_PRESETS = listOf(
         lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
 
-
     // ROXO
-
-
     ColorPreset(
-        name = "Roxo",
+        nameResId = R.string.cor_purple,
         icon = Icons.Rounded.AutoAwesome,
-
-        // DARK
         darkPrimaryColor = 0xFF7B1FA2.toInt(),
         darkSecondaryColor = 0xFFAB47BC.toInt(),
         darkBackgroundColor = 0xFF150018.toInt(),
@@ -301,8 +255,6 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerLowColor = 0xFF150018.toInt(),
         darkSurfaceContainerHighColor = 0xFF350042.toInt(),
         darkSurfaceContainerLowestColor = 0xFF0A000C.toInt(),
-
-        // LIGHT
         lightPrimaryColor = 0xFF884BA2.toInt(),
         lightSecondaryColor = 0xFF8E24AA.toInt(),
         lightBackgroundColor = 0xFFFBF5FC.toInt(),
@@ -315,15 +267,10 @@ val COLOR_PRESETS = listOf(
         lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
 
-
     // AMARELO
-
-
     ColorPreset(
-        name = "Amarelo",
+        nameResId = R.string.cor_yellow,
         icon = Icons.Rounded.WbSunny,
-
-        // DARK
         darkPrimaryColor = 0xFFF9A825.toInt(),
         darkSecondaryColor = 0xFFFFD54F.toInt(),
         darkBackgroundColor = 0xFF090900.toInt(),
@@ -334,8 +281,6 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerLowColor = 0xFF090900.toInt(),
         darkSurfaceContainerHighColor = 0xFF1F1F00.toInt(),
         darkSurfaceContainerLowestColor = 0xFF040400.toInt(),
-
-        // LIGHT
         lightPrimaryColor = 0xFFFFF489.toInt(),
         lightSecondaryColor = 0xFFF9A225.toInt(),
         lightBackgroundColor = 0xFFFFFCF2.toInt(),
@@ -348,15 +293,10 @@ val COLOR_PRESETS = listOf(
         lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
 
-
     // LARANJA
-
-
     ColorPreset(
-        name = "Laranja",
+        nameResId = R.string.cor_orange,
         icon = Icons.Rounded.Whatshot,
-
-        // DARK
         darkPrimaryColor = 0xFFE65100.toInt(),
         darkSecondaryColor = 0xFFFF9800.toInt(),
         darkBackgroundColor = 0xFF0F0A00.toInt(),
@@ -367,8 +307,6 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerLowColor = 0xFF0F0A00.toInt(),
         darkSurfaceContainerHighColor = 0xFF2F1E00.toInt(),
         darkSurfaceContainerLowestColor = 0xFF080500.toInt(),
-
-        // LIGHT
         lightPrimaryColor = 0xFFE6986E.toInt(),
         lightSecondaryColor = 0xFFEF6C00.toInt(),
         lightBackgroundColor = 0xFFFFF8F3.toInt(),
@@ -381,15 +319,10 @@ val COLOR_PRESETS = listOf(
         lightSurfaceContainerLowestColor = 0xFFFFFFFF.toInt()
     ),
 
-
     // NEON
-
-
     ColorPreset(
-        name = "Neon",
+        nameResId = R.string.cor_neon,
         icon = Icons.Rounded.Bolt,
-
-        // DARK
         darkPrimaryColor = 0xFF00FF84.toInt(),
         darkSecondaryColor = 0xFF00E2FF.toInt(),
         darkBackgroundColor = 0xFF1A1A1A.toInt(),
@@ -400,8 +333,6 @@ val COLOR_PRESETS = listOf(
         darkSurfaceContainerLowColor = 0xFF1A1A1A.toInt(),
         darkSurfaceContainerHighColor = 0xFF3A3A3A.toInt(),
         darkSurfaceContainerLowestColor = 0xFF0D0D0D.toInt(),
-
-        // LIGHT
         lightPrimaryColor = 0xFF8EFFFE.toInt(),
         lightSecondaryColor = 0xFF008FA3.toInt(),
         lightBackgroundColor = 0xFFF4FFFA.toInt(),

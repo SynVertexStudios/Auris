@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Basic and Neutral -->
+    <string name="cor_red">Red</string>
+    <string name="cor_yellow">Yellow</string>
+    <string name="cor_blue">Blue</string>
+    <string name="cor_green">Green</string>
+    <string name="cor_orange">Orange</string>
+    <string name="cor_purple">Purple</string>
+    <string name="cor_violet">Violet</string>
+    <string name="cor_black">Black</string>
+    <string name="cor_white">White</string>
+    <string name="cor_gray">Gray</string>
+    <string name="cor_brown">Brown</string>
+    <string name="cor_chestnut">Chestnut</string>
+    <string name="cor_pink">Pink</string>
+    <string name="cor_beige">Beige</string>
+    <string name="cor_lilac">Lilac</string>
+
+    <!-- Light Colors -->
+    <string name="cor_light_pink">Light pink</string>
+    <string name="cor_light_yellow">Light yellow</string>
+    <string name="cor_sky_blue">Sky blue</string>
+    <string name="cor_mint_green">Mint green</string>
+    <string name="cor_light_gray">Light gray</string>
+    <string name="cor_ivory">Ivory</string>
+    <string name="cor_cream">Cream</string>
+    <string name="cor_baby_blue">Baby blue</string>
+
+    <!-- Dark Colors -->
+    <string name="cor_wine_red">Wine red</string>
+    <string name="cor_burgundy">Burgundy</string>
+    <string name="cor_navy_blue">Navy blue</string>
+    <string name="cor_midnight_blue">Midnight blue</string>
+    <string name="cor_forest_green">Forest green</string>
+    <string name="cor_olive_green">Olive green</string>
+    <string name="cor_charcoal_gray">Charcoal gray</string>
+    <string name="cor_deep_purple">Deep purple</string>
+    <string name="cor_dark_brown">Dark brown</string>
+
+    <!-- Vibrant and Special -->
+    <string name="cor_gold">Gold</string>
+    <string name="cor_silver">Silver</string>
+    <string name="cor_turquoise">Turquoise</string>
+    <string name="cor_aqua">Aqua</string>
+    <string name="cor_aquamarine">Aquamarine</string>
+    <string name="cor_amber">Amber</string>
+    <string name="cor_magenta">Magenta</string>
+
+    <!-- Reds -->
+    <string name="cor_dark_red">Dark red</string>
+    <string name="cor_reddish_orange">Reddish orange</string>
+    <string name="cor_reddish_purple">Reddish purple</string>
+    <string name="cor_crimson">Crimson</string>
+    <string name="cor_cherry">Cherry</string>
+
+    <!-- Yellows -->
+    <string name="cor_greenish_yellow">Greenish yellow</string>
+    <string name="cor_yellowish_orange">Yellowish orange</string>
+    <string name="cor_golden_yellow">Golden yellow</string>
+    <string name="cor_burnt_yellow">Burnt yellow</string>
+
+    <!-- Blues -->
+    <string name="cor_dark_blue">Dark blue</string>
+    <string name="cor_greenish_blue">Greenish blue</string>
+    <string name="cor_oil_blue">Oil blue</string>
+    <string name="cor_turquoise_blue">Turquoise blue</string>
+    <string name="cor_celeste_blue">Celeste blue</string>
+    <string name="cor_indigo">Indigo</string>
+
+    <!-- Greens -->
+    <string name="cor_light_green">Light green</string>
+    <string name="cor_dark_green">Dark green</string>
+    <string name="cor_lime_green">Lime green</string>
+
+    <!-- Purples/Violets -->
+    <string name="cor_bluish_violet">Bluish violet</string>
+    <string name="cor_purple_purple">Purple</string>
+    <string name="cor_lavender">Lavender</string>
+
+    <!-- Oranges -->
+    <string name="cor_peach">Peach</string>
+    <string name="cor_salmon">Salmon</string>
+
+    <!-- Neutrals and Earthy -->
+    <string name="cor_caramel">Caramel</string>
+    <string name="cor_gold_metal">Gold</string>
+    <string name="cor_silver_metal">Silver</string>
+
+    <!-- EXTRA: usadas no ColorPresets.kt -->
+    <string name="cor_cyan">Cyan</string>
+    <string name="cor_neon">Neon</string>
+</resources>

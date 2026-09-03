@@ -3,7 +3,8 @@
 package com.goldensystem.auris.presentation.screens
 
 import com.goldensystem.auris.presentation.navigation.navigateSafely
-
+import com.goldensystem.auris.data.telegram.TelegramRepository
+import com.goldensystem.auris.presentation.telegram.dashboard.TelegramDashboardViewModel
 import android.os.Trace
 import com.goldensystem.auris.ui.theme.WallpaperBackground
 import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
@@ -437,8 +438,15 @@ fun LibraryScreen(
     playerViewModel: PlayerViewModel = hiltViewModel(),
     playlistViewModel: PlaylistViewModel = hiltViewModel(),
     libraryViewModel: LibraryViewModel = hiltViewModel(),
-    songInfoBottomSheetViewModel: SongInfoBottomSheetViewModel = hiltViewModel()
+    songInfoBottomSheetViewModel: SongInfoBottomSheetViewModel = hiltViewModel(),
+    telegramDashboardViewModel: TelegramDashboardViewModel = hiltViewModel()  // ← NOVO
 ) {
+
+    // Estado para sincronização do Telegram
+    val isTelegramSyncing by telegramDashboardViewModel.isRefreshing.collectAsStateWithLifecycle()
+    val telegramChannels by telegramDashboardViewModel.channels.collectAsStateWithLifecycle()
+    val isTelegramConnected by remember(telegramChannels) {
+    derivedStateOf { telegramChannels.isNotEmpty() }}
     // La recolección de estados de alto nivel se mantiene mínima.
     val context = LocalContext.current // Added context
     val haptic = LocalHapticFeedback.current
@@ -447,6 +455,24 @@ fun LibraryScreen(
     val lastTabIndex by playerViewModel.lastLibraryTabIndexFlow.collectAsStateWithLifecycle()
     val favoriteIds by playerViewModel.favoriteSongIds.collectAsStateWithLifecycle() // Reintroducir favoriteIds aquí
     val scope = rememberCoroutineScope() // Mantener si se usa para acciones de UI
+    // Depois de `val scope = rememberCoroutineScope()`, adicione:
+
+// 🔄 Função de refresh que sincroniza TUDO (local + Telegram)
+val refreshAll: () -> Unit = remember(scope, syncManager, telegramDashboardViewModel, telegramChannels) {
+    {
+        // Sincroniza biblioteca local
+        syncManager.incrementalSync()
+        
+        // Sincroniza Telegram se tiver canais
+        if (telegramChannels.isNotEmpty()) {
+            scope.launch {
+                telegramChannels.forEach { channel ->
+                    telegramDashboardViewModel.refreshChannel(channel)
+                }
+            }
+        }
+    }
+}
     val syncManager = playerViewModel.syncManager
     var isRefreshing by remember { mutableStateOf(false) }
     // The pull-to-refresh spinner is reserved for user gestures. Automatic sync
@@ -1576,7 +1602,7 @@ fun LibraryScreen(
                                             onMoreOptionsClick = stableOnMoreOptionsClick,
                                             isRefreshing = isRefreshing,
                                             onRefresh = {
-                                                onRefresh()
+                                                refreshAll()
                                                 allSongsLazyPagingItems.refresh()
                                             },
                                             isSelectionMode = isSelectionMode,
@@ -1666,7 +1692,7 @@ fun LibraryScreen(
                                             onMoreOptionsClick = stableOnMoreOptionsClick,
                                             isRefreshing = isRefreshing,
                                             onRefresh = {
-                                                onRefresh()
+                                                refreshAll()
                                                 favoritePagingItems.refresh()
                                             },
                                             isSelectionMode = isSelectionMode,
