@@ -54,16 +54,16 @@
     <string name="aurissheet_open">Abrir</string>
         <!-- YouTube -->
     <string name="about_youtube_title">YouTube</string>
-    <string name="about_youtube_subtitle">Inscreva-se no nosso canal no YouTube.</string>
+    <string name="about_youtube_subtitle">Acompanhe o desenvolvimento pelo YouTube.</string>
     <string name="about_youtube_button">Acessar Canal</string>
     <!-- Redes Sociais -->
     <string name="about_social_media_title">Acompanhe-nos pelas redes sociais</string>
     <string name="about_instagram">Instagram</string>
     <string name="about_tiktok">TikTok</string>
         <!-- Site Oficial -->
-    <string name="about_official_website_title">Site Oficial</string>
-    <string name="about_official_website_subtitle">Conheça mais sobre o Auris em nosso site oficial.</string>
-    <string name="about_official_website_button">Visitar Site Oficial</string>
+    <string name="about_official_website_title">WebSite</string>
+    <string name="about_official_website_subtitle">Acompanhe o desenvolvimento, versões betas, ideias, changelog, support e muito mais pelo nosso WebSite.</string>
+    <string name="about_official_website_button">Visitar WebSite</string>
     
     
     
@@ -79,12 +79,9 @@
     
       <!-- Aqui em baixo agente coloca as novidades da versao atual do auris, peste muita ATENCAO no uso de \n•, e muinto cuidado ao formatar -->
   <string name="about_changelog_text">
-• Primeira versão estável do Auris.\n\n
-• Adição do tema personalizado.\n
-• Suporte a papéis de parede.\n
+• Melhora na função do Tema Personalizado.\n
+• Suporte a papéis de parede mais amplos.\n
 • Melhorias de desempenho.\n
-• Suporte aos idiomas Português e Inglês.\n
-• Agora você pode deixar o player transparente em Configurações > Aparência > Tema do Player > Dinâmico do Sistema.\n
 • Agora você pode adicionar papéis de parede ao Auris. Basta acessar Configurações > Aparência, selecionar o Tema Personalizado e usar a área de personalização para deixar o aplicativo do seu jeito.\n
 • Acesse o site oficial abaixo para conhecer mais recursos e novidades do Auris.\n\n
 Obrigado por escolher o Auris! ❤️

@@ -210,7 +210,7 @@ fun AboutScreen(
         role = stringResource(R.string.contributor_regiane_role),
         detail = stringResource(R.string.contributor_regiane_detail),
         avatarUrl =
-            "https://raw.githubusercontent.com/synvertexstudios/Auris/assets/avatar/avatar24.png",
+            "https://raw.githubusercontent.com/SynVertexStudios/Auris/refs/heads/main/assets/avatar/avatar24.png",
         iconRes = R.drawable.ic_music_placeholder,
         githubUrl = "https://github.com/synvertexstudios",
     )

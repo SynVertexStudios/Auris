@@ -1,119 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- About screen strings (contributors) -->
     <string name="contributor_theo_display_name">Theo Vilardo</string>
-    <string name="contributor_theo_role">Original creator</string>
+    <string name="contributor_theo_role">Creator</string>
     <string name="contributor_theo_detail">This is the original creator of PixelPlayer.</string>
 
     <string name="contributor_auris_display_name">SYN Vertex</string>
-    <string name="contributor_auris_role">Auris maintainer</string>
-    <string name="contributor_auris_detail">Creator of the modified version of Auris.</string>
+    <string name="contributor_auris_role">Auris Maintainer</string>
+    <string name="contributor_auris_detail">Creator of Auris.</string>
 
-<string name="contributor_regiane_display_name">Nebulosa</string>
-<string name="contributor_regiane_role">Auris Contributor</string>
-<string name="contributor_regiane_detail"></string>
+    <string name="contributor_regiane_display_name">Nebulosa</string>
+    <string name="contributor_regiane_role">Auris Contributor</string>
+    <string name="contributor_regiane_detail"></string>
 
     <string name="contributor_lostf1sh_display_name">@lostf1sh</string>
-    <string name="contributor_lostf1sh_role">Most active contributor</string>
-    <string name="contributor_lostf1sh_detail">Has contributed enormously across core features, architecture and reliability.</string>
-    <string name="contributor_lostf1sh_badge">Top Impact</string>
+    <string name="contributor_lostf1sh_role">Most Active Contributor</string>
+    <string name="contributor_lostf1sh_detail">Made major contributions to features, architecture, and reliability.</string>
+    <string name="contributor_lostf1sh_badge">Greatest Impact</string>
 
     <string name="contributor_cromaguy_display_name">@cromaguy</string>
-    <string name="contributor_cromaguy_role">Rhythm developer</string>
-    <string name="contributor_cromaguy_detail">Developer of Rhythm (another music app) and key community supporter.</string>
+    <string name="contributor_cromaguy_role">Rhythm Developer</string>
+    <string name="contributor_cromaguy_detail">Developer of Rhythm (another music app) and a great supporter of the community.</string>
     <string name="contributor_cromaguy_badge">Community Ally</string>
 
     <string name="contributor_colby_display_name">@ColbyCabrera</string>
-    <string name="contributor_colby_role">Early contributor</string>
-    <string name="contributor_colby_detail">Helped shape Auris in the first stages of the app.</string>
+    <string name="contributor_colby_role">First Contributor</string>
+    <string name="contributor_colby_detail">Helped shape Auris during its early stages.</string>
     <string name="contributor_colby_badge">Early Support</string>
-
-
-
-    <string name="donate_title">Support development</string>
-    <string name="donate_subtitle">Your contribution keeps Auris alive ❤️</string>
-    <string name="donate_pix_title">PIX</string>
-    <string name="donate_pix_key">Random key</string>
-    <string name="donate_pix_copied">Key copied!</string>
-    <string name="donate_pix_button">Open bank app</string>
-    <string name="donate_other_methods">Other ways to contribute</string>
-    <string name="donate_paypal">PayPal</string>
-    <string name="donate_github">GitHub Sponsors</string>
-    <string name="donate_thanks">💝 Thank you for your support!</string>
-
 
     <!-- About Screen - Golden System -->
     <string name="contributor_golden_role">Company</string>
-
     <string name="contributor_golden_detail">Company responsible for the development and maintenance of Auris</string>
 
     <!-- Social Media Descriptions -->
     <string name="cd_open_instagram">Open Instagram</string>
     <string name="cd_open_tiktok">Open TikTok</string>
-    <string name="custom_theme_subtitle">Customize the apps colors and wallpapers</string>
+
+    <!-- aurisbuttonsheet -->
+    <!-- Custom Theme -->
+    <string name="custom_theme_subtitle">Customize the app's colors and wallpapers</string>
     <string name="custom_theme_open">Open Custom Theme</string>
+
     <!-- Video Gallery -->
     <string name="video_gallery_title">Videos</string>
     <string name="video_gallery_subtitle">Watch videos directly in the app</string>
     <string name="video_gallery_open">Open Video Gallery</string>
+
     <!-- About Sheet - New Features -->
     <string name="aurissheet_newfeatures">New Features</string>
     <string name="aurissheet_custom_theme_subtitle">Customize colors and wallpapers</string>
     <string name="aurissheet_video_subtitle">Watch videos in the app</string>
     <string name="aurissheet_open">Open</string>
-    
-     <!-- About Screen - Update -->
-    <string name="about_signal_update">Frequent Updates</string> 
- 
-
-
-
-
-      <!-- Aqui em baixo agente coloca as novidades da versao atual do auris, peste muita ATENCAO no uso de \n•, e muinto cuidado ao formatar -->
-    <string name="about_changelog_text">
-• First stable release of Auris.\n\n
-• Added custom theme support.\n
-• Wallpaper support.\n
-• Performance improvements.\n
-• Support for Portuguese and English.\n
-• You can now make the player transparent by going to Settings > Appearance > Player Theme > Dynamic System.\n
-• You can now add wallpapers to Auris. Go to Settings > Appearance, select the Custom Theme, and use the customization panel to personalize the app your way.\n
-• Visit the official website below to learn more about Auris and discover all its features.\n\n
-Thank you for choosing Auris! ❤️
-</string>
-    <!-- ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        fim das novidades da versao -->
-    
-    
-    
-    
-        <!-- About screen (expanded)
-    MUITA ATENCAO, ESSAS LINHAS NAO ESTAO MAIS SENDO ULTILIZADAS, AGORA E ULTILIZADO A STRING "about_changelog_title" -->
-    <string name="about_changelog_title">What\'s new</string>
-    <string name="about_changelog_item_1">• Version 1.0.1: First stable Auris release</string>
-    <string name="about_changelog_item_2">• Custom light theme (golden yellow and black)</string>
-    <string name="about_changelog_item_3">• Video gallery with built-in player</string>
-    <string name="about_changelog_item_4">• Automatic update system via spreadsheet</string>
-    <string name="about_changelog_item_5">• Full Portuguese (Brazil) translation</string>
-    <string name="about_changelog_item_6">• Bug fixes and performance improvements</string>
-    <string name="about_feedback_title">Send your feedback</string>
-    <string name="about_feedback_subtitle">Report bugs, suggest improvements, or send a compliment</string>
-    <string name="about_feedback_button">Open Feedback Center</string>
-    <string name="about_donate_title">Support development</string>
-    <string name="about_donate_subtitle">Contributions help keep Auris free and ad-free</string>
-    <string name="about_donate_button">Make a donation</string>
-    
-        <!-- Site Oficial -->
-    <string name="about_official_website_title">official website</string>
-    <string name="about_official_website_subtitle">Learn more about Auris on our official website.</string>
-    <string name="about_official_website_button">Go to the official website</string>
 
     <!-- YouTube -->
     <string name="about_youtube_title">YouTube</string>
-    <string name="about_youtube_subtitle">Subscribe to our YouTube channel.</string>
+    <string name="about_youtube_subtitle">Follow Auris development on YouTube.</string>
     <string name="about_youtube_button">Visit Channel</string>
 
     <!-- Social Media -->
     <string name="about_social_media_title">Follow us on social media</string>
     <string name="about_instagram">Instagram</string>
     <string name="about_tiktok">TikTok</string>
+
+    <!-- Official Website -->
+    <string name="about_official_website_title">Website</string>
+    <string name="about_official_website_subtitle">Follow development, beta releases, ideas, changelogs, support, and much more on our website.</string>
+    <string name="about_official_website_button">Visit Website</string>
+
+    <!-- About Screen - Update -->
+    <string name="about_signal_update">Frequent updates</string>
+
+    <!-- Here we add the latest Auris version updates. PAY CLOSE ATTENTION to the use of \n• and be very careful when formatting. -->
+    <string name="about_changelog_text">
+• Improvements to the Custom Theme feature.\n
+• Support for larger wallpapers.\n
+• Performance improvements.\n
+• You can now add wallpapers to Auris. Simply go to Settings > Appearance, select Custom Theme, and use the customization area to make the app your own.\n
+• Visit the official website below to discover more Auris features and updates.\n\n
+Thank you for choosing Auris! ❤️
+</string>
+
+    <!-- Auris screen? (Expanded AboutScreen) BE VERY CAREFUL, THESE LINES ARE NO LONGER USED. The "about_changelog_title" string is now used instead. -->
+    <string name="about_changelog_title">What's New</string>
+    <string name="about_changelog_item_1">• Version 1.0.1: First stable version of Auris</string>
+    <string name="about_changelog_item_2">• Custom light theme (golden yellow and black)</string> 
+    <string name="about_changelog_item_3">• Video gallery with integrated player</string>
+    <string name="about_changelog_item_4">• Automatic update system via spreadsheet</string>
+    <string name="about_changelog_item_5">• Full Portuguese (Brazil) translation</string>
+    <string name="about_changelog_item_6">• Bug fixes and performance improvements</string>
+
+    <string name="about_feedback_title">Share your feedback</string>
+    <string name="about_feedback_subtitle">Report bugs, suggest improvements, or leave a compliment</string>
+    <string name="about_feedback_button">Open Feedback Center</string>
+
+    <string name="about_donate_title">Support development</string>
+    <string name="about_donate_subtitle">Contributions help keep Auris free and ad-free</string>
+    <string name="about_donate_button">Make a Donation</string>
 </resources>
