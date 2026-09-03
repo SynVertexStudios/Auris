@@ -1793,9 +1793,8 @@ private fun CopyrightSection() {
             ),
             textAlign = TextAlign.Center,
         )
-
         Text(
-            text = "Copyright (c) 2026 Saymon Silva Pereira",
+            text = "Copyright (c) 2026 SYN Vertex",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                 alpha = 0.65f,
@@ -1821,6 +1820,17 @@ private fun CopyrightSection() {
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                 alpha = 0.5f,
+            ),
+            textAlign = TextAlign.Center,
+        )
+        Spacer(
+            modifier = Modifier.height(5.dp),
+        )
+        Text(
+            text = "By Golden System and SYN Vertex",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                alpha = 0.3f,
             ),
             textAlign = TextAlign.Center,
         )
