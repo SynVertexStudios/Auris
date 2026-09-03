@@ -126,9 +126,9 @@ fun SupportScreen(
         try {
             context.packageManager
                 .getPackageInfo(context.packageName, 0)
-                .versionName ?: stringResource(R.string.support_unknown)
+                .versionName ?: context.getString(R.string.support_unknown)
         } catch (_: Exception) {
-            stringResource(R.string.support_unknown)
+            context.getString(R.string.support_unknown)
         }
     }
 
@@ -146,16 +146,16 @@ fun SupportScreen(
 
     val categories = remember {
         listOf(
-            stringResource(R.string.support_category_bug),
-            stringResource(R.string.support_category_doubt),
-            stringResource(R.string.support_category_suggestion),
-            stringResource(R.string.support_category_playback_issue),
-            stringResource(R.string.support_category_compatibility),
-            stringResource(R.string.support_category_translation),
-            stringResource(R.string.support_category_download),
-            stringResource(R.string.support_category_account),
-            stringResource(R.string.support_category_performance),
-            stringResource(R.string.support_category_other)
+            context.getString(R.string.support_category_bug),
+            context.getString(R.string.support_category_doubt),
+            context.getString(R.string.support_category_suggestion),
+            context.getString(R.string.support_category_playback_issue),
+            context.getString(R.string.support_category_compatibility),
+            context.getString(R.string.support_category_translation),
+            context.getString(R.string.support_category_download),
+            context.getString(R.string.support_category_account),
+            context.getString(R.string.support_category_performance),
+            context.getString(R.string.support_category_other)
         )
     }
 
@@ -465,13 +465,13 @@ fun SupportScreen(
                             leadingIcon = {
                                 Icon(
                                     imageVector = when {
-                                        category.contains(stringResource(R.string.support_category_bug), true) ->
+                                        category.contains(context.getString(R.string.support_category_bug), true) ->
                                             Icons.Rounded.BugReport
 
-                                        category.contains(stringResource(R.string.support_category_suggestion), true) ->
+                                        category.contains(context.getString(R.string.support_category_suggestion), true) ->
                                             Icons.Rounded.Lightbulb
 
-                                        category.contains(stringResource(R.string.support_category_translation), true) ->
+                                        category.contains(context.getString(R.string.support_category_translation), true) ->
                                             Icons.Rounded.Language
 
                                         else ->
@@ -525,16 +525,16 @@ fun SupportScreen(
                                     leadingIcon = {
                                         Icon(
                                             imageVector = when {
-                                                option.contains(stringResource(R.string.support_category_bug), true) ->
+                                                option.contains(context.getString(R.string.support_category_bug), true) ->
                                                     Icons.Rounded.BugReport
 
-                                                option.contains(stringResource(R.string.support_category_suggestion), true) ->
+                                                option.contains(context.getString(R.string.support_category_suggestion), true) ->
                                                     Icons.Rounded.Lightbulb
 
-                                                option.contains(stringResource(R.string.support_category_translation), true) ->
+                                                option.contains(context.getString(R.string.support_category_translation), true) ->
                                                     Icons.Rounded.Language
 
-                                                option.contains(stringResource(R.string.support_category_compatibility), true) ->
+                                                option.contains(context.getString(R.string.support_category_compatibility), true) ->
                                                     Icons.Rounded.Devices
 
                                                 else ->
@@ -861,13 +861,13 @@ fun SupportScreen(
                             // Validação
                             when {
                                 name.isBlank() -> {
-                                    sendStatus = stringResource(R.string.support_error_name)
+                                    sendStatus = context.getString(R.string.support_error_name)
                                     isSuccess = false
                                     return@Button
                                 }
 
                                 email.isBlank() -> {
-                                    sendStatus = stringResource(R.string.support_error_email)
+                                    sendStatus = context.getString(R.string.support_error_email)
                                     isSuccess = false
                                     return@Button
                                 }
@@ -876,32 +876,32 @@ fun SupportScreen(
                                     .matcher(email.trim())
                                     .matches() -> {
 
-                                    sendStatus = stringResource(R.string.support_error_email_invalid)
+                                    sendStatus = context.getString(R.string.support_error_email_invalid)
                                     isSuccess = false
                                     return@Button
                                 }
 
                                 category.isBlank() -> {
-                                    sendStatus = stringResource(R.string.support_error_category)
+                                    sendStatus = context.getString(R.string.support_error_category)
                                     isSuccess = false
                                     return@Button
                                 }
 
                                 message.isBlank() -> {
-                                    sendStatus = stringResource(R.string.support_error_message)
+                                    sendStatus = context.getString(R.string.support_error_message)
                                     isSuccess = false
                                     return@Button
                                 }
 
                                 message.trim().length < 10 -> {
-                                    sendStatus = stringResource(R.string.support_error_message_short)
+                                    sendStatus = context.getString(R.string.support_error_message_short)
                                     isSuccess = false
                                     return@Button
                                 }
                             }
 
                             isSending = true
-                            sendStatus = stringResource(R.string.support_sending)
+                            sendStatus = context.getString(R.string.support_sending)
                             isSuccess = false
 
                             scope.launch {
@@ -922,7 +922,7 @@ fun SupportScreen(
 
                                     if (success) {
 
-                                        sendStatus = stringResource(R.string.support_success)
+                                        sendStatus = context.getString(R.string.support_success)
                                         isSuccess = true
 
                                         name = ""
@@ -933,13 +933,13 @@ fun SupportScreen(
 
                                     } else {
 
-                                        sendStatus = stringResource(R.string.support_error_send_failed)
+                                        sendStatus = context.getString(R.string.support_error_send_failed)
                                         isSuccess = false
                                     }
 
                                 } catch (e: Exception) {
 
-                                    sendStatus = stringResource(R.string.support_error_send_exception)
+                                    sendStatus = context.getString(R.string.support_error_send_exception)
                                     isSuccess = false
                                 }
 
