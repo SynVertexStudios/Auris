@@ -8,9 +8,9 @@
     <string name="contributor_auris_role">Auris maintainer</string>
     <string name="contributor_auris_detail">Creator of the modified version of Auris.</string>
 
-<string name="contributor_auris_regiane_name">Nebulosa</string>
-<string name="contributor_auris_regiane">Auris Contributor</string>
-<string name="contributor_auris_regiane"></string>
+<string name="contributor_regiane_display_name">Nebulosa</string>
+<string name="contributor_regiane_role">Auris Contributor</string>
+<string name="contributor_regiane_detail"></string>
 
     <string name="contributor_lostf1sh_display_name">@lostf1sh</string>
     <string name="contributor_lostf1sh_role">Most active contributor</string>
