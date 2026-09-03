@@ -1,6 +1,8 @@
 package com.goldensystem.auris.presentation.screens
 
 import android.Manifest
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.window.Dialog
 import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
