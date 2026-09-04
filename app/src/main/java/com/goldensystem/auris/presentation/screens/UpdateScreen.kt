@@ -623,21 +623,22 @@ private suspend fun checkDownloadStatus(
                     return
                 }
                 DownloadManager.STATUS_FAILED -> {
-                    val reason = cursor.getInt(
-                        cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON)
-                    )
-                    val errorMessage = when (reason) {
-                        DownloadManager.ERROR_FILE_ALREADY_EXISTS -> 
-                            "Arquivo já existe"
-                        DownloadManager.ERROR_INSUFFICIENT_SPACE -> 
-                            "Espaço insuficiente"
-                        DownloadManager.ERROR_HTTP_DATA_ERROR -> 
-                            "Erro ao baixar dados"
-                        DownloadManager.ERROR_UNHANDLED_HTTP_CODE -> 
-                            "Erro HTTP não tratado"
-                       DownloadManager.ERROR_NETWORK_FAILED -> "Erro de rede"
-                        else -> "Erro desconhecido ($reason)"
-                    }
+    val reason = cursor.getInt(
+        cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON)
+    )
+    val errorMessage = when (reason) {
+        DownloadManager.ERROR_FILE_ALREADY_EXISTS -> 
+            "Arquivo já existe"
+        DownloadManager.ERROR_INSUFFICIENT_SPACE -> 
+            "Espaço insuficiente"
+        DownloadManager.ERROR_HTTP_DATA_ERROR -> 
+            "Erro ao baixar dados"
+        DownloadManager.ERROR_UNHANDLED_HTTP_CODE -> 
+            "Erro HTTP não tratado"
+        DownloadManager.ERROR_CANNOT_RESUME -> 
+            "Não foi possível retomar o download"
+        else -> "Erro desconhecido ($reason)"
+    }
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
                             context,
