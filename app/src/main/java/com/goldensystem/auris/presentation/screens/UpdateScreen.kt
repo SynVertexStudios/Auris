@@ -2,6 +2,7 @@ package com.goldensystem.auris.presentation.screens
 
 import android.Manifest
 import android.app.DownloadManager
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -16,6 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Schedule
@@ -27,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
 import com.goldensystem.auris.BuildConfig
 import com.goldensystem.auris.R
@@ -51,7 +54,6 @@ fun UpdateScreen(
     var isCheckingExisting by remember { mutableStateOf(true) }
     val coroutineScope = rememberCoroutineScope()
 
-    // Launcher para permissão de instalação (Android 8+)
     val installPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
@@ -80,10 +82,9 @@ fun UpdateScreen(
         }
     }
 
-    // Launcher para permissão de notificações (Android 13+)
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { granted ->
+    ) { _ ->
         startDownloadWithCheck(context, updateInfo) { id, existingPath ->
             downloadId = id
             isDownloading = true
@@ -92,7 +93,6 @@ fun UpdateScreen(
         }
     }
 
-    // Verifica se o APK já existe ao iniciar
     LaunchedEffect(updateInfo) {
         isCheckingExisting = true
         existingApkPath = findExistingApk(context, updateInfo.version)
@@ -110,7 +110,6 @@ fun UpdateScreen(
                 existingApkPath = filePath
                 isInstalling = true
                 
-                // Verifica permissão de instalação no Android 8+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     if (!context.packageManager.canRequestPackageInstalls()) {
                         val intent = Intent(
@@ -149,7 +148,6 @@ fun UpdateScreen(
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Header
                 Surface(
                     modifier = Modifier.size(64.dp),
                     shape = MaterialTheme.shapes.medium,
@@ -205,7 +203,6 @@ fun UpdateScreen(
 
                 Spacer(Modifier.height(12.dp))
                 
-                // Versão
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -250,7 +247,6 @@ fun UpdateScreen(
                     }
                 }
 
-                // Changelog
                 updateInfo.changelog?.takeIf { it.isNotBlank() }?.let {
                     Spacer(Modifier.height(12.dp))
                     HorizontalDivider()
@@ -314,7 +310,6 @@ fun UpdateScreen(
                         }
                     }
                     existingApkPath != null -> {
-                        // APK já existe - mostra botão de instalação
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally
@@ -329,7 +324,6 @@ fun UpdateScreen(
                             
                             Button(
                                 onClick = {
-                                    // Verifica permissão de instalação
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                         if (!context.packageManager.canRequestPackageInstalls()) {
                                             val intent = Intent(
@@ -356,7 +350,6 @@ fun UpdateScreen(
                             
                             OutlinedButton(
                                 onClick = {
-                                    // Baixar novamente (sobrescreve)
                                     startDownloadWithCheck(context, updateInfo) { id, existingPath ->
                                         downloadId = id
                                         isDownloading = true
@@ -393,7 +386,6 @@ fun UpdateScreen(
                         }
                     }
                     else -> {
-                        // Botões de ação para baixar
                         Button(
                             onClick = {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -458,15 +450,10 @@ fun UpdateScreen(
     }
 }
 
-// Função para verificar se o APK já existe
 private fun findExistingApk(context: Context, version: String): String? {
     return try {
         val fileName = "auris_update_${version.replace(".", "_")}.apk"
         
-        // Verifica em diferentes locais
-        val possiblePaths = mutableListOf<String>()
-        
-        // 1. Pasta Downloads (Android 10+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val uri = MediaStore.Downloads.EXTERNAL_CONTENT_URI
             val projection = arrayOf(
@@ -492,7 +479,6 @@ private fun findExistingApk(context: Context, version: String): String? {
                         MediaStore.Downloads.EXTERNAL_CONTENT_URI,
                         id
                     )
-                    // Tenta acessar o arquivo para verificar se existe
                     context.contentResolver.openFileDescriptor(contentUri, "r")?.use {
                         return contentUri.toString()
                     }
@@ -500,7 +486,6 @@ private fun findExistingApk(context: Context, version: String): String? {
             }
         }
         
-        // 2. Pasta Downloads (método antigo)
         val downloadsDir = Environment.getExternalStoragePublicDirectory(
             Environment.DIRECTORY_DOWNLOADS
         )
@@ -511,7 +496,6 @@ private fun findExistingApk(context: Context, version: String): String? {
                 return file.absolutePath
             }
             
-            // Verifica se existe com números (ex: auris_update_1_0_0(1).apk)
             val pattern = Regex("auris_update_${version.replace(".", "_")}(?:\\\\((\\d+)\\))?\\\\.apk")
             downloadsDir.listFiles()?.forEach { f ->
                 if (f.isFile && pattern.matches(f.name)) {
@@ -520,7 +504,6 @@ private fun findExistingApk(context: Context, version: String): String? {
             }
         }
         
-        // 3. Cache do app
         val cacheFile = File(context.cacheDir, fileName)
         if (cacheFile.exists()) {
             return cacheFile.absolutePath
@@ -533,22 +516,18 @@ private fun findExistingApk(context: Context, version: String): String? {
     }
 }
 
-// Função melhorada para iniciar download com verificação
 private fun startDownloadWithCheck(
     context: Context,
     updateInfo: AppVersionInfo,
     onResult: (Long, String?) -> Unit
 ) {
-    // Verifica novamente antes de baixar
     val existingPath = findExistingApk(context, updateInfo.version)
     
     if (existingPath != null) {
-        // Já existe, retorna o caminho
         onResult(-1L, existingPath)
         return
     }
     
-    // Inicia download normal
     try {
         val downloadUri = Uri.parse(updateInfo.downloadUrl)
         val fileName = "auris_update_${updateInfo.version.replace(".", "_")}.apk"
@@ -612,13 +591,85 @@ private fun startDownloadWithCheck(
     }
 }
 
-// Resto do código permanece igual...
 private suspend fun checkDownloadStatus(
     context: Context,
     downloadId: Long,
     onComplete: (String?) -> Unit
 ) {
-    // ... (mesmo código anterior)
+    val manager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+    var attempts = 0
+    val maxAttempts = 600
+    
+    while (attempts < maxAttempts) {
+        val query = DownloadManager.Query().setFilterById(downloadId)
+        
+        manager.query(query).use { cursor ->
+            if (!cursor.moveToFirst()) {
+                delay(500)
+                attempts++
+                continue
+            }
+            
+            val status = cursor.getInt(
+                cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)
+            )
+            
+            when (status) {
+                DownloadManager.STATUS_SUCCESSFUL -> {
+                    val filePath = getDownloadedFilePath(context, manager, downloadId, cursor)
+                    withContext(Dispatchers.Main) {
+                        onComplete(filePath)
+                    }
+                    return
+                }
+                DownloadManager.STATUS_FAILED -> {
+                    val reason = cursor.getInt(
+                        cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON)
+                    )
+                    val errorMessage = when (reason) {
+                        DownloadManager.ERROR_FILE_ALREADY_EXISTS -> 
+                            "Arquivo já existe"
+                        DownloadManager.ERROR_INSUFFICIENT_SPACE -> 
+                            "Espaço insuficiente"
+                        DownloadManager.ERROR_HTTP_DATA_ERROR -> 
+                            "Erro ao baixar dados"
+                        DownloadManager.ERROR_UNHANDLED_HTTP_CODE -> 
+                            "Erro HTTP não tratado"
+                        DownloadManager.ERROR_NETWORK_UNSUPPORTED -> 
+                            "Rede não suportada"
+                        else -> "Erro desconhecido ($reason)"
+                    }
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            context,
+                            "Falha no download: $errorMessage",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        onComplete(null)
+                    }
+                    return
+                }
+                DownloadManager.STATUS_PAUSED,
+                DownloadManager.STATUS_RUNNING -> {
+                    delay(500)
+                    attempts++
+                }
+                else -> {
+                    delay(500)
+                    attempts++
+                }
+            }
+        }
+    }
+    
+    withContext(Dispatchers.Main) {
+        Toast.makeText(
+            context,
+            "Download demorou muito. Tente novamente.",
+            Toast.LENGTH_LONG
+        ).show()
+        onComplete(null)
+    }
 }
 
 private fun getDownloadedFilePath(
@@ -627,9 +678,108 @@ private fun getDownloadedFilePath(
     downloadId: Long,
     cursor: android.database.Cursor
 ): String? {
-    // ... (mesmo código anterior)
+    return try {
+        val uri = manager.getUriForDownloadedFile(downloadId)
+        
+        if (uri != null && uri.scheme == "content") {
+            context.contentResolver.openFileDescriptor(uri, "r")?.use { fd ->
+                val file = File(context.cacheDir, "auris_update_${System.currentTimeMillis()}.apk")
+                fd.fileDescriptor?.let { fd2 ->
+                    java.io.FileInputStream(fd2).use { input ->
+                        file.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    file.deleteOnExit()
+                    return file.absolutePath
+                }
+            }
+            return null
+        }
+        
+        val localUri = cursor.getString(
+            cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_URI)
+        )
+        
+        if (!localUri.isNullOrBlank()) {
+            return Uri.parse(localUri).path
+        }
+        
+        null
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
 }
 
 private fun installApk(context: Context, filePath: String) {
-    // ... (mesmo código anterior)
+    try {
+        val file = File(filePath)
+        
+        if (!file.exists()) {
+            Toast.makeText(
+                context,
+                "Arquivo de instalação não encontrado",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (!context.packageManager.canRequestPackageInstalls()) {
+                Toast.makeText(
+                    context,
+                    "Permita a instalação de apps desconhecidos nas configurações",
+                    Toast.LENGTH_LONG
+                ).show()
+                
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                    Uri.parse("package:${context.packageName}")
+                ).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(intent)
+                return
+            }
+        }
+
+        val apkUri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            context.grantUriPermission(
+                "com.android.packageinstaller",
+                apkUri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+        }
+
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(apkUri, "application/vnd.android.package-archive")
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+        } else {
+            Toast.makeText(
+                context,
+                "Nenhum instalador encontrado",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+
+    } catch (e: Exception) {
+        Toast.makeText(
+            context,
+            "Erro ao instalar: ${e.message}",
+            Toast.LENGTH_LONG
+        ).show()
+        e.printStackTrace()
+    }
 }
