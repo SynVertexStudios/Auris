@@ -635,8 +635,7 @@ private suspend fun checkDownloadStatus(
                             "Erro ao baixar dados"
                         DownloadManager.ERROR_UNHANDLED_HTTP_CODE -> 
                             "Erro HTTP não tratado"
-                        DownloadManager.ERROR_NETWORK_UNSUPPORTED -> 
-                            "Rede não suportada"
+                       DownloadManager.ERROR_NETWORK_FAILED -> "Erro de rede"
                         else -> "Erro desconhecido ($reason)"
                     }
                     withContext(Dispatchers.Main) {
