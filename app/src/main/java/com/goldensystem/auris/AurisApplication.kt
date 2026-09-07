@@ -87,6 +87,9 @@ class AurisApplication : Application(), ImageLoaderFactory, Configuration.Provid
 
     override fun onCreate() {
         super.onCreate()
+        CoroutineScope(Dispatchers.IO).launch {
+            telegramCacheManager.enforceStorageLimit()
+        }
 
         // Benchmark variant intentionally restarts/kills app process during tests.
         // Avoid persisting those events as user-facing crash reports.

@@ -42,29 +42,27 @@ companion object {
  * Deleta os arquivos mais antigos primeiro (LRU)
  * Chama isso SEMPRE que um download terminar
  */
+// TelegramCacheManager.kt
+
 suspend fun enforceStorageLimit() {
     try {
         val filesDir = File(context.filesDir, "tdlib_files")
         if (!filesDir.exists()) return
 
-        // 1. PEGA TODOS OS ARQUIVOS
+        // 1. LISTA TODOS OS ARQUIVOS COM DATA
         val allFiles = filesDir.walkTopDown()
             .filter { it.isFile }
             .map { file ->
-                Triple(
-                    file,
-                    file.length(),
-                    file.lastModified()  // ← Data de modificação
-                )
+                Triple(file, file.length(), file.lastModified())
             }
-            .sortedBy { it.third }  // ← ORDENA POR DATA (mais antigo primeiro)
+            .sortedBy { it.third }  // MAIS ANTIGO PRIMEIRO
             .toMutableList()
 
         // 2. CALCULA TAMANHO TOTAL
         var totalSizeBytes = allFiles.sumOf { it.second }
         val totalSizeMB = totalSizeBytes / (1024 * 1024)
         
-        // 3. SE TIVER MENOS QUE 100MB, NÃO FAZ NADA
+        // 3. SE < 100MB, NÃO FAZ NADA
         if (totalSizeMB <= MAX_STORAGE_MB) {
             Timber.d("✅ Armazenamento OK: ${totalSizeMB}MB / ${MAX_STORAGE_MB}MB")
             return
@@ -72,29 +70,44 @@ suspend fun enforceStorageLimit() {
 
         Timber.w("🔥 Armazenamento excedeu 100MB! Atual: ${totalSizeMB}MB")
 
-        // 4. DELETA OS MAIS ANTIGOS ATÉ CHEGAR EM 100MB
+        // 4. DELETA OS MAIS ANTIGOS
         var deletedCount = 0
         var freedBytes = 0L
-        val targetBytes = MAX_STORAGE_MB * 1024 * 1024  // 100MB em bytes
+        val targetBytes = MAX_STORAGE_MB * 1024 * 1024
 
         for ((file, size, _) in allFiles) {
             if (totalSizeBytes - freedBytes <= targetBytes) break
             
-            if (file.delete()) {
+            // ✅ TENTA DELETAR VÁRIAS VEZES SE FALHAR
+            var retries = 3
+            var deleted = false
+            while (retries > 0 && !deleted) {
+                deleted = file.delete()
+                if (!deleted) {
+                    kotlinx.coroutines.delay(100)
+                    retries--
+                }
+            }
+            
+            if (deleted) {
                 deletedCount++
                 freedBytes += size
                 Timber.v("🗑️ Deletado: ${file.name} (${size / 1024}KB)")
+            } else {
+                Timber.w("⚠️ Não foi possível deletar: ${file.name}")
             }
         }
 
         val freedMB = freedBytes / (1024 * 1024)
         Timber.w("✅ Limpeza automática: $deletedCount arquivos deletados (${freedMB}MB liberados)")
 
-        // 5. LIMPA CACHES DE MEMÓRIA SE DELETOU ALGO
+        // 5. LIMPA CACHES DE MEMÓRIA
         if (deletedCount > 0) {
             activeFileId = null
             recentlyPlayedFileIds.clear()
             audioFileHistory.clear()
+            // ✅ LIMPA TAMBÉM O CACHE DO REPOSITORY
+            telegramRepository.clearMemoryCache()
         }
 
     } catch (e: Exception) {
