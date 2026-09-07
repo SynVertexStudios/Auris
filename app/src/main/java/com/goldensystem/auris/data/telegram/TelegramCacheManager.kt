@@ -31,6 +31,76 @@ class TelegramCacheManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val telegramClientManager: TelegramClientManager
 ) {
+
+companion object {
+    private const val MAX_STORAGE_MB = 100L  // ← 100MB CARALHO!
+}
+
+/**
+ * 🔥 MANTÉM O ARMAZENAMENTO EM ATÉ 100MB
+ * Deleta os arquivos mais antigos primeiro (LRU)
+ * Chama isso SEMPRE que um download terminar
+ */
+suspend fun enforceStorageLimit() {
+    try {
+        val filesDir = File(context.filesDir, "tdlib_files")
+        if (!filesDir.exists()) return
+
+        // 1. PEGA TODOS OS ARQUIVOS
+        val allFiles = filesDir.walkTopDown()
+            .filter { it.isFile }
+            .map { file ->
+                Triple(
+                    file,
+                    file.length(),
+                    file.lastModified()  // ← Data de modificação
+                )
+            }
+            .sortedBy { it.third }  // ← ORDENA POR DATA (mais antigo primeiro)
+            .toMutableList()
+
+        // 2. CALCULA TAMANHO TOTAL
+        var totalSizeBytes = allFiles.sumOf { it.second }
+        val totalSizeMB = totalSizeBytes / (1024 * 1024)
+        
+        // 3. SE TIVER MENOS QUE 100MB, NÃO FAZ NADA
+        if (totalSizeMB <= MAX_STORAGE_MB) {
+            Timber.d("✅ Armazenamento OK: ${totalSizeMB}MB / ${MAX_STORAGE_MB}MB")
+            return
+        }
+
+        Timber.w("🔥 Armazenamento excedeu 100MB! Atual: ${totalSizeMB}MB")
+
+        // 4. DELETA OS MAIS ANTIGOS ATÉ CHEGAR EM 100MB
+        var deletedCount = 0
+        var freedBytes = 0L
+        val targetBytes = MAX_STORAGE_MB * 1024 * 1024  // 100MB em bytes
+
+        for ((file, size, _) in allFiles) {
+            if (totalSizeBytes - freedBytes <= targetBytes) break
+            
+            if (file.delete()) {
+                deletedCount++
+                freedBytes += size
+                Timber.v("🗑️ Deletado: ${file.name} (${size / 1024}KB)")
+            }
+        }
+
+        val freedMB = freedBytes / (1024 * 1024)
+        Timber.w("✅ Limpeza automática: $deletedCount arquivos deletados (${freedMB}MB liberados)")
+
+        // 5. LIMPA CACHES DE MEMÓRIA SE DELETOU ALGO
+        if (deletedCount > 0) {
+            activeFileId = null
+            recentlyPlayedFileIds.clear()
+            audioFileHistory.clear()
+            telegramRepository.clearMemoryCache()
+        }
+
+    } catch (e: Exception) {
+        Timber.e(e, "❌ Erro ao aplicar limite de 100MB")
+    }
+}
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     
     // Track currently playing Telegram file to avoid deleting it

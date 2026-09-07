@@ -5,6 +5,7 @@ import com.goldensystem.auris.data.database.TelegramSongEntity
 import com.goldensystem.auris.data.database.TelegramTopicEntity
 import com.goldensystem.auris.data.model.Song
 import com.goldensystem.auris.data.preferences.PlaylistPreferencesRepository
+import com.goldensystem.auris.data.telegram.TelegramCacheManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
@@ -39,6 +40,7 @@ class TelegramRepository @Inject constructor(
     private val clientManager: TelegramClientManager,
     private val dao: TelegramDao,
     private val playlistPreferencesRepository: PlaylistPreferencesRepository
+    private val telegramCacheManager: TelegramCacheManager
 ) {
     private companion object {
         private const val AUTH_REQUEST_TIMEOUT_MS = 20_000L
@@ -646,6 +648,8 @@ class TelegramRepository @Inject constructor(
                             resolvedPathCache[fileId] = it
                             persistSongFilePathIfNeeded(fileId, it)
                             _downloadCompleted.tryEmit(fileId)
+                            
+                    telegramCacheManager.enforceStorageLimit()
                             return@withPermit it
                         }
                     }
@@ -727,6 +731,7 @@ class TelegramRepository @Inject constructor(
         } catch (e: kotlinx.coroutines.CancellationException) {
             newJob.cancel(e)
             throw e
+            
         }
     }
 
