@@ -30,8 +30,7 @@ import javax.inject.Singleton
 @Singleton
 class TelegramCacheManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val telegramClientManager: TelegramClientManager,
-    private val telegramRepository: TelegramRepository
+    private val telegramClientManager: TelegramClientManager
 ) {
 
 companion object {
@@ -96,7 +95,6 @@ suspend fun enforceStorageLimit() {
             activeFileId = null
             recentlyPlayedFileIds.clear()
             audioFileHistory.clear()
-            telegramRepository.clearMemoryCache()
         }
 
     } catch (e: Exception) {
