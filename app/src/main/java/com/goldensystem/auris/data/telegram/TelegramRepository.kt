@@ -39,7 +39,7 @@ import timber.log.Timber
 class TelegramRepository @Inject constructor(
     private val clientManager: TelegramClientManager,
     private val dao: TelegramDao,
-    private val playlistPreferencesRepository: PlaylistPreferencesRepository
+    private val playlistPreferencesRepository: PlaylistPreferencesRepository,
     private val telegramCacheManager: TelegramCacheManager
 ) {
     private companion object {
