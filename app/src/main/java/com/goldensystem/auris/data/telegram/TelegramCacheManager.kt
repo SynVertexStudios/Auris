@@ -108,7 +108,7 @@ suspend fun enforceStorageLimit() {
             recentlyPlayedFileIds.clear()
             audioFileHistory.clear()
             // ✅ LIMPA TAMBÉM O CACHE DO REPOSITORY
-            telegramRepository.clearMemoryCache()
+            telegramRepository.get().clearMemoryCache()
         }
 
     } catch (e: Exception) {
