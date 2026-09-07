@@ -2,6 +2,7 @@ package com.goldensystem.auris.data.telegram
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
+import com.goldensystem.auris.data.telegram.TelegramRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -29,7 +30,8 @@ import javax.inject.Singleton
 @Singleton
 class TelegramCacheManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val telegramClientManager: TelegramClientManager
+    private val telegramClientManager: TelegramClientManager,
+    private val telegramRepository: TelegramRepository
 ) {
 
 companion object {
