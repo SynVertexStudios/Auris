@@ -40,7 +40,7 @@ class TelegramRepository @Inject constructor(
     private val clientManager: TelegramClientManager,
     private val dao: TelegramDao,
     private val playlistPreferencesRepository: PlaylistPreferencesRepository,
-    private val telegramCacheManager: TelegramCacheManager
+    private val telegramCacheManager: lazy<TelegramCacheManager>
 ) {
     private companion object {
         private const val AUTH_REQUEST_TIMEOUT_MS = 20_000L
