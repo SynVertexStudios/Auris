@@ -69,7 +69,7 @@ class AurisApplication : Application(), ImageLoaderFactory, Configuration.Provid
     lateinit var userPreferencesRepository: dagger.Lazy<UserPreferencesRepository>
     
     @Inject
-    lateinit var telegramCacheManager: dagger.Lazy<TelegramCacheManager>
+    lateinit var telegramCacheManager: TelegramCacheManager
 
     private val startupScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
