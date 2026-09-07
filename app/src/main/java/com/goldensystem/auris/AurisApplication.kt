@@ -14,6 +14,7 @@ import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import com.goldensystem.auris.data.preferences.UserPreferencesRepository
+import com.goldensystem.auris.data.telegram.TelegramCacheManager
 import com.goldensystem.auris.data.repository.ArtistImageRepository
 import com.goldensystem.auris.data.telegram.TelegramRepository
 import com.goldensystem.auris.presentation.viewmodel.LibraryStateHolder
@@ -69,7 +70,7 @@ class AurisApplication : Application(), ImageLoaderFactory, Configuration.Provid
     lateinit var userPreferencesRepository: dagger.Lazy<UserPreferencesRepository>
     
     @Inject
-    lateinit var telegramCacheManager: TelegramCacheManager*/
+    lateinit var telegramCacheManager: TelegramCacheManager
 
     private val startupScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
