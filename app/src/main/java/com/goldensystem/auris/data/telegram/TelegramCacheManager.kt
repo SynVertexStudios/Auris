@@ -30,7 +30,8 @@ import javax.inject.Singleton
 @Singleton
 class TelegramCacheManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val telegramClientManager: TelegramClientManager
+    private val telegramClientManager: TelegramClientManager,
+    private val telegramRepository: Lazy<TelegramRepository>
 ) {
 
 companion object {
