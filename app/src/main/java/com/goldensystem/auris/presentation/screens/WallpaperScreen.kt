@@ -61,13 +61,7 @@ import com.goldensystem.auris.ui.theme.customColorScheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.ui.draw.blur
-
-
-
-//================blur====================//
-private fun Float.toBlurRadius(): Float {
-    return this * 20f
-}
+import com.goldensystem.auris.utils.toBlurRadius
 
 // ============================================================
 // CONFIGURAÇÃO DAS CATEGORIAS

@@ -104,6 +104,7 @@ import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
 import androidx.compose.ui.res.stringResource
 import com.goldensystem.auris.ui.theme.WallpaperBackground
 import androidx.compose.ui.draw.blur
+import com.goldensystem.auris.utils.toBlurRadius
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class)

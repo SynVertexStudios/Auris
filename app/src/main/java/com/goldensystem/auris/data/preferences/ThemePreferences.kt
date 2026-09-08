@@ -66,8 +66,8 @@ data class CustomThemeConfig(
     val wallpaperColor: Int = 0xFF1E1234.toInt(),
     val wallpaperUri: String? = null,
     val wallpaperUrl: String? = null,
-    val wallpaperBlur: Float = 0.5f,
-    val wallpaperDim: Float = 0.3f
+    val wallpaperBlur: Float = 0f,
+    val wallpaperDim: Float = 0f
 )
 
 enum class WallpaperType {
