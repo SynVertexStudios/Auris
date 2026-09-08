@@ -12,7 +12,7 @@ fun Color.toHexString(): String {
     return String.format("#%08X", this.toArgb())
 }
 
-private fun Float.toBlurRadius(): Float {
+fun Float.toBlurRadius(): Float {
     return this * 20f // 0 = sem blur, 1 = blur máximo (20px)
 }
 
