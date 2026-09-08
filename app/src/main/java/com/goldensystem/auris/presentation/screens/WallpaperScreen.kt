@@ -60,6 +60,14 @@ import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
 import com.goldensystem.auris.ui.theme.customColorScheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.ui.draw.blur
+
+
+
+//================blur====================//
+private fun Float.toBlurRadius(): Float {
+    return this * 20f
+}
 
 // ============================================================
 // CONFIGURAÇÃO DAS CATEGORIAS
@@ -425,6 +433,7 @@ private fun WallpaperPreviewCard(
     colorScheme: ColorScheme
 ) {
     val context = LocalContext.current
+    val blurRadius = config.wallpaperBlur.toBlurRadius()
 
     val previewShape = RoundedCornerShape(28.dp)
 
@@ -446,7 +455,7 @@ private fun WallpaperPreviewCard(
         ) {
 
             // ------------------------------------------------
-            // Background
+            // Background com BLUR
             // ------------------------------------------------
 
             when (config.wallpaperType) {
@@ -492,7 +501,9 @@ private fun WallpaperPreviewCard(
                             contentDescription = stringResource(
                                 R.string.custom_theme_selected_wallpaper
                             ),
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .blur(radius = blurRadius.dp), // ← BLUR AQUI
                             contentScale = ContentScale.Crop
                         )
 
@@ -515,7 +526,9 @@ private fun WallpaperPreviewCard(
                             contentDescription = stringResource(
                                 R.string.custom_theme_selected_wallpaper
                             ),
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .blur(radius = blurRadius.dp), // ← BLUR AQUI
                             contentScale = ContentScale.Crop
                         )
 

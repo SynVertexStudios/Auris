@@ -2,6 +2,7 @@ package com.goldensystem.auris.utils
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.draw.blur
 import java.nio.charset.Charset
 import java.text.Normalizer
 
@@ -9,6 +10,10 @@ private val WINDOWS_1252: Charset = Charset.forName("windows-1252")
 
 fun Color.toHexString(): String {
     return String.format("#%08X", this.toArgb())
+}
+
+private fun Float.toBlurRadius(): Float {
+    return this * 20f // 0 = sem blur, 1 = blur máximo (20px)
 }
 
 /**
