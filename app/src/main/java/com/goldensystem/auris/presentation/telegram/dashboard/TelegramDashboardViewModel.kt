@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.goldensystem.auris.presentation.viewmodel.ConnectivityStateHolder
+import kotlinx.coroutines.flow.first
 
 @HiltViewModel
 class TelegramDashboardViewModel @Inject constructor(
