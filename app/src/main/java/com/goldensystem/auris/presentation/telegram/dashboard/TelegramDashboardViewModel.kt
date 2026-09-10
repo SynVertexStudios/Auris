@@ -50,33 +50,36 @@ class TelegramDashboardViewModel @Inject constructor(
     }
 
     fun refreshChannel(channel: TelegramChannelEntity) {
-        if (_isRefreshing.value != null) return
+    viewModelScope.launch {
+        _isRefreshing.value = channel.chatId
+        _statusMessage.value = "Syncing ${channel.title}..."
 
-        viewModelScope.launch {
-            _isRefreshing.value = channel.chatId
-            _statusMessage.value = "Syncing ${channel.title}..."
+        try {
+            // Busca TODOS os canais e sincroniza cada um, não só o recebido.
+            val allChannels = musicRepository.getAllTelegramChannels().first()
+            val channelsToSync = if (allChannels.isEmpty()) listOf(channel) else allChannels
 
-            try {
-                val isForum = telegramRepository.isForum(channel.chatId)
+            channelsToSync.forEach { currentChannel ->
+                try {
+                    val isForum = telegramRepository.isForum(currentChannel.chatId)
 
-                if (isForum) {
-                    syncForumChannel(channel)
-                } else {
-                    syncFlatChannel(channel)
+                    if (isForum) {
+                        syncForumChannel(currentChannel)
+                    } else {
+                        syncFlatChannel(currentChannel)
+                    }
+                } catch (e: Exception) {
+                    _statusMessage.value = "Sync failed for ${currentChannel.title}: ${e.message}"
                 }
-            } catch (e: Exception) {
-                _statusMessage.value = "Sync failed: ${e.message}"
-            } finally {
-                // Guarantee the unified-table sync runs even if a forum topic loop
-                // threw partway. Without this, topic songs already committed to
-                // telegram_songs would stay invisible until an unrelated later sync.
-                // KEEP policy means this is a no-op while another sync is still in
-                // flight (in particular, never disturbs a full/rebuild).
-                runCatching { musicRepository.requestTelegramUnifiedSync() }
-                _isRefreshing.value = null
             }
+        } catch (e: Exception) {
+            _statusMessage.value = "Sync failed: ${e.message}"
+        } finally {
+            runCatching { musicRepository.requestTelegramUnifiedSync() }
+            _isRefreshing.value = null
         }
     }
+}
 
     private suspend fun syncFlatChannel(channel: TelegramChannelEntity) {
         val songs = telegramRepository.getAudioMessages(channel.chatId)
