@@ -308,23 +308,22 @@ class TelegramChatViewModel @Inject constructor(
     }
 
     fun sendMessage() {
-        val text = _uiState.value.inputText.trim()
-        if (text.isEmpty() || _uiState.value.isSending) return
+    val text = _uiState.value.inputText.trim()
+    if (text.isEmpty() || _uiState.value.isSending) return
 
-        _uiState.update { it.copy(isSending = true, inputText = "") }
+    _uiState.update { it.copy(isSending = true, inputText = "") }
 
-        viewModelScope.launch {
-            val result = telegramRepository.sendTextMessage(chatId, text)
-            _uiState.update { it.copy(isSending = false) }
+    viewModelScope.launch {
+        val result = telegramRepository.sendTextMessage(chatId, text)
+        _uiState.update { it.copy(isSending = false) }
 
-            if (result == null) {
-                _uiState.update {
-                    it.copy(errorMessage = "Failed to send message. Check your connection.")
-                }
+        result.onFailure { throwable ->
+            _uiState.update {
+                it.copy(errorMessage = "Erro: ${throwable.message}")
             }
-            // The new message will arrive via observeNewMessages()
         }
     }
+}
 
     fun downloadAudio(fileId: Int) {
         if (downloadingFileIds.contains(fileId)) return

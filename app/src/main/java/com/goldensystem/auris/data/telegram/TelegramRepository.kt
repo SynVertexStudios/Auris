@@ -79,27 +79,26 @@ suspend fun getChatHistory(
  * This version uses the 6-arg constructor: (chatId, topicId, replyTo, options, replyMarkup, inputMessageContent)
  * Adjust the topicId field if your TDLib uses `messageThreadId: Long` instead of `topicId: MessageTopic`.
  */
-suspend fun sendTextMessage(chatId: Long, text: String): TdApi.Message? {
+suspend fun sendTextMessage(chatId: Long, text: String): Result<TdApi.Message> {
     return try {
         val request = TdApi.SendMessage().apply {
             this.chatId = chatId
-            this.topicId = TdApi.MessageTopicForum(0)  // 0 = General topic / no topic
+            this.topicId = TdApi.MessageTopicForum(0)
             this.replyTo = null
             this.options = null
             this.replyMarkup = null
             this.inputMessageContent = TdApi.InputMessageText(
                 TdApi.FormattedText(text, emptyArray()),
-                TdApi.LinkPreviewOptions(),   // ← era Boolean, agora é objeto
-                false                          // clearDraft
+                false,
+                false
             )
         }
-        clientManager.sendRequest(request)
+        Result.success(clientManager.sendRequest(request))
     } catch (e: Exception) {
-        Timber.e(e, "Error sending message to $chatId: ${e.message}")
-        null
+        Timber.e(e, "SendMessage failed: ${e.message}")
+        Result.failure(e)
     }
 }
-
 /**
  * Answers a callback query (inline button press).
  * NOTE: GetCallbackQueryAnswer requires (chatId, messageId, payload).

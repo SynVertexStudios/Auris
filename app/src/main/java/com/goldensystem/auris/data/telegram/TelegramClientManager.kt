@@ -54,8 +54,11 @@ class TelegramClientManager @Inject constructor(
                     // Handle user updates if needed
                 }
                 is TdApi.UpdateFile -> {
-                    _updates.tryEmit(update)
-                }
+    _updates.tryEmit(update)
+}
+else -> {
+    _updates.tryEmit(update)
+}
                 // Add other update handlers here
                 else -> {}
             }
