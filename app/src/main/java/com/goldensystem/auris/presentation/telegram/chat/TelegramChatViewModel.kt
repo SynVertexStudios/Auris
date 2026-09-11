@@ -368,22 +368,20 @@ class TelegramChatViewModel @Inject constructor(
         }
     }
 
-    fun onInlineButtonClick(button: ChatItem.InlineButton, messageId: Long) {
-        // For URL buttons, we just leave it — the UI will handle opening the URL.
-        // For callback buttons, we need to get the callback query ID.
-        // TDLib sends UpdateNewCallbackQuery when a user presses a button.
-        // But we're not the user pressing — we need to simulate it.
-        // Actually, for bot buttons, we can use GetCallbackQueryAnswer.
-        // However, the callbackQueryId is only known after the user clicks.
-        // The correct flow: when we press an inline button, TDLib sends us
-        // an UpdateNewCallbackQuery with a callbackQueryId, then we answer it.
-        // For now, we'll just log and let the bot respond.
-        viewModelScope.launch {
-            // Note: The actual callback query ID comes from the update flow.
-            // The UI press triggers TDLib to send the update, and we respond.
-            Timber.d("Inline button pressed: ${button.text}")
-        }
+   fun onInlineButtonClick(button: ChatItem.InlineButton, messageId: Long) {
+    val data = button.callbackData
+    if (data == null) {
+        // URL button — handled by UI directly
+        return
     }
+    viewModelScope.launch {
+        telegramRepository.answerCallbackQuery(
+            chatId = chatId,
+            messageId = messageId,
+            callbackData = data
+        )
+    }
+}
 
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }

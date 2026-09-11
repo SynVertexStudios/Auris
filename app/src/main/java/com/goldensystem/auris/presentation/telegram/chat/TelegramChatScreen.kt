@@ -513,30 +513,45 @@ private fun AudioMessageBubble(
                     )
                 }
                 item.localPath != null -> {
-                    FilledTonalIconButton(
-                        onClick = {
-                            val song = com.goldensystem.auris.data.model.Song(
-                                id = "chat_${item.messageId}",
-                                title = item.title,
-                                artist = item.artist,
-                                path = item.localPath,
-                                contentUriString = item.localPath,
-                                albumArtUriString = item.albumArtUri,
-                                duration = item.durationSeconds * 1000L,
-                                telegramFileId = item.fileId,
-                                telegramChatId = 0L,
-                                mimeType = item.mimeType
-                            )
-                            onPlayAudio(song)
-                        },
-                        colors = IconButtonDefaults.filledTonalIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    ) {
-                        Icon(Icons.Rounded.PlayArrow, contentDescription = "Reproduzir")
-                    }
-                }
+    FilledTonalIconButton(
+        onClick = {
+            val syntheticArtistId = -(item.artist.hashCode().toLong().absoluteValue)
+            val syntheticAlbumId = -("Telegram Chat".hashCode().toLong().absoluteValue)
+            val song = com.goldensystem.auris.data.model.Song(
+                id = "chat_${item.messageId}",
+                title = item.title,
+                artist = item.artist,
+                artistId = syntheticArtistId,
+                artists = emptyList(),
+                album = "Telegram Chat",
+                albumId = syntheticAlbumId,
+                albumArtist = "Telegram",
+                path = item.localPath,
+                contentUriString = item.localPath,
+                albumArtUriString = item.albumArtUri,
+                duration = item.durationSeconds * 1000L,
+                genre = null,
+                lyrics = null,
+                isFavorite = false,
+                trackNumber = 0,
+                year = 0,
+                dateAdded = item.date.toLong() * 1000L,
+                mimeType = item.mimeType,
+                bitrate = 0,
+                sampleRate = 0,
+                telegramFileId = item.fileId,
+                telegramChatId = 0L
+            )
+            onPlayAudio(song)
+        },
+        colors = IconButtonDefaults.filledTonalIconButtonColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+    ) {
+        Icon(Icons.Rounded.PlayArrow, contentDescription = "Reproduzir")
+    }
+}
                 else -> {
                     FilledTonalIconButton(
                         onClick = { onDownloadAudio(item.fileId) },

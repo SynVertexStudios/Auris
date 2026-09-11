@@ -51,7 +51,7 @@ class TelegramRepository @Inject constructor(
     val authorizationState: Flow<TdApi.AuthorizationState?> = clientManager.authorizationState
     val authErrors: SharedFlow<TdApi.Error> = clientManager.errors
     
-    // ─── Chat / Messaging Support ─────────────────────────────────────────────
+// ─── Chat / Messaging Support ─────────────────────────────────────────────
 
 /**
  * Fetches chat history (messages) for a chat.
@@ -75,21 +75,25 @@ suspend fun getChatHistory(
 
 /**
  * Sends a text message to a chat.
+ * NOTE: TdApi.SendMessage signature varies by TDLib version.
+ * This version uses the 6-arg constructor: (chatId, topicId, replyTo, options, replyMarkup, inputMessageContent)
+ * Adjust the topicId field if your TDLib uses `messageThreadId: Long` instead of `topicId: MessageTopic`.
  */
 suspend fun sendTextMessage(chatId: Long, text: String): TdApi.Message? {
     return try {
-        clientManager.sendRequest(TdApi.SendMessage(
-            chatId,
-            0, // messageThreadId (0 = no topic)
-            null, // replyTo
-            null, // options
-            null, // replyMarkup
-            TdApi.InputMessageText(
+        val request = TdApi.SendMessage().apply {
+            this.chatId = chatId
+            this.topicId = TdApi.MessageTopicForum(0)  // 0 = General topic / no topic
+            this.replyTo = null
+            this.options = null
+            this.replyMarkup = null
+            this.inputMessageContent = TdApi.InputMessageText(
                 TdApi.FormattedText(text, emptyArray()),
-                false, // disableWebPagePreview
-                false  // clearDraft
+                TdApi.LinkPreviewOptions(),   // ← era Boolean, agora é objeto
+                false                          // clearDraft
             )
-        ))
+        }
+        clientManager.sendRequest(request)
     } catch (e: Exception) {
         Timber.e(e, "Error sending message to $chatId: ${e.message}")
         null
@@ -98,24 +102,25 @@ suspend fun sendTextMessage(chatId: Long, text: String): TdApi.Message? {
 
 /**
  * Answers a callback query (inline button press).
+ * NOTE: GetCallbackQueryAnswer requires (chatId, messageId, payload).
+ * We use the actual callback data sent by the bot.
  */
-suspend fun answerCallbackQuery(callbackQueryId: Long, text: String? = null): Boolean {
+suspend fun answerCallbackQuery(
+    chatId: Long,
+    messageId: Long,
+    callbackData: ByteArray
+): TdApi.CallbackQueryAnswer? {
     return try {
-        clientManager.sendRequest<TdApi.Ok>(
-            TdApi.GetCallbackQueryAnswer(0, TdApi.CallbackQueryPayloadData(byteArrayOf()))
-        )
-        true
-    } catch (e: Exception) {
-        // Fallback: use AnswerCallbackQuery if available
-        try {
-            clientManager.sendRequest<TdApi.Ok>(
-                TdApi.AnswerCallbackQuery(callbackQueryId, text ?: "", "", 0, false)
+        clientManager.sendRequest(
+            TdApi.GetCallbackQueryAnswer(
+                chatId,
+                messageId,
+                TdApi.CallbackQueryPayloadData(callbackData)
             )
-            true
-        } catch (e2: Exception) {
-            Timber.e(e2, "Error answering callback query")
-            false
-        }
+        )
+    } catch (e: Exception) {
+        Timber.e(e, "Error answering callback query")
+        null
     }
 }
 
@@ -133,7 +138,6 @@ suspend fun getChat(chatId: Long): TdApi.Chat? {
 
 /**
  * Flow of new messages for a specific chat.
- * Filters UpdateNewMessage, UpdateMessageContent, etc.
  */
 fun observeNewMessages(chatId: Long): Flow<TdApi.Message> {
     return clientManager.updates
@@ -143,20 +147,12 @@ fun observeNewMessages(chatId: Long): Flow<TdApi.Message> {
 }
 
 /**
- * Flow of message content updates (for editing, etc.)
+ * Flow of message content updates (for edits).
  */
 fun observeMessageUpdates(chatId: Long): Flow<TdApi.UpdateMessageContent> {
     return clientManager.updates
         .filterIsInstance<TdApi.UpdateMessageContent>()
         .filter { it.chatId == chatId }
-}
-
-/**
- * Flow of callback query updates (for inline buttons).
- */
-fun observeCallbackQueries(): Flow<TdApi.UpdateNewCallbackQuery> {
-    return clientManager.updates
-        .filterIsInstance<TdApi.UpdateNewCallbackQuery>()
 }
 
     fun clearMemoryCache() {
