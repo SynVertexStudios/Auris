@@ -630,6 +630,11 @@ private fun InlineButtonChip(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    var isLoading by remember(button.text, button.url) {
+        mutableStateOf(false)
+    }
 
     val buttonColor by animateColorAsState(
         targetValue = MaterialTheme.colorScheme.secondaryContainer,
@@ -650,7 +655,15 @@ private fun InlineButtonChip(
                     smoothnessAsPercentBL = 65
                 )
             )
-            .clickable {
+            .clickable(
+                enabled = !isLoading
+            ) {
+                if (isLoading) return@clickable
+
+                // Ativa o efeito somente neste botão
+                isLoading = true
+
+                // Mantém o comportamento original do botão
                 if (button.url != null) {
                     runCatching {
                         context.startActivity(
@@ -663,40 +676,130 @@ private fun InlineButtonChip(
                 } else {
                     onClick()
                 }
+
+                // Depois de 2 segundos, volta ao normal
+                coroutineScope.launch {
+                    kotlinx.coroutines.delay(2000)
+                    isLoading = false
+                }
             },
         color = buttonColor
     ) {
-        Row(
-            modifier = Modifier.padding(
-                horizontal = 13.dp,
-                vertical = 11.dp
-            ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier.fillMaxWidth()
         ) {
 
-            if (button.url != null) {
-                Icon(
-                    imageVector = Icons.Rounded.Link,
-                    contentDescription = null,
-                    modifier = Modifier.size(17.dp),
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
+            // -------------------------------------------------------------
+            // CONTEÚDO NORMAL
+            // Fica sempre visível por baixo do shimmer
+            // -------------------------------------------------------------
 
-                Spacer(Modifier.width(6.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = 13.dp,
+                        vertical = 11.dp
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+
+                if (button.url != null) {
+                    Icon(
+                        imageVector = Icons.Rounded.Link,
+                        contentDescription = null,
+                        modifier = Modifier.size(17.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+
+                    Spacer(Modifier.width(6.dp))
+                }
+
+                Text(
+                    text = button.text,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontFamily = GoogleSansRounded,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
 
-            Text(
-                text = button.text,
-                style = MaterialTheme.typography.labelLarge,
-                fontFamily = GoogleSansRounded,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            // -------------------------------------------------------------
+            // SHIMMER
+            // Fica por cima do texto, mas é transparente
+            // -------------------------------------------------------------
+
+            AnimatedVisibility(
+                visible = isLoading,
+                modifier = Modifier.matchParentSize(),
+                enter = fadeIn(
+                    animationSpec = androidx.compose.animation.core.tween(120)
+                ),
+                exit = fadeOut(
+                    animationSpec = androidx.compose.animation.core.tween(180)
+                )
+            ) {
+                ShimmerLoading()
+            }
         }
     }
+}
+
+
+@Composable
+private fun ShimmerLoading(
+    modifier: Modifier = Modifier
+) {
+    val infiniteTransition =
+        androidx.compose.animation.core.rememberInfiniteTransition(
+            label = "buttonShimmer"
+        )
+
+    val shimmerPosition by infiniteTransition.animateFloat(
+        initialValue = -1.5f,
+        targetValue = 2.5f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(
+                durationMillis = 850,
+                easing = androidx.compose.animation.core.LinearEasing
+            ),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Restart
+        ),
+        label = "shimmerPosition"
+    )
+
+    val baseColor = MaterialTheme.colorScheme.onSecondaryContainer
+        .copy(alpha = 0.055f)
+
+    val highlightColor = MaterialTheme.colorScheme.onSecondaryContainer
+        .copy(alpha = 0.22f)
+
+    val shimmerBrush = Brush.linearGradient(
+        colors = listOf(
+            Color.Transparent,
+            baseColor,
+            highlightColor,
+            baseColor,
+            Color.Transparent
+        ),
+        start = androidx.compose.ui.geometry.Offset(
+            x = shimmerPosition * 350f,
+            y = 0f
+        ),
+        end = androidx.compose.ui.geometry.Offset(
+            x = shimmerPosition * 350f + 130f,
+            y = 0f
+        )
+    )
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(shimmerBrush)
+    )
 }
 
 // =============================================================================
