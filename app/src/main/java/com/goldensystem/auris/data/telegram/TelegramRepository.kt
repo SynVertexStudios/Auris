@@ -83,7 +83,7 @@ suspend fun sendTextMessage(chatId: Long, text: String): Result<TdApi.Message> {
     return try {
         val request = TdApi.SendMessage().apply {
             this.chatId = chatId
-            this.topicId = TdApi.MessageTopicForum(0)
+            this.topicId = null
             this.replyTo = null
             this.options = null
             this.replyMarkup = null
