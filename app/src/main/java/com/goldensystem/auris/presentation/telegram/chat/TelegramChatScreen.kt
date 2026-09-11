@@ -4,6 +4,7 @@ package com.goldensystem.auris.presentation.telegram.chat
 
 import android.content.Intent
 import android.net.Uri
+import kotlin.math.absoluteValue
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState

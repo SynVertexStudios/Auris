@@ -551,7 +551,7 @@ private fun ExpressiveChannelItem(
             }
             // ── Botão Adicionar Música ──────────────────────────────────────
 FilledTonalButton(
-    onClick = { onOpenChat(channel.chatId) },
+    onClick = onOpenChat,
     modifier = Modifier.fillMaxWidth(),
     colors = androidx.compose.material3.ButtonDefaults.filledTonalButtonColors(
         containerColor = MaterialTheme.colorScheme.primaryContainer,
