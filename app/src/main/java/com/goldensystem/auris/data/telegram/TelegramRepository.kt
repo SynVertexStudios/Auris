@@ -50,6 +50,114 @@ class TelegramRepository @Inject constructor(
 
     val authorizationState: Flow<TdApi.AuthorizationState?> = clientManager.authorizationState
     val authErrors: SharedFlow<TdApi.Error> = clientManager.errors
+    
+    // ─── Chat / Messaging Support ─────────────────────────────────────────────
+
+/**
+ * Fetches chat history (messages) for a chat.
+ * Returns messages in chronological order (oldest first).
+ */
+suspend fun getChatHistory(
+    chatId: Long,
+    fromMessageId: Long = 0L,
+    limit: Int = 50
+): List<TdApi.Message> {
+    return try {
+        val messages = clientManager.sendRequest<TdApi.Messages>(
+            TdApi.GetChatHistory(chatId, fromMessageId, 0, limit, false)
+        )
+        messages.messages.reversed() // oldest first
+    } catch (e: Exception) {
+        Timber.e(e, "Error fetching chat history for $chatId")
+        emptyList()
+    }
+}
+
+/**
+ * Sends a text message to a chat.
+ */
+suspend fun sendTextMessage(chatId: Long, text: String): TdApi.Message? {
+    return try {
+        clientManager.sendRequest(TdApi.SendMessage(
+            chatId,
+            0, // messageThreadId (0 = no topic)
+            null, // replyTo
+            null, // options
+            null, // replyMarkup
+            TdApi.InputMessageText(
+                TdApi.FormattedText(text, emptyArray()),
+                false, // disableWebPagePreview
+                false  // clearDraft
+            )
+        ))
+    } catch (e: Exception) {
+        Timber.e(e, "Error sending message to $chatId: ${e.message}")
+        null
+    }
+}
+
+/**
+ * Answers a callback query (inline button press).
+ */
+suspend fun answerCallbackQuery(callbackQueryId: Long, text: String? = null): Boolean {
+    return try {
+        clientManager.sendRequest<TdApi.Ok>(
+            TdApi.GetCallbackQueryAnswer(0, TdApi.CallbackQueryPayloadData(byteArrayOf()))
+        )
+        true
+    } catch (e: Exception) {
+        // Fallback: use AnswerCallbackQuery if available
+        try {
+            clientManager.sendRequest<TdApi.Ok>(
+                TdApi.AnswerCallbackQuery(callbackQueryId, text ?: "", "", 0, false)
+            )
+            true
+        } catch (e2: Exception) {
+            Timber.e(e2, "Error answering callback query")
+            false
+        }
+    }
+}
+
+/**
+ * Gets a chat by ID (for getting chat info).
+ */
+suspend fun getChat(chatId: Long): TdApi.Chat? {
+    return try {
+        clientManager.sendRequest(TdApi.GetChat(chatId))
+    } catch (e: Exception) {
+        Timber.e(e, "Error getting chat $chatId")
+        null
+    }
+}
+
+/**
+ * Flow of new messages for a specific chat.
+ * Filters UpdateNewMessage, UpdateMessageContent, etc.
+ */
+fun observeNewMessages(chatId: Long): Flow<TdApi.Message> {
+    return clientManager.updates
+        .filterIsInstance<TdApi.UpdateNewMessage>()
+        .filter { it.message.chatId == chatId }
+        .map { it.message }
+}
+
+/**
+ * Flow of message content updates (for editing, etc.)
+ */
+fun observeMessageUpdates(chatId: Long): Flow<TdApi.UpdateMessageContent> {
+    return clientManager.updates
+        .filterIsInstance<TdApi.UpdateMessageContent>()
+        .filter { it.chatId == chatId }
+}
+
+/**
+ * Flow of callback query updates (for inline buttons).
+ */
+fun observeCallbackQueries(): Flow<TdApi.UpdateNewCallbackQuery> {
+    return clientManager.updates
+        .filterIsInstance<TdApi.UpdateNewCallbackQuery>()
+}
 
     fun clearMemoryCache() {
         resolvedPathCache.clear()

@@ -109,6 +109,7 @@ import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
 fun TelegramDashboardScreen(
     onAddChannel: () -> Unit,
     onBack: () -> Unit,
+    onOpenChat: (Long) -> Unit,
     viewModel: TelegramDashboardViewModel = hiltViewModel()
 ) {
     val channels by viewModel.channels.collectAsStateWithLifecycle()
@@ -242,14 +243,15 @@ fun TelegramDashboardScreen(
                         val isExpanded = channel.chatId in expandedChannels
 
                         ExpressiveChannelItem(
-                            channel = channel,
-                            isSyncing = isRefreshingId == channel.chatId,
-                            topics = channelTopics,
-                            isExpanded = isExpanded,
-                            onSync = { viewModel.refreshChannel(channel) },
-                            onOpenActions = { selectedChannelForActions = channel },
-                            onToggleExpand = { viewModel.toggleChannelExpanded(channel.chatId) }
-                        )
+    channel = channel,
+    isSyncing = isRefreshingId == channel.chatId,
+    topics = channelTopics,
+    isExpanded = isExpanded,
+    onSync = { viewModel.refreshChannel(channel) },
+    onOpenActions = { selectedChannelForActions = channel },
+    onToggleExpand = { viewModel.toggleChannelExpanded(channel.chatId) },
+    onOpenChat = { onOpenChat(channel.chatId) }   // ← NOVO
+)
                     }
                 }
             }
@@ -339,7 +341,8 @@ private fun ExpressiveChannelItem(
     isExpanded: Boolean,
     onSync: () -> Unit,
     onOpenActions: () -> Unit,
-    onToggleExpand: () -> Unit
+    onToggleExpand: () -> Unit,
+    onOpenChat: () -> Unit   // ← NOVO
 ) {
     val context = LocalContext.current
     val cardShape = AbsoluteSmoothCornerShape(
@@ -546,6 +549,27 @@ private fun ExpressiveChannelItem(
                     )
                 }
             }
+            // ── Botão Adicionar Música ──────────────────────────────────────
+FilledTonalButton(
+    onClick = { onOpenChat(channel.chatId) },
+    modifier = Modifier.fillMaxWidth(),
+    colors = androidx.compose.material3.ButtonDefaults.filledTonalButtonColors(
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+    )
+) {
+    Icon(
+        imageVector = Icons.Rounded.MusicNote,
+        contentDescription = null,
+        modifier = Modifier.size(18.dp)
+    )
+    Spacer(modifier = Modifier.size(8.dp))
+    Text(
+        text = "Adicionar Música",
+        fontFamily = GoogleSansRounded,
+        fontWeight = FontWeight.SemiBold
+    )
+}
 
             // ── Expandable topics list ──────────────────────────────────
             AnimatedVisibility(

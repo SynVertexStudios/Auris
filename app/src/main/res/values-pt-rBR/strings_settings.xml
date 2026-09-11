@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+
+
+  <string name="presentation_batch_f_add_music_button">Adicionar Música</string>
+<string name="presentation_batch_f_chat_input_hint">Nome da música, artista, link...</string>
+<string name="presentation_batch_f_chat_empty_title">Nenhuma mensagem ainda</string>
+<string name="presentation_batch_f_chat_empty_body">Envie o nome de uma música, artista ou link\npara começar.</string>
+<string name="presentation_batch_f_chat_synced">Sincronizado com Telegram</string>
+
+
+
   
   <!-- ============================================ -->
   <!-- STRINGS GERAIS / COMUNS                      -->

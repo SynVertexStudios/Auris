@@ -2,6 +2,14 @@
 <resources>
 
 
+<string name="presentation_batch_f_add_music_button">Adicionar Música</string>
+<string name="presentation_batch_f_chat_input_hint">Nome da música, artista, link...</string>
+<string name="presentation_batch_f_chat_empty_title">Nenhuma mensagem ainda</string>
+<string name="presentation_batch_f_chat_empty_body">Envie o nome de uma música, artista ou link\npara começar.</string>
+<string name="presentation_batch_f_chat_synced">Sincronizado com Telegram</string>
+
+  
+
 <string name ="custom_theme_advance_section">Advanced</string>
 <string name="custom_theme_auto_from_wallpaper">Theme according to wallpaper</string>
 <string name="custom_theme_auto_from_wallpaper_subtitle">The theme will be applied automatically based on the wallpaper color</string>

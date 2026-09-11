@@ -3,6 +3,7 @@ package com.goldensystem.auris.presentation.telegram.auth
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import com.goldensystem.auris.presentation.telegram.chat.TelegramChatScreen
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -141,6 +142,7 @@ fun TelegramLoginScreen(
     val authState by viewModel.authorizationState.collectAsStateWithLifecycle(initialValue = null)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showSearchSheet by remember { mutableStateOf(false) }
+    var openChatId by remember { mutableStateOf<Long?>(null) }
 
     if (showSearchSheet) {
         TelegramChannelSearchSheet(
@@ -172,12 +174,30 @@ fun TelegramLoginScreen(
     }
 
     if (authState is TdApi.AuthorizationStateReady && !uiState.isLoading) {
+    // 🔥 CHAT TEM PRIORIDADE
+    val currentChatId = openChatId
+    if (currentChatId != null) {
+        TelegramChatScreen(
+            chatId = currentChatId,
+            onBack = { openChatId = null },
+            onPlayAudio = { song ->
+                val intent = Intent(context, MainActivity::class.java).apply {
+                    action = "com.goldensystem.auris.ACTION_PLAY_SONG"
+                    putExtra("song", song as android.os.Parcelable)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                }
+                context.startActivity(intent)
+            }
+        )
+    } else {
         TelegramDashboardScreen(
             onAddChannel = { showSearchSheet = true },
-            onBack = onFinish
+            onBack = onFinish,
+            onOpenChat = { chatId -> openChatId = chatId }
         )
-        return
     }
+    return
+}
 
     val visualStep = remember(authState, uiState.phoneEditMode) {
         resolveTelegramVisualStep(authState, uiState.phoneEditMode)
