@@ -5,6 +5,7 @@
 
 package com.goldensystem.auris.presentation.telegram.chat
 
+import kotlinx.coroutines.launch
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
@@ -124,6 +125,7 @@ fun TelegramChatScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { message ->
@@ -248,10 +250,12 @@ fun TelegramChatScreen(
             ) {
                 FilledTonalIconButton(
                     onClick = {
-                        if (uiState.items.isNotEmpty()) {
-                            listState.animateScrollToItem(uiState.items.lastIndex)
-                        }
-                    },
+    if (uiState.items.isNotEmpty()) {
+        coroutineScope.launch {
+            listState.animateScrollToItem(uiState.items.lastIndex)
+        }
+    }
+},
                     modifier = Modifier.size(46.dp),
                     colors = IconButtonDefaults.filledTonalIconButtonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
