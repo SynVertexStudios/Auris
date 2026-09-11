@@ -5,6 +5,18 @@
 
 package com.goldensystem.auris.presentation.telegram.chat
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.Dp
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.animation.core.animateFloat
 import kotlinx.coroutines.launch
@@ -637,9 +649,32 @@ private fun InlineButtonChip(
         mutableStateOf(false)
     }
 
-    val buttonColor by animateColorAsState(
+    val normalButtonColor by animateColorAsState(
         targetValue = MaterialTheme.colorScheme.secondaryContainer,
+        animationSpec = tween(220),
         label = "buttonColor"
+    )
+
+    val surfaceColor by animateColorAsState(
+        targetValue = if (isLoading) {
+            Color.Transparent
+        } else {
+            normalButtonColor
+        },
+        animationSpec = tween(
+            durationMillis = 260,
+            easing = FastOutSlowInEasing
+        ),
+        label = "surfaceColor"
+    )
+
+    val contentAlpha by animateFloatAsState(
+        targetValue = if (isLoading) 0f else 1f,
+        animationSpec = tween(
+            durationMillis = 180,
+            easing = FastOutSlowInEasing
+        ),
+        label = "contentAlpha"
     )
 
     Surface(
@@ -661,10 +696,8 @@ private fun InlineButtonChip(
             ) {
                 if (isLoading) return@clickable
 
-                // Ativa o efeito somente neste botão
                 isLoading = true
 
-                // Mantém o comportamento original do botão
                 if (button.url != null) {
                     runCatching {
                         context.startActivity(
@@ -678,22 +711,20 @@ private fun InlineButtonChip(
                     onClick()
                 }
 
-                // Depois de 2 segundos, volta ao normal
                 coroutineScope.launch {
-                    kotlinx.coroutines.delay(2000)
+                    delay(2000)
                     isLoading = false
                 }
             },
-        color = buttonColor
+        color = surfaceColor
     ) {
         Box(
             modifier = Modifier.fillMaxWidth()
         ) {
 
-            // -------------------------------------------------------------
+            // =============================================================
             // CONTEÚDO NORMAL
-            // Fica sempre visível por baixo do shimmer
-            // -------------------------------------------------------------
+            // =============================================================
 
             Row(
                 modifier = Modifier
@@ -701,7 +732,10 @@ private fun InlineButtonChip(
                     .padding(
                         horizontal = 13.dp,
                         vertical = 11.dp
-                    ),
+                    )
+                    .graphicsLayer {
+                        alpha = contentAlpha
+                    },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
@@ -728,22 +762,29 @@ private fun InlineButtonChip(
                 )
             }
 
-            // -------------------------------------------------------------
-            // SHIMMER
-            // Fica por cima do texto, mas é transparente
-            // -------------------------------------------------------------
+            // =============================================================
+            // SKELETON AVANÇADO
+            // =============================================================
 
             AnimatedVisibility(
                 visible = isLoading,
                 modifier = Modifier.matchParentSize(),
                 enter = fadeIn(
-                    animationSpec = androidx.compose.animation.core.tween(120)
+                    animationSpec = tween(
+                        durationMillis = 180,
+                        easing = FastOutSlowInEasing
+                    )
                 ),
                 exit = fadeOut(
-                    animationSpec = androidx.compose.animation.core.tween(180)
+                    animationSpec = tween(
+                        durationMillis = 220,
+                        easing = FastOutSlowInEasing
+                    )
                 )
             ) {
-                ShimmerLoading()
+                AdvancedButtonSkeleton(
+                    hasIcon = button.url != null
+                )
             }
         }
     }
@@ -751,47 +792,108 @@ private fun InlineButtonChip(
 
 
 @Composable
-private fun ShimmerLoading(
+private fun AdvancedButtonSkeleton(
+    hasIcon: Boolean,
     modifier: Modifier = Modifier
 ) {
     val infiniteTransition =
-        androidx.compose.animation.core.rememberInfiniteTransition(
-            label = "buttonShimmer"
+        rememberInfiniteTransition(
+            label = "advancedButtonSkeleton"
         )
 
-    val shimmerPosition by infiniteTransition.animateFloat(
-        initialValue = -1.5f,
-        targetValue = 2.5f,
-        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-            animation = androidx.compose.animation.core.tween(
-                durationMillis = 850,
-                easing = androidx.compose.animation.core.LinearEasing
+    // Movimento principal do brilho
+    val sweepPosition by infiniteTransition.animateFloat(
+        initialValue = -1.4f,
+        targetValue = 2.4f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 900,
+                easing = LinearEasing
             ),
-            repeatMode = androidx.compose.animation.core.RepeatMode.Restart
+            repeatMode = RepeatMode.Restart
         ),
-        label = "shimmerPosition"
+        label = "skeletonSweep"
     )
 
-    val baseColor = MaterialTheme.colorScheme.onSecondaryContainer
-        .copy(alpha = 0.055f)
+    // Pulso suave da luminosidade
+    val pulse by infiniteTransition.animateFloat(
+        initialValue = 0.55f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 720,
+                easing = FastOutSlowInEasing
+            ),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "skeletonPulse"
+    )
 
-    val highlightColor = MaterialTheme.colorScheme.onSecondaryContainer
-        .copy(alpha = 0.22f)
+    // Segunda animação, mais lenta, para evitar aspecto de
+    // um simples gradiente passando.
+    val secondarySweep by infiniteTransition.animateFloat(
+        initialValue = -1.2f,
+        targetValue = 2.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 1450,
+                easing = LinearEasing
+            ),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "secondarySweep"
+    )
 
-    val shimmerBrush = Brush.linearGradient(
+    val skeletonColor =
+        MaterialTheme.colorScheme.onSecondaryContainer
+
+    val baseAlpha = 0.075f
+    val highlightAlpha = 0.32f * pulse
+
+    val baseColor = skeletonColor.copy(
+        alpha = baseAlpha
+    )
+
+    val highlightColor = skeletonColor.copy(
+        alpha = highlightAlpha
+    )
+
+    val secondaryHighlight = skeletonColor.copy(
+        alpha = 0.13f
+    )
+
+    val mainBrush = Brush.linearGradient(
         colors = listOf(
             Color.Transparent,
             baseColor,
             highlightColor,
+            Color.White.copy(alpha = 0.045f),
+            highlightColor,
             baseColor,
             Color.Transparent
         ),
-        start = androidx.compose.ui.geometry.Offset(
-            x = shimmerPosition * 350f,
+        start = Offset(
+            x = sweepPosition * 420f - 120f,
+            y = -40f
+        ),
+        end = Offset(
+            x = sweepPosition * 420f + 120f,
+            y = 100f
+        )
+    )
+
+    val secondaryBrush = Brush.linearGradient(
+        colors = listOf(
+            Color.Transparent,
+            secondaryHighlight,
+            Color.Transparent
+        ),
+        start = Offset(
+            x = secondarySweep * 500f,
             y = 0f
         ),
-        end = androidx.compose.ui.geometry.Offset(
-            x = shimmerPosition * 350f + 130f,
+        end = Offset(
+            x = secondarySweep * 500f + 180f,
             y = 0f
         )
     )
@@ -799,7 +901,131 @@ private fun ShimmerLoading(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(shimmerBrush)
+            .drawBehind {
+
+                // ---------------------------------------------------------
+                // Brilho geral passando pelo botão inteiro
+                // ---------------------------------------------------------
+
+                drawRect(
+                    brush = secondaryBrush
+                )
+
+                drawRect(
+                    brush = mainBrush
+                )
+            }
+    ) {
+
+        // -------------------------------------------------------------
+        // Skeleton real:
+        // imita exatamente a estrutura do conteúdo do botão
+        // -------------------------------------------------------------
+
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    horizontal = 13.dp,
+                    vertical = 11.dp
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+
+            if (hasIcon) {
+
+                SkeletonBlock(
+                    modifier = Modifier.size(17.dp),
+                    cornerRadius = 5.dp,
+                    pulse = pulse
+                )
+
+                Spacer(
+                    modifier = Modifier.width(6.dp)
+                )
+            }
+
+            SkeletonBlock(
+                modifier = Modifier
+                    .width(82.dp)
+                    .height(14.dp),
+                cornerRadius = 7.dp,
+                pulse = pulse
+            )
+        }
+
+        // -------------------------------------------------------------
+        // Reflexo fino que atravessa o skeleton
+        // -------------------------------------------------------------
+
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .drawWithCache {
+
+                    val reflectionBrush = Brush.linearGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            skeletonColor.copy(alpha = 0.08f),
+                            skeletonColor.copy(alpha = 0.20f),
+                            Color.Transparent
+                        ),
+                        start = Offset(
+                            x = sweepPosition * size.width - 100f,
+                            y = 0f
+                        ),
+                        end = Offset(
+                            x = sweepPosition * size.width + 100f,
+                            y = size.height
+                        )
+                    )
+
+                    onDrawBehind {
+                        drawRect(
+                            brush = reflectionBrush
+                        )
+                    }
+                }
+        )
+    }
+}
+@Composable
+private fun SkeletonBlock(
+    modifier: Modifier,
+    cornerRadius: Dp,
+    pulse: Float
+) {
+    val infiniteTransition =
+        rememberInfiniteTransition(
+            label = "skeletonBlock"
+        )
+
+    val shimmer by infiniteTransition.animateFloat(
+        initialValue = 0.65f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 650,
+                easing = FastOutSlowInEasing
+            ),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "skeletonBlockPulse"
+    )
+
+    val color = MaterialTheme.colorScheme.onSecondaryContainer
+
+    Box(
+        modifier = modifier
+            .clip(
+                RoundedCornerShape(cornerRadius)
+            )
+            .background(
+                color.copy(
+                    alpha = 0.12f + (0.07f * shimmer * pulse)
+                )
+            )
     )
 }
 
