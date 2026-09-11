@@ -6,6 +6,7 @@
 package com.goldensystem.auris.presentation.telegram.chat
 
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.animation.core.animateFloat
 import kotlinx.coroutines.launch
 import android.content.Intent
 import android.net.Uri
