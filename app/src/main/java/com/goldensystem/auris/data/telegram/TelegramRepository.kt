@@ -89,7 +89,7 @@ suspend fun sendTextMessage(chatId: Long, text: String): Result<TdApi.Message> {
             this.replyMarkup = null
             this.inputMessageContent = TdApi.InputMessageText(
                 TdApi.FormattedText(text, emptyArray()),
-                false,
+                TdApi.LinkPreviewOptions(),
                 false
             )
         }

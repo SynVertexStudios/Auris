@@ -45,27 +45,18 @@ class TelegramClientManager @Inject constructor(
 
     // Handler for incoming updates from TDLib
     private val updateHandler = Client.ResultHandler { update ->
-        if (update is TdApi.Update) {
-            when (update) {
-                is TdApi.UpdateAuthorizationState -> {
-                    onAuthorizationStateUpdated(update.authorizationState)
-                }
-                is TdApi.UpdateUser -> {
-                    // Handle user updates if needed
-                }
-                is TdApi.UpdateFile -> {
-    _updates.tryEmit(update)
-}
-else -> {
-    _updates.tryEmit(update)
-}
-                // Add other update handlers here
-                else -> {}
+    if (update is TdApi.Update) {
+        when (update) {
+            is TdApi.UpdateAuthorizationState -> {
+                onAuthorizationStateUpdated(update.authorizationState)
             }
-        } else if (update is TdApi.Error) {
-            reportTdError(update)
         }
+        // Emit ALL updates to the flow
+        _updates.tryEmit(update)
+    } else if (update is TdApi.Error) {
+        reportTdError(update)
     }
+}
 
     init {
         initializeClient()
