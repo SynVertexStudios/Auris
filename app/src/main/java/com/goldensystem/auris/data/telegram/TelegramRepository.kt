@@ -137,14 +137,16 @@ suspend fun downloadAudioToPublic(
 
             if (artworkFile != null) {
                 try {
-                   val audioFile = AudioFileIO.read(sourceFile)
+                  val audioFile = AudioFileIO.read(sourceFile)
+
+val tag = audioFile.getTagOrCreateAndSetDefault()
 
 val artwork = ArtworkFactory.createArtworkFromFile(
     artworkFile
 )
 
-audioFile.tag?.deleteArtworkField()
-audioFile.tag?.setField(artwork)
+tag.deleteArtworkField()
+tag.setField(artwork)
 audioFile.commit()
 
                     Timber.d(
