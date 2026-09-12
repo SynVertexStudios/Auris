@@ -4,6 +4,9 @@ import com.goldensystem.auris.data.database.TelegramDao
 import com.goldensystem.auris.data.database.TelegramSongEntity
 import com.goldensystem.auris.data.database.TelegramTopicEntity
 import com.goldensystem.auris.data.model.Song
+import android.content.ContentValues
+import android.os.Environment
+import android.provider.MediaStore
 import com.goldensystem.auris.data.preferences.PlaylistPreferencesRepository
 import com.goldensystem.auris.data.telegram.TelegramCacheManager
 import kotlinx.coroutines.Dispatchers
@@ -50,7 +53,83 @@ class TelegramRepository @Inject constructor(
 
     val authorizationState: Flow<TdApi.AuthorizationState?> = clientManager.authorizationState
     val authErrors: SharedFlow<TdApi.Error> = clientManager.errors
-    
+
+suspend fun downloadAudioToPublic(
+    fileId: Int,
+    fileName: String,
+    mimeType: String,
+    priority: Int = 16
+): String? {
+    val tempPath = downloadFileAwait(
+        fileId = fileId,
+        priority = priority,
+        enforceCacheLimit = false
+    ) ?: return null
+
+    val publicUri = withContext(Dispatchers.IO) {
+        val sourceFile = File(tempPath)
+
+        if (!sourceFile.exists()) {
+            Timber.e("Downloaded file does not exist: $tempPath")
+            return@withContext null
+        }
+
+        val safeName = fileName
+            .substringAfterLast('/')
+            .substringAfterLast('\\')
+            .replace(Regex("""[\\/:*?"<>|]"""), "_")
+            .ifBlank { "audio_$fileId" }
+
+        val values = ContentValues().apply {
+            put(MediaStore.Downloads.DISPLAY_NAME, safeName)
+            put(
+                MediaStore.Downloads.MIME_TYPE,
+                mimeType.ifBlank { "application/octet-stream" }
+            )
+            put(
+                MediaStore.Downloads.RELATIVE_PATH,
+                "${Environment.DIRECTORY_DOWNLOADS}/AurisMusicPlayer/file/songs"
+            )
+            put(MediaStore.Downloads.IS_PENDING, 1)
+        }
+
+        val resolver = context.contentResolver
+
+        val uri = resolver.insert(
+            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+            values
+        ) ?: return@withContext null
+
+        try {
+            resolver.openOutputStream(uri)?.use { output ->
+                sourceFile.inputStream().use { input ->
+                    input.copyTo(output)
+                }
+            } ?: throw IllegalStateException("Could not open output stream")
+
+            val completedValues = ContentValues().apply {
+                put(MediaStore.Downloads.IS_PENDING, 0)
+            }
+
+            resolver.update(
+                uri,
+                completedValues,
+                null,
+                null
+            )
+
+            uri.toString()
+        } catch (e: Exception) {
+            resolver.delete(uri, null, null)
+            Timber.e(e, "Failed to copy Telegram audio to public storage")
+            null
+        }
+    }
+
+    telegramCacheManager.enforceStorageLimit()
+
+    return publicUri
+}
 // ─── Chat / Messaging Support ─────────────────────────────────────────────
 
 /**
@@ -739,7 +818,11 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
         _songFileUpdated.tryEmit(existingSong.id)
     }
 
-    suspend fun downloadFileAwait(fileId: Int, priority: Int = 1): String? {
+suspend fun downloadFileAwait(
+    fileId: Int,
+    priority: Int = 1,
+    enforceCacheLimit: Boolean = true
+): String? {
     resolvedPathCache[fileId]?.let { path ->
         if (java.io.File(path).exists()) return path
         resolvedPathCache.remove(fileId)
@@ -759,7 +842,9 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
                         _downloadCompleted.tryEmit(fileId)
                         
                         // ✅ PONTO 1
-                        telegramCacheManager.enforceStorageLimit()
+                        if (enforceCacheLimit) {
+    telegramCacheManager.enforceStorageLimit()
+}
                         
                         return@withPermit it
                     }
@@ -779,7 +864,9 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
                             _downloadCompleted.tryEmit(fileId)
                             
                             // ✅ PONTO 2
-                            telegramCacheManager.enforceStorageLimit()
+                            if (enforceCacheLimit) {
+    telegramCacheManager.enforceStorageLimit()
+}
                             
                             resultFile.local.path
                         } else null
@@ -821,7 +908,9 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
                     _downloadCompleted.tryEmit(fileId)
                     
                     // ✅ PONTO 3
-                    telegramCacheManager.enforceStorageLimit()
+                  if (enforceCacheLimit) {
+    telegramCacheManager.enforceStorageLimit()
+}
                     
                     return@withPermit completedPath
                 }
@@ -832,7 +921,9 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
                     _downloadCompleted.tryEmit(fileId)
                     
                     // ✅ PONTO 4
-                    telegramCacheManager.enforceStorageLimit()
+                  if (enforceCacheLimit) {
+    telegramCacheManager.enforceStorageLimit()
+}
                     
                     finalFile.local.path
                 } else null

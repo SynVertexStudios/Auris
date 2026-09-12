@@ -1,5 +1,10 @@
 package com.goldensystem.auris.presentation.telegram.chat
 
+import android.content.ContentValues
+import android.content.Context
+import android.os.Environment
+import android.provider.MediaStore
+import dagger.hilt.android.qualifiers.ApplicationContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.goldensystem.auris.data.model.Song
@@ -92,8 +97,10 @@ data class TelegramChatUiState(
     val isOnline: Boolean = true
 )
 
+
 @HiltViewModel
 class TelegramChatViewModel @Inject constructor(
+@ApplicationContext private val context: Context, 
     private val telegramRepository: TelegramRepository,
     private val musicRepository: MusicRepository
 ) : ViewModel() {
@@ -351,35 +358,55 @@ private fun observeMessageEditsReplyMarkup() {
     }
 }
 
-    fun downloadAudio(fileId: Int) {
-        if (downloadingFileIds.contains(fileId)) return
-        downloadingFileIds.add(fileId)
-        updateAudioDownloadState(fileId, isDownloading = true)
+fun downloadAudio(fileId: Int) {
+    if (downloadingFileIds.contains(fileId)) return
 
-        viewModelScope.launch {
-            val path = telegramRepository.downloadFileAwait(fileId, priority = 16)
-            downloadingFileIds.remove(fileId)
+    val audio = _uiState.value.items
+        .filterIsInstance<ChatItem.AudioMessage>()
+        .firstOrNull { it.fileId == fileId }
 
-            _uiState.update { state ->
-                state.copy(
-                    items = state.items.map { item ->
-                        if (item is ChatItem.AudioMessage && item.fileId == fileId) {
-                            item.copy(
-                                localPath = path,
-                                isDownloading = false
-                            )
-                        } else item
+    if (audio == null) {
+        _uiState.update {
+            it.copy(errorMessage = "Áudio não encontrado.")
+        }
+        return
+    }
+
+    downloadingFileIds.add(fileId)
+    updateAudioDownloadState(fileId, isDownloading = true)
+
+    viewModelScope.launch {
+        val path = telegramRepository.downloadAudioToPublic(
+            fileId = fileId,
+            fileName = audio.fileName,
+            mimeType = audio.mimeType,
+            priority = 16
+        )
+
+        downloadingFileIds.remove(fileId)
+
+        _uiState.update { state ->
+            state.copy(
+                items = state.items.map { item ->
+                    if (item is ChatItem.AudioMessage && item.fileId == fileId) {
+                        item.copy(
+                            localPath = path,
+                            isDownloading = false
+                        )
+                    } else {
+                        item
                     }
-                )
-            }
-
-            if (path == null) {
-                _uiState.update {
-                    it.copy(errorMessage = "Download failed. Try again.")
                 }
+            )
+        }
+
+        if (path == null) {
+            _uiState.update {
+                it.copy(errorMessage = "Download failed. Try again.")
             }
         }
     }
+}
 
     private fun updateAudioDownloadState(fileId: Int, isDownloading: Boolean) {
         _uiState.update { state ->
