@@ -358,19 +358,12 @@ private fun observeMessageEditsReplyMarkup() {
     }
 }
 
-fun downloadAudio(fileId: Int) {
+fun downloadAudio(fileId: Int, messageId: Long) {
     if (downloadingFileIds.contains(fileId)) return
 
     val audio = _uiState.value.items
         .filterIsInstance<ChatItem.AudioMessage>()
-        .firstOrNull { it.fileId == fileId }
-
-    if (audio == null) {
-        _uiState.update {
-            it.copy(errorMessage = "Áudio não encontrado.")
-        }
-        return
-    }
+        .firstOrNull { it.fileId == fileId } ?: return
 
     downloadingFileIds.add(fileId)
     updateAudioDownloadState(fileId, isDownloading = true)
@@ -380,6 +373,8 @@ fun downloadAudio(fileId: Int) {
             fileId = fileId,
             fileName = audio.fileName,
             mimeType = audio.mimeType,
+            chatId = chatId,
+            messageId = messageId,
             priority = 16
         )
 

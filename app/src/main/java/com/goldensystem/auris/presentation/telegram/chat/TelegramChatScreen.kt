@@ -237,11 +237,11 @@ fun TelegramChatScreen(
                         ) { item ->
 
                             ChatItemRow(
-                                item = item,
-                                onDownloadAudio = viewModel::downloadAudio,
-                                onPlayAudio = onPlayAudio,
-                                onInlineButtonClick = viewModel::onInlineButtonClick
-                            )
+    item = item,
+    onDownloadAudio = { fileId, messageId -> viewModel.downloadAudio(fileId, messageId) },
+    onPlayAudio = onPlayAudio,
+    onInlineButtonClick = viewModel::onInlineButtonClick
+)
                         }
                     }
                 }
@@ -520,7 +520,7 @@ private fun EmptyChatState() {
 @Composable
 private fun ChatItemRow(
     item: ChatItem,
-    onDownloadAudio: (Int) -> Unit,
+    onDownloadAudio: (Int, Long) -> Unit,
     onPlayAudio: (com.goldensystem.auris.data.model.Song) -> Unit,
     onInlineButtonClick: (ChatItem.InlineButton, Long) -> Unit
 ) {
@@ -1148,7 +1148,7 @@ private fun AudioMessageBubble(
 
                 AudioActionButton(
                     item = item,
-                    onDownloadAudio = onDownloadAudio,
+                    onDownloadAudio(item.fileId, item.messageId),
                     onPlayAudio = onPlayAudio
                 )
             }

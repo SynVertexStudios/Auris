@@ -1,5 +1,7 @@
 package com.goldensystem.auris.data.telegram
 
+import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.images.ArtworkFactory
@@ -61,12 +63,108 @@ class TelegramRepository @Inject constructor(
     val authorizationState: Flow<TdApi.AuthorizationState?> = clientManager.authorizationState
     val authErrors: SharedFlow<TdApi.Error> = clientManager.errors
 
+private suspend fun resolveBestArtwork(
+    chatId: Long,
+    messageId: Long,
+    sourceAudioFile: File? = null
+): File? {
+    // ─── Prioridade 1: capa embutida no arquivo de áudio ───────────────────
+    if (sourceAudioFile != null && sourceAudioFile.exists()) {
+        val embedded = extractEmbeddedArtwork(sourceAudioFile)
+        if (embedded != null) {
+            Timber.d("Artwork source 1 (embedded): ${embedded.absolutePath}")
+            return embedded
+        }
+    }
+
+    // ─── Prioridade 2 e 3: externalAlbumCovers > albumCoverThumbnail ───────
+    val message = getMessage(chatId, messageId) ?: return null
+
+    val thumbnailCandidates: List<TdApi.Thumbnail> = when (val content = message.content) {
+        is TdApi.MessageAudio -> {
+            buildList {
+                content.audio.externalAlbumCovers
+                    ?.filter { it.file.local.canBeDownloaded }
+                    ?.sortedByDescending { it.width * it.height }
+                    ?.let { addAll(it) }
+                content.audio.albumCoverThumbnail?.let { add(it) }
+            }
+        }
+        is TdApi.MessageDocument -> {
+            listOfNotNull(content.document.thumbnail)
+        }
+        else -> emptyList()
+    }
+
+    for ((index, thumb) in thumbnailCandidates.withIndex()) {
+        val downloaded = downloadFileAwait(
+            fileId = thumb.file.id,
+            priority = 1,
+            enforceCacheLimit = false
+        )
+        if (!downloaded.isNullOrBlank()) {
+            val f = File(downloaded)
+            if (f.exists() && f.length() > 0) {
+                Timber.d(
+                    "Artwork source ${index + 2} (${thumb.width}x${thumb.height}): ${f.absolutePath}"
+                )
+                return f
+            }
+        }
+    }
+
+    // ─── Prioridade 4: minithumbnail inline ────────────────────────────────
+    val miniBytes = when (val content = message.content) {
+        is TdApi.MessageAudio -> content.audio.albumCoverMinithumbnail?.data
+        is TdApi.MessageDocument -> content.document.minithumbnail?.data
+        else -> null
+    }
+    if (miniBytes != null && miniBytes.isNotEmpty()) {
+        val out = File(context.cacheDir, "tg_mini_${chatId}_${messageId}.jpg")
+        out.writeBytes(miniBytes)
+        Timber.d("Artwork source 4 (minithumbnail): ${out.absolutePath}")
+        return out
+    }
+
+    return null
+}
+
+private fun extractEmbeddedArtwork(audioFile: File): File? {
+    val retriever = MediaMetadataRetriever()
+    return try {
+        retriever.setDataSource(audioFile.absolutePath)
+        val bytes = retriever.embeddedPicture ?: return null
+        if (bytes.isEmpty()) return null
+
+        val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
+        if (opts.outWidth <= 0 || opts.outHeight <= 0) return null
+
+        val out = File(
+            context.cacheDir,
+            "tg_embedded_${audioFile.nameWithoutExtension}_${audioFile.lastModified()}.jpg"
+        )
+        if (!out.exists() || out.length() == 0L) {
+            out.writeBytes(bytes)
+        }
+        Timber.d("Embedded art: ${opts.outWidth}x${opts.outHeight}")
+        out
+    } catch (e: Exception) {
+        Timber.w(e, "extractEmbeddedArtwork failed for ${audioFile.name}")
+        null
+    } finally {
+        try { retriever.release() } catch (_: Exception) {}
+    }
+}
+
 suspend fun downloadAudioToPublic(
     fileId: Int,
     fileName: String,
     mimeType: String,
+    chatId: Long,
+    messageId: Long,
     priority: Int = 16
-): String? {
+): String?
     val tempPath = downloadFileAwait(
         fileId = fileId,
         priority = priority,
@@ -86,83 +184,33 @@ suspend fun downloadAudioToPublic(
             // Procura a capa da mensagem original
             // ─────────────────────────────────────────────
 
-            var artworkFile: File? = null
-
-            val song = dao.getSongByFileId(fileId)
-
-            if (song != null) {
-                val message = getMessage(
-                    song.chatId,
-                    song.messageId
-                )
-
-                if (message != null) {
-                    val thumbnail = when (val content = message.content) {
-                        is TdApi.MessageAudio -> {
-                            content.audio.albumCoverThumbnail
-                                ?: content.audio.externalAlbumCovers
-                                    ?.maxByOrNull {
-                                        it.width * it.height
-                                    }
-                        }
-
-                        is TdApi.MessageDocument -> {
-                            content.document.thumbnail
-                        }
-
-                        else -> null
-                    }
-
-                    if (thumbnail != null) {
-                        val artworkPath = downloadFileAwait(
-                            fileId = thumbnail.file.id,
-                            priority = 1,
-                            enforceCacheLimit = false
-                        )
-
-                        if (!artworkPath.isNullOrBlank()) {
-                            val file = File(artworkPath)
-
-                            if (file.exists()) {
-                                artworkFile = file
-                            }
-                        }
-                    }
-                }
-            }
-
+          // sourceFile é o MP3 já baixado pelo TDLib (variável existente no escopo)
+val artworkFile = resolveBestArtwork(
+    chatId = chatId,
+    messageId = messageId,
+    sourceAudioFile = sourceFile
+)
             // ─────────────────────────────────────────────
             // Incorpora a capa no arquivo de áudio
             // ─────────────────────────────────────────────
 
             if (artworkFile != null) {
-                try {
-                  val audioFile = AudioFileIO.read(sourceFile)
-
-val tag = audioFile.getTagOrCreateAndSetDefault()
-
-val artwork = ArtworkFactory.createArtworkFromFile(
-    artworkFile
-)
-
-tag.deleteArtworkField()
-tag.setField(artwork)
-audioFile.commit()
-
-                    Timber.d(
-                        "Telegram artwork embedded: ${sourceFile.name}"
-                    )
-                } catch (e: Exception) {
-                    Timber.w(
-                        e,
-                        "Could not embed artwork into ${sourceFile.name}"
-                    )
-                }
-            } else {
-                Timber.d(
-                    "No artwork found for Telegram audio: $fileId"
-                )
-            }
+    val isAlreadyEmbedded = artworkFile.name.startsWith("tg_embedded_")
+    if (!isAlreadyEmbedded) {
+        try {
+            val audioFile = AudioFileIO.read(sourceFile)
+            val tag = audioFile.getTagOrCreateAndSetDefault()
+            val artwork = ArtworkFactory.createArtworkFromFile(artworkFile)
+            tag.deleteArtworkField()
+            tag.setField(artwork)
+            audioFile.commit()
+        } catch (e: Exception) {
+            Timber.e(e, "Artwork embed failed")
+        }
+    } else {
+        Timber.d("Skipping embed — artwork already in file")
+    }
+}
 
             // ─────────────────────────────────────────────
             // Nome do arquivo
