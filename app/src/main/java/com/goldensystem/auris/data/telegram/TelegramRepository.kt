@@ -139,16 +139,13 @@ suspend fun downloadAudioToPublic(
                 try {
                     val audioFile = AudioFileIO.read(sourceFile)
 
-                    audioFile.tagOrCreateAndSetDefault()
+val artwork = ArtworkFactory.createArtworkFromFile(
+    artworkFile
+)
 
-                    val artwork = ArtworkFactory.createArtworkFromFile(
-                        artworkFile
-                    )
-
-                    audioFile.tag.deleteArtworkField()
-                    audioFile.tag.setField(artwork)
-
-                    audioFile.commit()
+audioFile.tag?.deleteArtworkField()
+audioFile.tag?.setField(FieldKey.COVER_ART, artwork.binaryData)
+audioFile.commit()
 
                     Timber.d(
                         "Telegram artwork embedded: ${sourceFile.name}"
