@@ -1036,7 +1036,7 @@ private fun SkeletonBlock(
 @Composable
 private fun AudioMessageBubble(
     item: ChatItem.AudioMessage,
-    onDownloadAudio: (Int) -> Unit,
+    onDownloadAudio: (Int, Long) -> Unit,
     onPlayAudio: (com.goldensystem.auris.data.model.Song) -> Unit
 ) {
     MessageBubbleShell(
@@ -1147,10 +1147,10 @@ private fun AudioMessageBubble(
                 // -----------------------------------------------------------------
 
                 AudioActionButton(
-                    item = item,
-                    onDownloadAudio(item.fileId, item.messageId),
-                    onPlayAudio = onPlayAudio
-                )
+    item = item,
+    onDownloadAudio = onDownloadAudio,   // ← CORRETO
+    onPlayAudio = onPlayAudio
+)
             }
 
             // ---------------------------------------------------------------------
