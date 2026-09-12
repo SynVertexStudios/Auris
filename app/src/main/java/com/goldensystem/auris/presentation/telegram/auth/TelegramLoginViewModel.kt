@@ -270,6 +270,9 @@ class TelegramLoginViewModel @Inject constructor(
                                 password = ""
                             )
                         }
+                        if (!hasHydratedThisSession) {
+                        hasHydratedThisSession = true
+                        hydrateAllSavedChats()
                     }
 
                     is TdApi.AuthorizationStateWaitCode -> {
@@ -323,6 +326,38 @@ class TelegramLoginViewModel @Inject constructor(
             }
         }
     }
+private fun hydrateAllSavedChats() {
+    viewModelScope.launch {
+        _uiState.update {
+            it.copy(isLoading = true, loadingMessage = "Sincronizando canais...")
+        }
+
+        try {
+            val savedChannels = musicRepository.getAllTelegramChannels().first()
+            if (savedChannels.isEmpty()) {
+                _uiState.update { it.copy(isLoading = false, loadingMessage = "") }
+                return@launch
+            }
+
+            val remapping = telegramRepository.hydrateSavedChats(savedChannels) { progress ->
+                _uiState.update { it.copy(loadingMessage = progress) }
+            }
+
+            // 🔥 Se houve remapeamento, atualiza o banco
+            if (remapping.isNotEmpty()) {
+                musicRepository.remapTelegramChatIds(remapping)
+                Timber.d("Remapped ${remapping.size} chat IDs")
+            }
+
+            _uiState.update {
+                it.copy(isLoading = false, loadingMessage = "")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Hydration failed")
+            _uiState.update { it.copy(isLoading = false, loadingMessage = "") }
+        }
+    }
+}
 
     private fun normalizePhoneNumber(raw: String): String {
         val trimmed = raw.trim()

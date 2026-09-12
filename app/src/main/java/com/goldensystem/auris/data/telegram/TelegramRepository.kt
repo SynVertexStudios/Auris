@@ -62,7 +62,109 @@ class TelegramRepository @Inject constructor(
 
     val authorizationState: Flow<TdApi.AuthorizationState?> = clientManager.authorizationState
     val authErrors: SharedFlow<TdApi.Error> = clientManager.errors
+    
+/**
+ * Após login/relogin, o TDLib não carrega chats automaticamente.
+ * Este método itera sobre os chats salvos no banco, verifica se ainda
+ * existem no TDLib (pelo username) e força o carregamento.
+ */
+suspend fun hydrateSavedChats(
+    savedChannels: List<TelegramChannelEntity>,
+    onProgress: (String) -> Unit = {}
+): Map<Long, Long> {
+    // Retorna: oldChatId -> newChatId
+    val remapping = mutableMapOf<Long, Long>()
 
+    for (channel in savedChannels) {
+        try {
+            onProgress("Hydrating ${channel.title}...")
+
+            // Estratégia 1: tentar pelo chatId antigo diretamente
+            val existingChat = try {
+                clientManager.sendRequest<TdApi.Chat>(TdApi.GetChat(channel.chatId))
+            } catch (e: Exception) {
+                null
+            }
+
+            if (existingChat != null) {
+                // ChatId ainda é válido — força carregamento
+                openAndLoadChat(existingChat.id)
+                remapping[channel.chatId] = existingChat.id
+                continue
+            }
+
+            // Estratégia 2: re-resolver pelo username (chatId mudou)
+            val username = channel.username?.trim()?.removePrefix("@")
+            if (!username.isNullOrBlank()) {
+                val resolved = try {
+                    clientManager.sendRequest<TdApi.Chat>(
+                        TdApi.SearchPublicChat(username)
+                    )
+                } catch (e: Exception) {
+                    Timber.w(e, "Could not re-resolve @$username")
+                    null
+                }
+
+                if (resolved != null) {
+                    Timber.d("Remapped @$username: ${channel.chatId} -> ${resolved.id}")
+                    remapping[channel.chatId] = resolved.id
+                    openAndLoadChat(resolved.id)
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Hydration failed for chat ${channel.chatId}")
+        }
+    }
+
+    return remapping
+}
+
+/**
+ * Força o TDLib a "acordar" um chat: abre, carrega histórico recente
+ * e (se for fórum) carrega os tópicos.
+ */
+private suspend fun openAndLoadChat(chatId: Long) {
+    try {
+        // 1. Marca como aberto — isso faz o TDLib sincronizar
+        clientManager.sendRequest<TdApi.Ok>(TdApi.OpenChat(chatId))
+        Timber.d("Opened chat $chatId")
+
+        // 2. Dispara carregamento de histórico recente
+        //    (o resultado não importa — só queremos forçar o TDLib a popular o cache)
+        try {
+            clientManager.sendRequest<TdApi.Messages>(
+                TdApi.GetChatHistory(chatId, 0L, 0, 20, false)
+            )
+        } catch (e: Exception) {
+            Timber.v("History prefetch failed (non-fatal): ${e.message}")
+        }
+
+        // 3. Espera um pouco para o TDLib processar updates assíncronos
+        kotlinx.coroutines.delay(200)
+
+        // 4. Se for fórum, "abre" também alguns tópicos para forçar carregamento
+        val isForum = try { isForum(chatId) } catch (e: Exception) { false }
+        if (isForum) {
+            try {
+                val topics = clientManager.sendRequest<TdApi.ForumTopics>(
+                    TdApi.GetForumTopics().apply {
+                        this.chatId = chatId
+                        this.query = ""
+                        this.offsetDate = 0
+                        this.offsetMessageId = 0L
+                        this.offsetForumTopicId = 0
+                        this.limit = 100
+                    }
+                )
+                Timber.d("Forum $chatId: ${topics.topics.size} topics found")
+            } catch (e: Exception) {
+                Timber.v("Forum topics prefetch failed: ${e.message}")
+            }
+        }
+    } catch (e: Exception) {
+        Timber.e(e, "openAndLoadChat failed for $chatId")
+    }
+}
     // ────────────────────────────────────────────────────────────────────────
     // Artwork resolution cascade
     // ────────────────────────────────────────────────────────────────────────
@@ -504,19 +606,24 @@ class TelegramRepository @Inject constructor(
     // ─── Forum Topic Support ──────────────────────────────────────────────────
 
     suspend fun isForum(chatId: Long): Boolean {
-        return try {
-            val chat = clientManager.sendRequest<TdApi.Chat>(TdApi.GetChat(chatId))
-            val type = chat.type
-            if (type !is TdApi.ChatTypeSupergroup) return false
-            val supergroup = clientManager.sendRequest<TdApi.Supergroup>(
-                TdApi.GetSupergroup(type.supergroupId)
-            )
-            supergroup.isForum
-        } catch (e: Exception) {
-            Timber.w(e, "isForum check failed for chatId=$chatId")
-            false
-        }
+    return try {
+        val chat = clientManager.sendRequest<TdApi.Chat>(TdApi.GetChat(chatId))
+        val type = chat.type
+        if (type !is TdApi.ChatTypeSupergroup) return false
+        
+        val supergroup = clientManager.sendRequest<TdApi.Supergroup>(
+            TdApi.GetSupergroup(type.supergroupId)
+        )
+        
+        // Se o supergroup ainda não foi carregado, isForum pode estar incompleto
+        if (supergroup.status is TdApi.ChatMemberStatusLeft) return false
+        
+        supergroup.isForum
+    } catch (e: Exception) {
+        Timber.w(e, "isForum check failed for chatId=$chatId")
+        false
     }
+}
 
     suspend fun getForumTopics(chatId: Long): List<TelegramTopicEntity> {
         val topics = mutableListOf<TelegramTopicEntity>()

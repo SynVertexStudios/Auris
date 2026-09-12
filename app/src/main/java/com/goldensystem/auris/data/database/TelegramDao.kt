@@ -8,6 +8,16 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TelegramDao {
+
+@Query("UPDATE telegram_channels SET chat_id = :newId WHERE chat_id = :oldId")
+suspend fun remapChannelChatId(oldId: Long, newId: Long)
+
+@Query("UPDATE telegram_songs SET chat_id = :newId WHERE chat_id = :oldId")
+suspend fun remapSongChatId(oldId: Long, newId: Long)
+
+@Query("UPDATE telegram_topics SET chat_id = :newId WHERE chat_id = :oldId")
+suspend fun remapTopicChatId(oldId: Long, newId: Long)
+
     @Query("SELECT * FROM telegram_songs ORDER BY date_added DESC")
     fun getAllTelegramSongs(): Flow<List<TelegramSongEntity>>
 
