@@ -153,9 +153,10 @@ fun observeMessageUpdates(chatId: Long): Flow<TdApi.UpdateMessageContent> {
         .filterIsInstance<TdApi.UpdateMessageContent>()
         .filter { it.chatId == chatId }
 }
-fun observeMessageReplyMarkupUpdates(chatId: Long): Flow<TdApi.UpdateMessageReplyMarkup> {
+
+fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
     return clientManager.updates
-        .filterIsInstance<TdApi.UpdateMessageReplyMarkup>()
+        .filterIsInstance<TdApi.UpdateMessageEdited>()
         .filter { it.chatId == chatId }
 }
 
