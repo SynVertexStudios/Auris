@@ -24,7 +24,7 @@ data class TelegramLoginUiState(
     val isLoading: Boolean = false,
     val loadingMessage: String = "",
     val inlineError: String? = null,
-    val phoneEditMode: Boolean = false
+    val phoneEditMode: Boolean = false,
     var hasHydratedThisSession = false
 )
 
