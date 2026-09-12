@@ -1,5 +1,8 @@
 package com.goldensystem.auris.data.telegram
 
+import org.jaudiotagger.audio.AudioFileIO
+import org.jaudiotagger.tag.FieldKey
+import org.jaudiotagger.tag.images.ArtworkFactory
 import com.goldensystem.auris.data.database.TelegramDao
 import com.goldensystem.auris.data.database.TelegramSongEntity
 import com.goldensystem.auris.data.database.TelegramTopicEntity
@@ -70,69 +73,202 @@ suspend fun downloadAudioToPublic(
         enforceCacheLimit = false
     ) ?: return null
 
-    val publicUri = withContext(Dispatchers.IO) {
-        val sourceFile = File(tempPath)
-
-        if (!sourceFile.exists()) {
-            Timber.e("Downloaded file does not exist: $tempPath")
-            return@withContext null
-        }
-
-        val safeName = fileName
-            .substringAfterLast('/')
-            .substringAfterLast('\\')
-            .replace(Regex("""[\\/:*?"<>|]"""), "_")
-            .ifBlank { "audio_$fileId" }
-
-        val values = ContentValues().apply {
-            put(MediaStore.Downloads.DISPLAY_NAME, safeName)
-            put(
-                MediaStore.Downloads.MIME_TYPE,
-                mimeType.ifBlank { "application/octet-stream" }
-            )
-            put(
-                MediaStore.Downloads.RELATIVE_PATH,
-                "${Environment.DIRECTORY_DOWNLOADS}/AurisMusicPlayer/file/songs"
-            )
-            put(MediaStore.Downloads.IS_PENDING, 1)
-        }
-
-        val resolver = context.contentResolver
-
-        val uri = resolver.insert(
-            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-            values
-        ) ?: return@withContext null
-
+    return withContext(Dispatchers.IO) {
         try {
-            resolver.openOutputStream(uri)?.use { output ->
-                sourceFile.inputStream().use { input ->
-                    input.copyTo(output)
-                }
-            } ?: throw IllegalStateException("Could not open output stream")
+            val sourceFile = File(tempPath)
 
-            val completedValues = ContentValues().apply {
-                put(MediaStore.Downloads.IS_PENDING, 0)
+            if (!sourceFile.exists()) {
+                Timber.e("Downloaded audio does not exist: $tempPath")
+                return@withContext null
             }
 
-            resolver.update(
-                uri,
-                completedValues,
-                null,
+            // ─────────────────────────────────────────────
+            // Procura a capa da mensagem original
+            // ─────────────────────────────────────────────
+
+            var artworkFile: File? = null
+
+            val song = dao.getSongByFileId(fileId)
+
+            if (song != null) {
+                val message = getMessage(
+                    song.chatId,
+                    song.messageId
+                )
+
+                if (message != null) {
+                    val thumbnail = when (val content = message.content) {
+                        is TdApi.MessageAudio -> {
+                            content.audio.albumCoverThumbnail
+                                ?: content.audio.externalAlbumCovers
+                                    ?.maxByOrNull {
+                                        it.width * it.height
+                                    }
+                        }
+
+                        is TdApi.MessageDocument -> {
+                            content.document.thumbnail
+                        }
+
+                        else -> null
+                    }
+
+                    if (thumbnail != null) {
+                        val artworkPath = downloadFileAwait(
+                            fileId = thumbnail.file.id,
+                            priority = 1,
+                            enforceCacheLimit = false
+                        )
+
+                        if (!artworkPath.isNullOrBlank()) {
+                            val file = File(artworkPath)
+
+                            if (file.exists()) {
+                                artworkFile = file
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ─────────────────────────────────────────────
+            // Incorpora a capa no arquivo de áudio
+            // ─────────────────────────────────────────────
+
+            if (artworkFile != null) {
+                try {
+                    val audioFile = AudioFileIO.read(sourceFile)
+
+                    audioFile.tagOrCreateAndSetDefault()
+
+                    val artwork = ArtworkFactory.createArtworkFromFile(
+                        artworkFile
+                    )
+
+                    audioFile.tag.deleteArtworkField()
+                    audioFile.tag.setField(artwork)
+
+                    audioFile.commit()
+
+                    Timber.d(
+                        "Telegram artwork embedded: ${sourceFile.name}"
+                    )
+                } catch (e: Exception) {
+                    Timber.w(
+                        e,
+                        "Could not embed artwork into ${sourceFile.name}"
+                    )
+                }
+            } else {
+                Timber.d(
+                    "No artwork found for Telegram audio: $fileId"
+                )
+            }
+
+            // ─────────────────────────────────────────────
+            // Nome do arquivo
+            // ─────────────────────────────────────────────
+
+            val safeName = fileName
+                .substringAfterLast('/')
+                .substringAfterLast('\\')
+                .replace(
+                    Regex("""[\\/:*?"<>|]"""),
+                    "_"
+                )
+                .ifBlank {
+                    "audio_$fileId"
+                }
+
+            // ─────────────────────────────────────────────
+            // Salva no Download público
+            // ─────────────────────────────────────────────
+
+            val values = ContentValues().apply {
+                put(
+                    MediaStore.Downloads.DISPLAY_NAME,
+                    safeName
+                )
+
+                put(
+                    MediaStore.Downloads.MIME_TYPE,
+                    mimeType.ifBlank {
+                        "application/octet-stream"
+                    }
+                )
+
+                put(
+                    MediaStore.Downloads.RELATIVE_PATH,
+                    "${Environment.DIRECTORY_DOWNLOADS}/AurisMusicPlayer/file/songs"
+                )
+
+                put(
+                    MediaStore.Downloads.IS_PENDING,
+                    1
+                )
+            }
+
+            val resolver = context.contentResolver
+
+            val uri = resolver.insert(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                values
+            ) ?: return@withContext null
+
+            try {
+                val output = resolver.openOutputStream(uri)
+
+                if (output == null) {
+                    resolver.delete(uri, null, null)
+                    return@withContext null
+                }
+
+                output.use { outputStream ->
+                    sourceFile.inputStream().use { inputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+                }
+
+                val completedValues = ContentValues().apply {
+                    put(
+                        MediaStore.Downloads.IS_PENDING,
+                        0
+                    )
+                }
+
+                resolver.update(
+                    uri,
+                    completedValues,
+                    null,
+                    null
+                )
+
+                Timber.d(
+                    "Telegram audio saved with artwork: $uri"
+                )
+
+                uri.toString()
+            } catch (e: Exception) {
+                resolver.delete(uri, null, null)
+
+                Timber.e(
+                    e,
+                    "Failed to copy Telegram audio to public storage"
+                )
+
                 null
+            }
+        } catch (e: Exception) {
+            Timber.e(
+                e,
+                "Failed to download Telegram audio"
             )
 
-            uri.toString()
-        } catch (e: Exception) {
-            resolver.delete(uri, null, null)
-            Timber.e(e, "Failed to copy Telegram audio to public storage")
             null
+        } finally {
+            telegramCacheManager.enforceStorageLimit()
         }
     }
-
-    telegramCacheManager.enforceStorageLimit()
-
-    return publicUri
 }
 // ─── Chat / Messaging Support ─────────────────────────────────────────────
 
