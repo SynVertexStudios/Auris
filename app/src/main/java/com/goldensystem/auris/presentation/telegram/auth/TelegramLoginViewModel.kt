@@ -326,6 +326,7 @@ class TelegramLoginViewModel @Inject constructor(
             }
         }
     }
+}
 private fun hydrateAllSavedChats() {
     viewModelScope.launch {
         _uiState.update {
