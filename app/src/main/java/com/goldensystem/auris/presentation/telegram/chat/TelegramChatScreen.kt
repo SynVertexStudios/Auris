@@ -1210,7 +1210,7 @@ private fun AudioMessageBubble(
 @Composable
 private fun AudioActionButton(
     item: ChatItem.AudioMessage,
-    onDownloadAudio: (Int) -> Unit,
+    onDownloadAudio: (Int, Long) -> Unit,
     onPlayAudio: (com.goldensystem.auris.data.model.Song) -> Unit
 ) {
     val buttonScale by animateFloatAsState(
@@ -1291,10 +1291,10 @@ private fun AudioActionButton(
             }
 
             else -> {
-                FilledTonalIconButton(
-                    onClick = {
-                        onDownloadAudio(item.fileId)
-                    },
+               FilledTonalIconButton(
+    onClick = {
+        onDownloadAudio(item.fileId, item.messageId)
+    },
                     modifier = Modifier.size(46.dp),
                     colors = IconButtonDefaults.filledTonalIconButtonColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
