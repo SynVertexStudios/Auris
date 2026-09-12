@@ -63,368 +63,370 @@ class TelegramRepository @Inject constructor(
     val authorizationState: Flow<TdApi.AuthorizationState?> = clientManager.authorizationState
     val authErrors: SharedFlow<TdApi.Error> = clientManager.errors
 
-private suspend fun resolveBestArtwork(
-    chatId: Long,
-    messageId: Long,
-    sourceAudioFile: File? = null
-): File? {
-    // ─── Prioridade 1: capa embutida no arquivo de áudio ───────────────────
-    if (sourceAudioFile != null && sourceAudioFile.exists()) {
-        val embedded = extractEmbeddedArtwork(sourceAudioFile)
-        if (embedded != null) {
-            Timber.d("Artwork source 1 (embedded): ${embedded.absolutePath}")
-            return embedded
-        }
-    }
+    // ────────────────────────────────────────────────────────────────────────
+    // Artwork resolution cascade
+    // ────────────────────────────────────────────────────────────────────────
 
-    // ─── Prioridade 2 e 3: externalAlbumCovers > albumCoverThumbnail ───────
-    val message = getMessage(chatId, messageId) ?: return null
-
-    val thumbnailCandidates: List<TdApi.Thumbnail> = when (val content = message.content) {
-        is TdApi.MessageAudio -> {
-            buildList {
-                content.audio.externalAlbumCovers
-                    ?.filter { it.file.local.canBeDownloaded }
-                    ?.sortedByDescending { it.width * it.height }
-                    ?.let { addAll(it) }
-                content.audio.albumCoverThumbnail?.let { add(it) }
+    /**
+     * Resolves the best available artwork for a Telegram audio message,
+     * trying sources in order of quality:
+     *
+     *  1. Embedded artwork in the downloaded audio file (highest quality)
+     *  2. externalAlbumCovers from TDLib (Spotify / Apple Music metadata)
+     *  3. albumCoverThumbnail from TDLib (low-res thumbnail)
+     *  4. Inline minithumbnail (tiny, last resort)
+     *
+     * Returns a File pointing to the artwork, or null if nothing is available.
+     */
+    private suspend fun resolveBestArtwork(
+        chatId: Long,
+        messageId: Long,
+        sourceAudioFile: File? = null
+    ): File? {
+        // ─── Prioridade 1: capa embutida no arquivo de áudio ────────────────
+        if (sourceAudioFile != null && sourceAudioFile.exists()) {
+            val embedded = extractEmbeddedArtwork(sourceAudioFile)
+            if (embedded != null) {
+                Timber.d("Artwork source 1 (embedded): ${embedded.absolutePath}")
+                return embedded
             }
         }
-        is TdApi.MessageDocument -> {
-            listOfNotNull(content.document.thumbnail)
-        }
-        else -> emptyList()
-    }
 
-    for ((index, thumb) in thumbnailCandidates.withIndex()) {
-        val downloaded = downloadFileAwait(
-            fileId = thumb.file.id,
-            priority = 1,
-            enforceCacheLimit = false
-        )
-        if (!downloaded.isNullOrBlank()) {
-            val f = File(downloaded)
-            if (f.exists() && f.length() > 0) {
-                Timber.d(
-                    "Artwork source ${index + 2} (${thumb.width}x${thumb.height}): ${f.absolutePath}"
-                )
-                return f
-            }
-        }
-    }
+        // ─── Prioridade 2 e 3: externalAlbumCovers > albumCoverThumbnail ────
+        val message = getMessage(chatId, messageId) ?: return null
 
-    // ─── Prioridade 4: minithumbnail inline ────────────────────────────────
-    val miniBytes = when (val content = message.content) {
-        is TdApi.MessageAudio -> content.audio.albumCoverMinithumbnail?.data
-        is TdApi.MessageDocument -> content.document.minithumbnail?.data
-        else -> null
-    }
-    if (miniBytes != null && miniBytes.isNotEmpty()) {
-        val out = File(context.cacheDir, "tg_mini_${chatId}_${messageId}.jpg")
-        out.writeBytes(miniBytes)
-        Timber.d("Artwork source 4 (minithumbnail): ${out.absolutePath}")
-        return out
-    }
-
-    return null
-}
-
-private fun extractEmbeddedArtwork(audioFile: File): File? {
-    val retriever = MediaMetadataRetriever()
-    return try {
-        retriever.setDataSource(audioFile.absolutePath)
-        val bytes = retriever.embeddedPicture ?: return null
-        if (bytes.isEmpty()) return null
-
-        val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
-        if (opts.outWidth <= 0 || opts.outHeight <= 0) return null
-
-        val out = File(
-            context.cacheDir,
-            "tg_embedded_${audioFile.nameWithoutExtension}_${audioFile.lastModified()}.jpg"
-        )
-        if (!out.exists() || out.length() == 0L) {
-            out.writeBytes(bytes)
-        }
-        Timber.d("Embedded art: ${opts.outWidth}x${opts.outHeight}")
-        out
-    } catch (e: Exception) {
-        Timber.w(e, "extractEmbeddedArtwork failed for ${audioFile.name}")
-        null
-    } finally {
-        try { retriever.release() } catch (_: Exception) {}
-    }
-}
-
-suspend fun downloadAudioToPublic(
-    fileId: Int,
-    fileName: String,
-    mimeType: String,
-    chatId: Long,
-    messageId: Long,
-    priority: Int = 16
-): String?
-    val tempPath = downloadFileAwait(
-        fileId = fileId,
-        priority = priority,
-        enforceCacheLimit = false
-    ) ?: return null
-
-    return withContext(Dispatchers.IO) {
-        try {
-            val sourceFile = File(tempPath)
-
-            if (!sourceFile.exists()) {
-                Timber.e("Downloaded audio does not exist: $tempPath")
-                return@withContext null
-            }
-
-            // ─────────────────────────────────────────────
-            // Procura a capa da mensagem original
-            // ─────────────────────────────────────────────
-
-          // sourceFile é o MP3 já baixado pelo TDLib (variável existente no escopo)
-val artworkFile = resolveBestArtwork(
-    chatId = chatId,
-    messageId = messageId,
-    sourceAudioFile = sourceFile
-)
-            // ─────────────────────────────────────────────
-            // Incorpora a capa no arquivo de áudio
-            // ─────────────────────────────────────────────
-
-            if (artworkFile != null) {
-    val isAlreadyEmbedded = artworkFile.name.startsWith("tg_embedded_")
-    if (!isAlreadyEmbedded) {
-        try {
-            val audioFile = AudioFileIO.read(sourceFile)
-            val tag = audioFile.getTagOrCreateAndSetDefault()
-            val artwork = ArtworkFactory.createArtworkFromFile(artworkFile)
-            tag.deleteArtworkField()
-            tag.setField(artwork)
-            audioFile.commit()
-        } catch (e: Exception) {
-            Timber.e(e, "Artwork embed failed")
-        }
-    } else {
-        Timber.d("Skipping embed — artwork already in file")
-    }
-}
-
-            // ─────────────────────────────────────────────
-            // Nome do arquivo
-            // ─────────────────────────────────────────────
-
-            val safeName = fileName
-                .substringAfterLast('/')
-                .substringAfterLast('\\')
-                .replace(
-                    Regex("""[\\/:*?"<>|]"""),
-                    "_"
-                )
-                .ifBlank {
-                    "audio_$fileId"
+        val thumbnailCandidates: List<TdApi.Thumbnail> = when (val content = message.content) {
+            is TdApi.MessageAudio -> {
+                buildList {
+                    content.audio.externalAlbumCovers
+                        ?.filter { it.file.local.canBeDownloaded }
+                        ?.sortedByDescending { it.width * it.height }
+                        ?.let { addAll(it) }
+                    content.audio.albumCoverThumbnail?.let { add(it) }
                 }
+            }
+            is TdApi.MessageDocument -> {
+                listOfNotNull(content.document.thumbnail)
+            }
+            else -> emptyList()
+        }
 
-            // ─────────────────────────────────────────────
-            // Salva no Download público
-            // ─────────────────────────────────────────────
+        for ((index, thumb) in thumbnailCandidates.withIndex()) {
+            val downloaded = downloadFileAwait(
+                fileId = thumb.file.id,
+                priority = 1,
+                enforceCacheLimit = false
+            )
+            if (!downloaded.isNullOrBlank()) {
+                val f = File(downloaded)
+                if (f.exists() && f.length() > 0) {
+                    Timber.d(
+                        "Artwork source ${index + 2} (${thumb.width}x${thumb.height}): ${f.absolutePath}"
+                    )
+                    return f
+                }
+            }
+        }
 
-            val values = ContentValues().apply {
-                put(
-                    MediaStore.Downloads.DISPLAY_NAME,
-                    safeName
-                )
+        // ─── Prioridade 4: minithumbnail inline ─────────────────────────────
+        val miniBytes = when (val content = message.content) {
+            is TdApi.MessageAudio -> content.audio.albumCoverMinithumbnail?.data
+            is TdApi.MessageDocument -> content.document.minithumbnail?.data
+            else -> null
+        }
+        if (miniBytes != null && miniBytes.isNotEmpty()) {
+            val out = File(context.cacheDir, "tg_mini_${chatId}_${messageId}.jpg")
+            out.writeBytes(miniBytes)
+            Timber.d("Artwork source 4 (minithumbnail): ${out.absolutePath}")
+            return out
+        }
 
-                put(
-                    MediaStore.Downloads.MIME_TYPE,
-                    mimeType.ifBlank {
-                        "application/octet-stream"
-                    }
-                )
+        return null
+    }
 
-                put(
-                    MediaStore.Downloads.RELATIVE_PATH,
-                    "${Environment.DIRECTORY_DOWNLOADS}/AurisMusicPlayer/file/songs"
-                )
-
-                put(
-                    MediaStore.Downloads.IS_PENDING,
-                    1
-                )
+    /**
+     * Extracts embedded artwork (APIC frame) from an audio file via
+     * MediaMetadataRetriever, writing it to cache. Returns the cached file
+     * or null if the audio has no embedded artwork.
+     *
+     * The returned file's name starts with "tg_embedded_" so callers can
+     * detect that the artwork is already inside the audio and skip re-embedding.
+     */
+    private fun extractEmbeddedArtwork(audioFile: File): File? {
+        val retriever = MediaMetadataRetriever()
+        return try {
+            retriever.setDataSource(audioFile.absolutePath)
+            val bytes = retriever.embeddedPicture
+            if (bytes == null || bytes.isEmpty()) {
+                return null
             }
 
-            val resolver = context.contentResolver
+            // Validate that the bytes are actually an image
+            val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
+            if (opts.outWidth <= 0 || opts.outHeight <= 0) {
+                return null
+            }
 
-            val uri = resolver.insert(
-                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                values
-            ) ?: return@withContext null
-
+            val out = File(
+                context.cacheDir,
+                "tg_embedded_${audioFile.nameWithoutExtension}_${audioFile.lastModified()}.jpg"
+            )
+            if (!out.exists() || out.length() == 0L) {
+                out.writeBytes(bytes)
+            }
+            Timber.d("Embedded art: ${opts.outWidth}x${opts.outHeight}")
+            out
+        } catch (e: Exception) {
+            Timber.w(e, "extractEmbeddedArtwork failed for ${audioFile.name}")
+            null
+        } finally {
             try {
-                val output = resolver.openOutputStream(uri)
+                retriever.release()
+            } catch (_: Exception) {
+                // Ignore release errors
+            }
+        }
+    }
 
-                if (output == null) {
-                    resolver.delete(uri, null, null)
+    // ────────────────────────────────────────────────────────────────────────
+    // Download to public MediaStore with best artwork embed
+    // ────────────────────────────────────────────────────────────────────────
+
+    suspend fun downloadAudioToPublic(
+        fileId: Int,
+        fileName: String,
+        mimeType: String,
+        chatId: Long,
+        messageId: Long,
+        priority: Int = 16
+    ): String? {                                    // ← CORRIGIDO: chave faltando
+        val tempPath = downloadFileAwait(
+            fileId = fileId,
+            priority = priority,
+            enforceCacheLimit = false
+        ) ?: return null
+
+        return withContext(Dispatchers.IO) {
+            try {
+                val sourceFile = File(tempPath)
+
+                if (!sourceFile.exists()) {
+                    Timber.e("Downloaded audio does not exist: $tempPath")
                     return@withContext null
                 }
 
-                output.use { outputStream ->
-                    sourceFile.inputStream().use { inputStream ->
-                        inputStream.copyTo(outputStream)
+                // ─────────────────────────────────────────────
+                // Resolve a melhor capa disponível (cascata)
+                // ─────────────────────────────────────────────
+                val artworkFile = resolveBestArtwork(
+                    chatId = chatId,
+                    messageId = messageId,
+                    sourceAudioFile = sourceFile
+                )
+
+                // ─────────────────────────────────────────────
+                // Incorpora a capa no arquivo de áudio (se necessário)
+                // ─────────────────────────────────────────────
+                if (artworkFile != null) {
+                    // Se a capa veio da prioridade 1 (embedded), o áudio já a tem.
+                    // Re-embedar seria redundante e reescreveria o ID3 à toa.
+                    val isAlreadyEmbedded = artworkFile.name.startsWith("tg_embedded_")
+                    if (!isAlreadyEmbedded) {
+                        try {
+                            val audioFile = AudioFileIO.read(sourceFile)
+                            val tag = audioFile.getTagOrCreateAndSetDefault()
+                            val artwork = ArtworkFactory.createArtworkFromFile(artworkFile)
+                            tag.deleteArtworkField()
+                            tag.setField(artwork)
+                            audioFile.commit()
+                            Timber.d("Artwork embedded from ${artworkFile.name}")
+                        } catch (e: Exception) {
+                            Timber.e(e, "Artwork embed failed")
+                        }
+                    } else {
+                        Timber.d("Skipping embed — artwork already in file")
                     }
+                } else {
+                    Timber.d("No artwork available for fileId=$fileId (chatId=$chatId, messageId=$messageId)")
                 }
 
-                val completedValues = ContentValues().apply {
-                    put(
-                        MediaStore.Downloads.IS_PENDING,
-                        0
+                // ─────────────────────────────────────────────
+                // Nome do arquivo
+                // ─────────────────────────────────────────────
+                val safeName = fileName
+                    .substringAfterLast('/')
+                    .substringAfterLast('\\')
+                    .replace(
+                        Regex("""[\\/:*?"<>|]"""),
+                        "_"
                     )
+                    .ifBlank {
+                        "audio_$fileId"
+                    }
+
+                // ─────────────────────────────────────────────
+                // Salva no Download público
+                // ─────────────────────────────────────────────
+                val values = ContentValues().apply {
+                    put(MediaStore.Downloads.DISPLAY_NAME, safeName)
+                    put(
+                        MediaStore.Downloads.MIME_TYPE,
+                        mimeType.ifBlank { "application/octet-stream" }
+                    )
+                    put(
+                        MediaStore.Downloads.RELATIVE_PATH,
+                        "${Environment.DIRECTORY_DOWNLOADS}/AurisMusicPlayer/file/songs"
+                    )
+                    put(MediaStore.Downloads.IS_PENDING, 1)
                 }
 
-                resolver.update(
-                    uri,
-                    completedValues,
-                    null,
+                val resolver = context.contentResolver
+
+                val uri = resolver.insert(
+                    MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                    values
+                ) ?: return@withContext null
+
+                try {
+                    val output = resolver.openOutputStream(uri)
+                    if (output == null) {
+                        resolver.delete(uri, null, null)
+                        return@withContext null
+                    }
+
+                    output.use { outputStream ->
+                        sourceFile.inputStream().use { inputStream ->
+                            inputStream.copyTo(outputStream)
+                        }
+                    }
+
+                    val completedValues = ContentValues().apply {
+                        put(MediaStore.Downloads.IS_PENDING, 0)
+                    }
+
+                    resolver.update(uri, completedValues, null, null)
+
+                    Timber.d("Telegram audio saved with artwork: $uri")
+                    uri.toString()
+                } catch (e: Exception) {
+                    resolver.delete(uri, null, null)
+                    Timber.e(e, "Failed to copy Telegram audio to public storage")
                     null
-                )
-
-                Timber.d(
-                    "Telegram audio saved with artwork: $uri"
-                )
-
-                uri.toString()
+                }
             } catch (e: Exception) {
-                resolver.delete(uri, null, null)
-
-                Timber.e(
-                    e,
-                    "Failed to copy Telegram audio to public storage"
-                )
-
+                Timber.e(e, "Failed to download Telegram audio")
                 null
+            } finally {
+                telegramCacheManager.enforceStorageLimit()
             }
+        }
+    }
+
+    // ─── Chat / Messaging Support ─────────────────────────────────────────────
+
+    /**
+     * Fetches chat history (messages) for a chat.
+     * Returns messages in chronological order (oldest first).
+     */
+    suspend fun getChatHistory(
+        chatId: Long,
+        fromMessageId: Long = 0L,
+        limit: Int = 50
+    ): List<TdApi.Message> {
+        return try {
+            val messages = clientManager.sendRequest<TdApi.Messages>(
+                TdApi.GetChatHistory(chatId, fromMessageId, 0, limit, false)
+            )
+            messages.messages.reversed()
         } catch (e: Exception) {
-            Timber.e(
-                e,
-                "Failed to download Telegram audio"
-            )
+            Timber.e(e, "Error fetching chat history for $chatId")
+            emptyList()
+        }
+    }
 
+    /**
+     * Sends a text message to a chat.
+     */
+    suspend fun sendTextMessage(chatId: Long, text: String): Result<TdApi.Message> {
+        return try {
+            val request = TdApi.SendMessage().apply {
+                this.chatId = chatId
+                this.topicId = null
+                this.replyTo = null
+                this.options = null
+                this.replyMarkup = null
+                this.inputMessageContent = TdApi.InputMessageText(
+                    TdApi.FormattedText(text, emptyArray()),
+                    TdApi.LinkPreviewOptions(),
+                    false
+                )
+            }
+            Result.success(clientManager.sendRequest(request))
+        } catch (e: Exception) {
+            Timber.e(e, "SendMessage failed: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Answers a callback query (inline button press).
+     */
+    suspend fun answerCallbackQuery(
+        chatId: Long,
+        messageId: Long,
+        callbackData: ByteArray
+    ): TdApi.CallbackQueryAnswer? {
+        return try {
+            clientManager.sendRequest(
+                TdApi.GetCallbackQueryAnswer(
+                    chatId,
+                    messageId,
+                    TdApi.CallbackQueryPayloadData(callbackData)
+                )
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "Error answering callback query")
             null
-        } finally {
-            telegramCacheManager.enforceStorageLimit()
         }
     }
-}
-// ─── Chat / Messaging Support ─────────────────────────────────────────────
 
-/**
- * Fetches chat history (messages) for a chat.
- * Returns messages in chronological order (oldest first).
- */
-suspend fun getChatHistory(
-    chatId: Long,
-    fromMessageId: Long = 0L,
-    limit: Int = 50
-): List<TdApi.Message> {
-    return try {
-        val messages = clientManager.sendRequest<TdApi.Messages>(
-            TdApi.GetChatHistory(chatId, fromMessageId, 0, limit, false)
-        )
-        messages.messages.reversed() // oldest first
-    } catch (e: Exception) {
-        Timber.e(e, "Error fetching chat history for $chatId")
-        emptyList()
-    }
-}
-
-/**
- * Sends a text message to a chat.
- * NOTE: TdApi.SendMessage signature varies by TDLib version.
- * This version uses the 6-arg constructor: (chatId, topicId, replyTo, options, replyMarkup, inputMessageContent)
- * Adjust the topicId field if your TDLib uses `messageThreadId: Long` instead of `topicId: MessageTopic`.
- */
-suspend fun sendTextMessage(chatId: Long, text: String): Result<TdApi.Message> {
-    return try {
-        val request = TdApi.SendMessage().apply {
-            this.chatId = chatId
-            this.topicId = null
-            this.replyTo = null
-            this.options = null
-            this.replyMarkup = null
-            this.inputMessageContent = TdApi.InputMessageText(
-                TdApi.FormattedText(text, emptyArray()),
-                TdApi.LinkPreviewOptions(),
-                false
-            )
+    /**
+     * Gets a chat by ID (for getting chat info).
+     */
+    suspend fun getChat(chatId: Long): TdApi.Chat? {
+        return try {
+            clientManager.sendRequest(TdApi.GetChat(chatId))
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting chat $chatId")
+            null
         }
-        Result.success(clientManager.sendRequest(request))
-    } catch (e: Exception) {
-        Timber.e(e, "SendMessage failed: ${e.message}")
-        Result.failure(e)
     }
-}
-/**
- * Answers a callback query (inline button press).
- * NOTE: GetCallbackQueryAnswer requires (chatId, messageId, payload).
- * We use the actual callback data sent by the bot.
- */
-suspend fun answerCallbackQuery(
-    chatId: Long,
-    messageId: Long,
-    callbackData: ByteArray
-): TdApi.CallbackQueryAnswer? {
-    return try {
-        clientManager.sendRequest(
-            TdApi.GetCallbackQueryAnswer(
-                chatId,
-                messageId,
-                TdApi.CallbackQueryPayloadData(callbackData)
-            )
-        )
-    } catch (e: Exception) {
-        Timber.e(e, "Error answering callback query")
-        null
+
+    /**
+     * Flow of new messages for a specific chat.
+     */
+    fun observeNewMessages(chatId: Long): Flow<TdApi.Message> {
+        return clientManager.updates
+            .filterIsInstance<TdApi.UpdateNewMessage>()
+            .filter { it.message.chatId == chatId }
+            .map { it.message }
     }
-}
 
-/**
- * Gets a chat by ID (for getting chat info).
- */
-suspend fun getChat(chatId: Long): TdApi.Chat? {
-    return try {
-        clientManager.sendRequest(TdApi.GetChat(chatId))
-    } catch (e: Exception) {
-        Timber.e(e, "Error getting chat $chatId")
-        null
+    /**
+     * Flow of message content updates (for edits).
+     */
+    fun observeMessageUpdates(chatId: Long): Flow<TdApi.UpdateMessageContent> {
+        return clientManager.updates
+            .filterIsInstance<TdApi.UpdateMessageContent>()
+            .filter { it.chatId == chatId }
     }
-}
 
-/**
- * Flow of new messages for a specific chat.
- */
-fun observeNewMessages(chatId: Long): Flow<TdApi.Message> {
-    return clientManager.updates
-        .filterIsInstance<TdApi.UpdateNewMessage>()
-        .filter { it.message.chatId == chatId }
-        .map { it.message }
-}
-
-/**
- * Flow of message content updates (for edits).
- */
-fun observeMessageUpdates(chatId: Long): Flow<TdApi.UpdateMessageContent> {
-    return clientManager.updates
-        .filterIsInstance<TdApi.UpdateMessageContent>()
-        .filter { it.chatId == chatId }
-}
-
-fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
-    return clientManager.updates
-        .filterIsInstance<TdApi.UpdateMessageEdited>()
-        .filter { it.chatId == chatId }
-}
+    fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
+        return clientManager.updates
+            .filterIsInstance<TdApi.UpdateMessageEdited>()
+            .filter { it.chatId == chatId }
+    }
 
     fun clearMemoryCache() {
         resolvedPathCache.clear()
@@ -501,10 +503,6 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
 
     // ─── Forum Topic Support ──────────────────────────────────────────────────
 
-    /**
-     * Returns true if [chatId] is a supergroup with Forum mode enabled.
-     * Regular broadcast channels always return false.
-     */
     suspend fun isForum(chatId: Long): Boolean {
         return try {
             val chat = clientManager.sendRequest<TdApi.Chat>(TdApi.GetChat(chatId))
@@ -520,25 +518,20 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
         }
     }
 
-    /**
-     * Fetches all forum topics for a supergroup.
-     * Returns empty list for non-forum chats.
-     */
-
     suspend fun getForumTopics(chatId: Long): List<TelegramTopicEntity> {
         val topics = mutableListOf<TelegramTopicEntity>()
         try {
             var offsetDate = 0
-            var offsetMessageId = 0L          // int53 → Long ✓
-            var offsetForumTopicId = 0        // int32 → Int ✓
+            var offsetMessageId = 0L
+            var offsetForumTopicId = 0
 
             while (true) {
                 val request = TdApi.GetForumTopics().apply {
                     this.chatId = chatId
                     this.query = ""
-                    this.offsetDate = offsetDate              // Int ✓
-                    this.offsetMessageId = offsetMessageId   // Long ✓
-                    this.offsetForumTopicId = offsetForumTopicId  // Int ✓
+                    this.offsetDate = offsetDate
+                    this.offsetMessageId = offsetMessageId
+                    this.offsetForumTopicId = offsetForumTopicId
                     this.limit = 100
                 }
                 val result = clientManager.sendRequest<TdApi.ForumTopics>(request)
@@ -549,18 +542,11 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
                     val info = topic.info
                     val emojiId = info.icon.customEmojiId
 
-                    // Resolve the thread ID from ForumTopicInfo via reflection.
-                    // We only accept Long/Int fields with a non-zero value whose name
-                    // looks like a thread/message identifier. We skip fields named
-                    // exactly "id" because in many TDLib Java builds that field is a
-                    // String composite key, not the numeric thread ID.
                     val threadId: Long = run {
-                        // Log all fields once so we can confirm the correct name in Logcat
                         val allFields = info.javaClass.declaredFields
                         Timber.d("ForumTopicInfo fields: ${allFields.map { "${it.name}:${it.type.simpleName}" }}")
 
                         var resolved = 0L
-                        // Prefer the most specific name first, skip bare "id" (likely String)
                         val preferredNames = listOf(
                             "messageThreadId", "message_thread_id",
                             "threadId", "thread_id",
@@ -574,8 +560,8 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
                                 val v = f.get(info)
                                 val candidate = when (v) {
                                     is Long -> v
-                                    is Int  -> v.toLong()
-                                    else    -> 0L
+                                    is Int -> v.toLong()
+                                    else -> 0L
                                 }
                                 if (candidate != 0L) {
                                     Timber.d("ForumTopicInfo: resolved threadId via field '$name' = $candidate")
@@ -585,12 +571,12 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
                             } catch (_: NoSuchFieldException) { }
                         }
 
-                        // Last resort: scan ALL Long/Int fields for the first non-zero value
-                        // that isn't a known non-thread field
                         if (resolved == 0L) {
-                            val skipNames = setOf("chatId", "chat_id", "creatorUserId",
+                            val skipNames = setOf(
+                                "chatId", "chat_id", "creatorUserId",
                                 "creator_user_id", "customEmojiId", "custom_emoji_id",
-                                "editDate", "edit_date", "date")
+                                "editDate", "edit_date", "date"
+                            )
                             for (f in allFields) {
                                 if (f.name in skipNames) continue
                                 if (f.type != Long::class.java && f.type != Int::class.java) continue
@@ -598,8 +584,8 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
                                     f.isAccessible = true
                                     val candidate = when (val v = f.get(info)) {
                                         is Long -> v
-                                        is Int  -> v.toLong()
-                                        else    -> 0L
+                                        is Int -> v.toLong()
+                                        else -> 0L
                                     }
                                     if (candidate != 0L) {
                                         Timber.w("ForumTopicInfo: fallback threadId via field '${f.name}' = $candidate")
@@ -616,7 +602,6 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
                         resolved
                     }
 
-                    // Only add topics where we successfully resolved a thread ID
                     if (threadId != 0L) {
                         topics.add(
                             TelegramTopicEntity(
@@ -632,9 +617,9 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
 
                 if (result.nextOffsetDate == 0) break
 
-                offsetDate         = result.nextOffsetDate           // Int ✓
-                offsetMessageId    = result.nextOffsetMessageId      // Long ✓
-                offsetForumTopicId = result.nextOffsetForumTopicId   // Int ✓
+                offsetDate = result.nextOffsetDate
+                offsetMessageId = result.nextOffsetMessageId
+                offsetForumTopicId = result.nextOffsetForumTopicId
             }
 
             Timber.d("Fetched ${topics.size} forum topics for chat $chatId")
@@ -667,25 +652,19 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
                     this.limit = batchSize
                     this.filter = TdApi.SearchMessagesFilterAudio()
 
-                    // Set the topic/thread filter via reflection to handle different TDLib builds.
-                    // In newer builds the field is 'topicId' (MessageTopic object).
-                    // In older builds it was 'messageThreadId' (Long).
                     val scFields = this.javaClass.declaredFields
                     Timber.d("SearchChatMessages fields: ${scFields.map { "${it.name}:${it.type.simpleName}" }}")
 
                     var topicSet = false
 
-                    // Try 'topicId' field (newer TDLib — expects a MessageTopic object)
                     try {
                         val f = this.javaClass.getDeclaredField("topicId")
                         f.isAccessible = true
-                        // MessageTopicForum wraps the thread ID as Int
                         f.set(this, TdApi.MessageTopicForum(threadId.toInt()))
                         Timber.d("SearchChatMessages: set topicId = MessageTopicForum($threadId)")
                         topicSet = true
                     } catch (_: NoSuchFieldException) { }
 
-                    // Fallback: try 'messageThreadId' field (older TDLib — Long)
                     if (!topicSet) {
                         try {
                             val f = this.javaClass.getDeclaredField("messageThreadId")
@@ -718,9 +697,6 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
         }
         return allSongs
     }
-
-
-    // ─── Full-channel fetch
 
     suspend fun getAudioMessages(chatId: Long): List<Song> {
         Timber.d("Fetching chat history for chat: $chatId")
@@ -917,7 +893,11 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
     fun preResolveTelegramUri(uriString: String) {
         if (uriResolutionCache.containsKey(uriString)) return
         repositoryScope.launch {
-            try { resolveTelegramUri(uriString) } catch (e: Exception) { /* ignore */ }
+            try {
+                resolveTelegramUri(uriString)
+            } catch (e: Exception) {
+                // ignore
+            }
         }
     }
 
@@ -1005,135 +985,131 @@ fun observeMessageEdits(chatId: Long): Flow<TdApi.UpdateMessageEdited> {
         _songFileUpdated.tryEmit(existingSong.id)
     }
 
-suspend fun downloadFileAwait(
-    fileId: Int,
-    priority: Int = 1,
-    enforceCacheLimit: Boolean = true
-): String? {
-    resolvedPathCache[fileId]?.let { path ->
-        if (java.io.File(path).exists()) return path
-        resolvedPathCache.remove(fileId)
-    }
+    suspend fun downloadFileAwait(
+        fileId: Int,
+        priority: Int = 1,
+        enforceCacheLimit: Boolean = true
+    ): String? {
+        resolvedPathCache[fileId]?.let { path ->
+            if (java.io.File(path).exists()) return path
+            resolvedPathCache.remove(fileId)
+        }
 
-    val existingJob = activeDownloads[fileId]
-    if (existingJob != null && existingJob.isActive) return existingJob.await()
+        val existingJob = activeDownloads[fileId]
+        if (existingJob != null && existingJob.isActive) return existingJob.await()
 
-    val newJob = repositoryScope.async(start = kotlinx.coroutines.CoroutineStart.LAZY) {
-        try {
-            downloadSemaphore.withPermit {
-                val currentFile = getFile(fileId)
-                if (currentFile?.local?.isDownloadingCompleted == true) {
-                    currentFile.local.path.takeIf { it.isNotEmpty() }?.let {
-                        resolvedPathCache[fileId] = it
-                        persistSongFilePathIfNeeded(fileId, it)
-                        _downloadCompleted.tryEmit(fileId)
-                        
-                        // ✅ PONTO 1
-                        if (enforceCacheLimit) {
-    telegramCacheManager.enforceStorageLimit()
-}
-                        
-                        return@withPermit it
-                    }
-                }
-
-                val initialFile = getFile(fileId)
-                val isSmallFile = initialFile?.size == 0L || (initialFile?.size ?: 0) < 1024 * 1024
-
-                if (isSmallFile) {
-                    return@withPermit try {
-                        val resultFile = withTimeout(15_000L) {
-                            clientManager.sendRequest<TdApi.File>(TdApi.DownloadFile(fileId, priority, 0, 0, true))
-                        }
-                        if (resultFile.local.isDownloadingCompleted && resultFile.local.path.isNotEmpty()) {
-                            resolvedPathCache[fileId] = resultFile.local.path
-                            persistSongFilePathIfNeeded(fileId, resultFile.local.path)
+        val newJob = repositoryScope.async(start = kotlinx.coroutines.CoroutineStart.LAZY) {
+            try {
+                downloadSemaphore.withPermit {
+                    val currentFile = getFile(fileId)
+                    if (currentFile?.local?.isDownloadingCompleted == true) {
+                        currentFile.local.path.takeIf { it.isNotEmpty() }?.let {
+                            resolvedPathCache[fileId] = it
+                            persistSongFilePathIfNeeded(fileId, it)
                             _downloadCompleted.tryEmit(fileId)
-                            
-                            // ✅ PONTO 2
+
                             if (enforceCacheLimit) {
-    telegramCacheManager.enforceStorageLimit()
-}
-                            
-                            resultFile.local.path
-                        } else null
-                    } catch (e: kotlinx.coroutines.CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        if (e.message?.contains("canceled") != true && e.message?.contains("has failed") != true) {
-                            Timber.w("Sync download failed for $fileId: ${e.message}")
-                        }
-                        null
-                    }
-                }
-
-                try {
-                    clientManager.sendRequest<TdApi.File>(TdApi.DownloadFile(fileId, priority, 0, 0, false))
-                } catch (e: Exception) {
-                    Timber.w("Async download request failed for $fileId: ${e.message}")
-                    return@withPermit null
-                }
-
-                val completedPath = withTimeoutOrNull(60_000L) {
-                    clientManager.updates
-                        .filterIsInstance<TdApi.UpdateFile>()
-                        .filter { it.file.id == fileId }
-                        .first { update ->
-                            val file = update.file
-                            when {
-                                file.local.isDownloadingCompleted && file.local.path.isNotEmpty() -> true
-                                !file.local.canBeDownloaded -> throw Exception("File cannot be downloaded")
-                                else -> false
+                                telegramCacheManager.enforceStorageLimit()
                             }
+
+                            return@withPermit it
                         }
-                        .file.local.path
-                }
+                    }
 
-                if (completedPath != null) {
-                    resolvedPathCache[fileId] = completedPath
-                    persistSongFilePathIfNeeded(fileId, completedPath)
-                    _downloadCompleted.tryEmit(fileId)
-                    
-                    // ✅ PONTO 3
-                  if (enforceCacheLimit) {
-    telegramCacheManager.enforceStorageLimit()
-}
-                    
-                    return@withPermit completedPath
-                }
+                    val initialFile = getFile(fileId)
+                    val isSmallFile = initialFile?.size == 0L || (initialFile?.size ?: 0) < 1024 * 1024
 
-                val finalFile = getFile(fileId)
-                return@withPermit if (finalFile?.local?.isDownloadingCompleted == true && finalFile.local.path.isNotEmpty()) {
-                    persistSongFilePathIfNeeded(fileId, finalFile.local.path)
-                    _downloadCompleted.tryEmit(fileId)
-                    
-                    // ✅ PONTO 4
-                  if (enforceCacheLimit) {
-    telegramCacheManager.enforceStorageLimit()
-}
-                    
-                    finalFile.local.path
-                } else null
+                    if (isSmallFile) {
+                        return@withPermit try {
+                            val resultFile = withTimeout(15_000L) {
+                                clientManager.sendRequest<TdApi.File>(TdApi.DownloadFile(fileId, priority, 0, 0, true))
+                            }
+                            if (resultFile.local.isDownloadingCompleted && resultFile.local.path.isNotEmpty()) {
+                                resolvedPathCache[fileId] = resultFile.local.path
+                                persistSongFilePathIfNeeded(fileId, resultFile.local.path)
+                                _downloadCompleted.tryEmit(fileId)
+
+                                if (enforceCacheLimit) {
+                                    telegramCacheManager.enforceStorageLimit()
+                                }
+
+                                resultFile.local.path
+                            } else null
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            if (e.message?.contains("canceled") != true && e.message?.contains("has failed") != true) {
+                                Timber.w("Sync download failed for $fileId: ${e.message}")
+                            }
+                            null
+                        }
+                    }
+
+                    try {
+                        clientManager.sendRequest<TdApi.File>(TdApi.DownloadFile(fileId, priority, 0, 0, false))
+                    } catch (e: Exception) {
+                        Timber.w("Async download request failed for $fileId: ${e.message}")
+                        return@withPermit null
+                    }
+
+                    val completedPath = withTimeoutOrNull(60_000L) {
+                        clientManager.updates
+                            .filterIsInstance<TdApi.UpdateFile>()
+                            .filter { it.file.id == fileId }
+                            .first { update ->
+                                val file = update.file
+                                when {
+                                    file.local.isDownloadingCompleted && file.local.path.isNotEmpty() -> true
+                                    !file.local.canBeDownloaded -> throw Exception("File cannot be downloaded")
+                                    else -> false
+                                }
+                            }
+                            .file.local.path
+                    }
+
+                    if (completedPath != null) {
+                        resolvedPathCache[fileId] = completedPath
+                        persistSongFilePathIfNeeded(fileId, completedPath)
+                        _downloadCompleted.tryEmit(fileId)
+
+                        if (enforceCacheLimit) {
+                            telegramCacheManager.enforceStorageLimit()
+                        }
+
+                        return@withPermit completedPath
+                    }
+
+                    val finalFile = getFile(fileId)
+                    return@withPermit if (finalFile?.local?.isDownloadingCompleted == true && finalFile.local.path.isNotEmpty()) {
+                        persistSongFilePathIfNeeded(fileId, finalFile.local.path)
+                        _downloadCompleted.tryEmit(fileId)
+
+                        if (enforceCacheLimit) {
+                            telegramCacheManager.enforceStorageLimit()
+                        }
+
+                        finalFile.local.path
+                    } else null
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w("downloadFileAwait error for $fileId: ${e.message}")
+                throw e
+            } finally {
+                activeDownloads.remove(fileId)
             }
+        }
+
+        activeDownloads[fileId] = newJob
+        return try {
+            newJob.start()
+            newJob.await()
         } catch (e: kotlinx.coroutines.CancellationException) {
+            newJob.cancel(e)
             throw e
-        } catch (e: Exception) {
-            Timber.w("downloadFileAwait error for $fileId: ${e.message}")
-            throw e
-        } finally {
-            activeDownloads.remove(fileId)
         }
     }
-
-    activeDownloads[fileId] = newJob
-    return try {
-        newJob.start()
-        newJob.await()
-    } catch (e: kotlinx.coroutines.CancellationException) {
-        newJob.cancel(e)
-        throw e
-    }
-}
 
     // ─── App Playlist Management ──────────────────────────────────────────────
 
@@ -1146,7 +1122,6 @@ suspend fun downloadFileAwait(
         return if (songId == 0L) -1L else songId
     }
 
-    /** Creates/updates the whole-channel playlist (used for non-forum channels). */
     suspend fun updateAppPlaylistForTelegramChannel(
         chatId: Long,
         channelTitle: String,
@@ -1160,7 +1135,6 @@ suspend fun downloadFileAwait(
         }
     }
 
-    /** Creates/updates a per-topic playlist. */
     suspend fun updateAppPlaylistForTopic(
         chatId: Long,
         threadId: Long,
@@ -1227,7 +1201,6 @@ suspend fun downloadFileAwait(
         }
     }
 
-    /** Deletes all topic playlists for a given channel (used when removing a channel). */
     suspend fun deleteAllTopicPlaylistsForChannel(chatId: Long) {
         try {
             val all = withContext(Dispatchers.IO) {
