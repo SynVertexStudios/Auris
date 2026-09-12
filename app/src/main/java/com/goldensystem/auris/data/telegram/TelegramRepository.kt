@@ -153,6 +153,11 @@ fun observeMessageUpdates(chatId: Long): Flow<TdApi.UpdateMessageContent> {
         .filterIsInstance<TdApi.UpdateMessageContent>()
         .filter { it.chatId == chatId }
 }
+fun observeMessageReplyMarkupUpdates(chatId: Long): Flow<TdApi.UpdateMessageReplyMarkup> {
+    return clientManager.updates
+        .filterIsInstance<TdApi.UpdateMessageReplyMarkup>()
+        .filter { it.chatId == chatId }
+}
 
     fun clearMemoryCache() {
         resolvedPathCache.clear()

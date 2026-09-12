@@ -129,6 +129,7 @@ class TelegramChatViewModel @Inject constructor(
             // Observe new messages in real-time
             observeNewMessages()
             observeMessageEdits()
+            observeMessageReplyMarkupUpdates()
         }
     }
 
@@ -181,6 +182,27 @@ class TelegramChatViewModel @Inject constructor(
             }
         }
     }
+private fun observeMessageReplyMarkupUpdates() {
+    viewModelScope.launch {
+        telegramRepository.observeMessageReplyMarkupUpdates(chatId).collect { update ->
+            val refreshed = telegramRepository.getMessage(chatId, update.messageId)
+
+            if (refreshed != null) {
+                val item = mapMessageToChatItem(refreshed)
+
+                if (item != null) {
+                    _uiState.update { state ->
+                        val newItems = state.items.map { existing ->
+                            if (existing.messageId == item.messageId) item else existing
+                        }
+
+                        state.copy(items = newItems)
+                    }
+                }
+            }
+        }
+    }
+}
 
     // ─── Mapping ──────────────────────────────────────────────────────────────
 
