@@ -458,7 +458,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     
     //Audio
-    implementation("org.jaudiotagger:jaudiotagger:3.0.1")
+    implementation("org.jaudiotagger:jaudiotagger:2.0.3")
     
     //ADS-ainda em testes.
    /*admob implementation("com.google.android.gms:play-services-ads:24.5.0")*/
