@@ -25,6 +25,7 @@ data class TelegramLoginUiState(
     val loadingMessage: String = "",
     val inlineError: String? = null,
     val phoneEditMode: Boolean = false
+    var hasHydratedThisSession = false
 )
 
 @HiltViewModel
@@ -256,73 +257,74 @@ class TelegramLoginViewModel @Inject constructor(
     }
 
     private fun observeAuthorizationState() {
-        viewModelScope.launch {
-            telegramRepository.authorizationState.collect { state ->
-                when (state) {
-                    is TdApi.AuthorizationStateWaitPhoneNumber -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                loadingMessage = "",
-                                inlineError = null,
-                                phoneEditMode = false,
-                                code = "",
-                                password = ""
-                            )
-                        }
-                        if (!hasHydratedThisSession) {
+    viewModelScope.launch {
+        telegramRepository.authorizationState.collect { state ->
+            when (state) {
+                is TdApi.AuthorizationStateWaitPhoneNumber -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            loadingMessage = "",
+                            inlineError = null,
+                            phoneEditMode = false,
+                            code = "",
+                            password = ""
+                        )
+                    }
+                }
+
+                is TdApi.AuthorizationStateWaitCode -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            loadingMessage = "",
+                            inlineError = null,
+                            phoneEditMode = false,
+                            password = ""
+                        )
+                    }
+                }
+
+                is TdApi.AuthorizationStateWaitPassword -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            loadingMessage = "",
+                            inlineError = null
+                        )
+                    }
+                }
+
+                is TdApi.AuthorizationStateReady -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            loadingMessage = "",
+                            inlineError = null,
+                            phoneEditMode = false,
+                            code = "",
+                            password = ""
+                        )
+                    }
+
+                    if (!hasHydratedThisSession) {
                         hasHydratedThisSession = true
                         hydrateAllSavedChats()
                     }
-
-                    is TdApi.AuthorizationStateWaitCode -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                loadingMessage = "",
-                                inlineError = null,
-                                phoneEditMode = false,
-                                password = ""
-                            )
-                        }
-                    }
-
-                    is TdApi.AuthorizationStateWaitPassword -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                loadingMessage = "",
-                                inlineError = null
-                            )
-                        }
-                    }
-
-                    is TdApi.AuthorizationStateReady -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                loadingMessage = "",
-                                inlineError = null,
-                                phoneEditMode = false,
-                                code = "",
-                                password = ""
-                            )
-                        }
-                    }
-
-                    is TdApi.AuthorizationStateClosed -> {
-                        val message = "Telegram session was closed. Try opening login again."
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                loadingMessage = "",
-                                inlineError = message
-                            )
-                        }
-                    }
-
-                    else -> Unit
                 }
+
+                is TdApi.AuthorizationStateClosed -> {
+                    val message = "Telegram session was closed. Try opening login again."
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            loadingMessage = "",
+                            inlineError = message
+                        )
+                    }
+                }
+
+                else -> Unit
             }
         }
     }
