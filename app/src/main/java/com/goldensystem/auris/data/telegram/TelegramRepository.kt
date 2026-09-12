@@ -4,6 +4,9 @@ import com.goldensystem.auris.data.database.TelegramDao
 import com.goldensystem.auris.data.database.TelegramSongEntity
 import com.goldensystem.auris.data.database.TelegramTopicEntity
 import com.goldensystem.auris.data.model.Song
+import android.content.Context
+import java.io.File
+import dagger.hilt.android.qualifiers.ApplicationContext
 import android.content.ContentValues
 import android.os.Environment
 import android.provider.MediaStore
@@ -40,6 +43,7 @@ import timber.log.Timber
 
 @Singleton
 class TelegramRepository @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val clientManager: TelegramClientManager,
     private val dao: TelegramDao,
     private val playlistPreferencesRepository: PlaylistPreferencesRepository,
