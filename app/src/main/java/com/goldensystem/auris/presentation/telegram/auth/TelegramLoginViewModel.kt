@@ -24,8 +24,7 @@ data class TelegramLoginUiState(
     val isLoading: Boolean = false,
     val loadingMessage: String = "",
     val inlineError: String? = null,
-    val phoneEditMode: Boolean = false,
-    var hasHydratedThisSession = false
+    val phoneEditMode: Boolean = false
 )
 
 @HiltViewModel
@@ -34,6 +33,7 @@ class TelegramLoginViewModel @Inject constructor(
     private val musicRepository: MusicRepository
 ) : ViewModel() {
 
+    provate var hasHydratedThisSession = false
     val authorizationState = telegramRepository.authorizationState
 
     private val _uiState = MutableStateFlow(TelegramLoginUiState())
