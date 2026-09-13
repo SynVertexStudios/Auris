@@ -33,7 +33,7 @@ class TelegramLoginViewModel @Inject constructor(
     private val musicRepository: MusicRepository
 ) : ViewModel() {
 
-    provate var hasHydratedThisSession = false
+    private var hasHydratedThisSession = false
     val authorizationState = telegramRepository.authorizationState
 
     private val _uiState = MutableStateFlow(TelegramLoginUiState())
