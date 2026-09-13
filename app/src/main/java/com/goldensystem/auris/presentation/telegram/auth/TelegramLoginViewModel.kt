@@ -3,6 +3,8 @@ package com.goldensystem.auris.presentation.telegram.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.goldensystem.auris.data.model.Song
+import kotlinx.coroutines.flow.first
+import timber.log.Timber
 import com.goldensystem.auris.data.repository.MusicRepository
 import com.goldensystem.auris.data.telegram.TdlibRequestException
 import com.goldensystem.auris.data.telegram.TelegramRepository

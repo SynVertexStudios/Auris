@@ -2,6 +2,7 @@ package com.goldensystem.auris.data.telegram
 
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
+import com.goldensystem.auris.data.database.TelegramChannelEntity
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.images.ArtworkFactory
