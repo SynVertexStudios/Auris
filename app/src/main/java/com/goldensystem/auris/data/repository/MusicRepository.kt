@@ -84,6 +84,7 @@ interface MusicRepository {
     suspend fun getTopicsForChannel(chatId: Long): List<com.goldensystem.auris.data.database.TelegramTopicEntity>
     fun getAllTelegramTopics(): Flow<List<com.goldensystem.auris.data.database.TelegramTopicEntity>>
     suspend fun replaceTelegramSongsForTopic(chatId: Long, threadId: Long, topicName: String, songs: List<Song>)
+    suspend fun remapTelegramChatIds(remapping: Map<Long, Long>)
     val telegramRepository: com.goldensystem.auris.data.telegram.TelegramRepository
     suspend fun getSongIdsSorted(sortOption: com.goldensystem.auris.data.model.SortOption, storageFilter: com.goldensystem.auris.data.model.StorageFilter): List<Long>
     suspend fun getFavoriteSongIdsSorted(sortOption: com.goldensystem.auris.data.model.SortOption, storageFilter: com.goldensystem.auris.data.model.StorageFilter): List<Long>

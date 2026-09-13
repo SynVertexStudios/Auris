@@ -376,6 +376,21 @@ class MusicRepositoryImpl @Inject constructor(
             )
         }
     }
+    
+override suspend fun remapTelegramChatIds(remapping: Map<Long, Long>) {
+    if (remapping.isEmpty()) return
+    withContext(Dispatchers.IO) {
+        remapping.forEach { (oldId, newId) ->
+            if (oldId == newId) return@forEach
+            telegramDao.remapChannelChatId(oldId, newId)
+            telegramDao.deleteTopicsByChannel(oldId)
+            telegramDao.deleteSongsByChatId(oldId)
+            musicDao.clearTelegramSongsForChat(oldId)
+            telegramRepository.deleteAppPlaylistForTelegramChannel(oldId)
+            telegramRepository.deleteAllTopicPlaylistsForChannel(oldId)
+        }
+    }
+}
 
     override suspend fun replaceTelegramSongsForChannel(chatId: Long, songs: List<Song>) {
         val entities = songs.mapNotNull { it.toTelegramEntity() }.filter { it.chatId == chatId }
