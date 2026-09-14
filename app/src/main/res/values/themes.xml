@@ -23,4 +23,21 @@
 <!--        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>-->
 <!--        <item name="postSplashScreenTheme">@style/Theme.Auris</item>-->
     </style>
+<style name="Theme.Auris.ExternalPlayer" parent="android:style/Theme.Material.NoActionBar">
+    <!-- Janela totalmente transparente -->
+    <item name="android:windowIsTranslucent">true</item>
+    <item name="android:windowBackground">@android:color/transparent</item>
+    <item name="android:windowNoTitle">true</item>
+    <item name="android:windowIsFloating">false</item>
+    
+    <!-- Escurecer levemente o fundo (opcional) -->
+    <item name="android:backgroundDimEnabled">true</item>
+    <item name="android:windowDimAmount">0.3</item>
+    
+    <!-- Permitir que o conteúdo desenhe atrás das barras de sistema (opcional) -->
+    <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    <item name="android:statusBarColor">@android:color/transparent</item>
+    <item name="android:navigationBarColor">@android:color/transparent</item>
+    <item name="android:windowLightStatusBar">false</item>
+</style>
 </resources>

@@ -1,5 +1,11 @@
 package com.goldensystem.auris.presentation.components.player
 
+
+import com.goldensystem.auris.presentation.components.resolveCurrentLineIndex
+import androidx.compose.foundation.layout.offset
+import kotlinx.coroutines.flow.StateFlow
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.KeyboardArrowRight
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -549,30 +555,35 @@ fun FullPlayerContent(
         )
     }
 
-    val controlsSection: @Composable () -> Unit = {
-        FullPlayerControlsSection(
-            loadingTweaks = loadingTweaks,
-            isSheetDragGestureActive = isSheetDragGestureActive,
-            expansionFractionProvider = expansionFractionProvider,
-            currentSheetState = currentSheetState,
-            placeholderColor = placeholderColor,
-            placeholderOnColor = placeholderOnColor,
-            isPlayingProvider = isPlayingProvider,
-            onPrevious = safeOnPrevious,
-            onPlayPause = onPlayPause,
-            onNext = safeOnNext,
-            transportPlayPauseColors = transportPlayPauseColors,
-            transportSkipColors = transportSkipButtonColors,
-            isShuffleEnabledProvider = isShuffleEnabledProvider,
-            shuffleTransitionInProgress = shuffleTransitionInProgress,
-            repeatModeProvider = repeatModeProvider,
-            isFavoriteProvider = isFavoriteProvider,
-            isPlaybackEnabled = isPlaybackEnabled,
-            onShuffleToggle = onShuffleToggle,
-            onRepeatToggle = onRepeatToggle,
-            onFavoriteToggle = onFavoriteToggle
-        )
-    }
+val controlsSection: @Composable () -> Unit = {
+    FullPlayerControlsSection(
+        loadingTweaks = loadingTweaks,
+        isSheetDragGestureActive = isSheetDragGestureActive,
+        expansionFractionProvider = expansionFractionProvider,
+        currentSheetState = currentSheetState,
+        placeholderColor = placeholderColor,
+        placeholderOnColor = placeholderOnColor,
+        isPlayingProvider = isPlayingProvider,
+        onPrevious = safeOnPrevious,
+        onPlayPause = onPlayPause,
+        onNext = safeOnNext,
+        transportPlayPauseColors = transportPlayPauseColors,
+        transportSkipColors = transportSkipButtonColors,
+        isShuffleEnabledProvider = isShuffleEnabledProvider,
+        shuffleTransitionInProgress = shuffleTransitionInProgress,
+        repeatModeProvider = repeatModeProvider,
+        isFavoriteProvider = isFavoriteProvider,
+        isPlaybackEnabled = isPlaybackEnabled,
+        onShuffleToggle = onShuffleToggle,
+        onRepeatToggle = onRepeatToggle,
+        onFavoriteToggle = onFavoriteToggle,
+        // Novos parâmetros
+        lyricsProvider = lyricsProvider,
+        songIdProvider = { song.id },
+        playbackPositionFlow = playerViewModel.currentPlaybackPosition,
+        onSeekTo = { playerViewModel.seekTo(it) }
+    )
+}
 
     val portraitSongMetadataSection: @Composable () -> Unit = {
         FullPlayerSongMetadataSection(
@@ -1114,7 +1125,12 @@ private fun FullPlayerControlsSection(
     isPlaybackEnabled: Boolean,
     onShuffleToggle: () -> Unit,
     onRepeatToggle: () -> Unit,
-    onFavoriteToggle: () -> Unit
+    onFavoriteToggle: () -> Unit,
+    // NOVOS parâmetros para o card de letras
+    lyricsProvider: () -> Lyrics?,
+    songIdProvider: () -> String?,
+    playbackPositionFlow: StateFlow<Long>,
+    onSeekTo: (Long) -> Unit
 ) {
     val stableControlAnimationSpec = remember {
         tween<Float>(durationMillis = 240, easing = FastOutSlowInEasing)
@@ -1122,6 +1138,39 @@ private fun FullPlayerControlsSection(
     val shouldDelay = loadingTweaks.delayAll || loadingTweaks.delayControls
 
     val context = LocalContext.current
+
+    // ----- Estado do card de letras -----
+    var showLyricsCard by remember { mutableStateOf(false) }
+    var lyricsCardDismissed by remember(songIdProvider()) { mutableStateOf(false) }
+
+    val currentSongId = songIdProvider()
+
+    // Observa mudanças de letras para resetar o estado
+    val currentLyrics = lyricsProvider()
+    val hasSyncedLyrics = remember(currentLyrics) {
+        !currentLyrics?.synced.isNullOrEmpty()
+    }
+
+    // Reseta o "dispensado" quando muda a música
+    LaunchedEffect(currentSongId) {
+        lyricsCardDismissed = false
+        showLyricsCard = false
+    }
+
+    // Timer de 3 segundos para trocar de card
+    LaunchedEffect(currentSongId, hasSyncedLyrics, lyricsCardDismissed, currentSheetState) {
+        if (!hasSyncedLyrics || lyricsCardDismissed) {
+            showLyricsCard = false
+            return@LaunchedEffect
+        }
+        // Só conta o timer quando o player estiver expandido
+        if (currentSheetState != PlayerSheetState.EXPANDED) {
+            showLyricsCard = false
+            return@LaunchedEffect
+        }
+        delay(3000)
+        showLyricsCard = true
+    }
 
     DelayedContent(
         shouldDelay = shouldDelay,
@@ -1188,20 +1237,89 @@ private fun FullPlayerControlsSection(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            BottomToggleRow(
+            // ----- NOVO: alterna entre BottomToggleRow e InlineLyricsCard -----
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 66.dp, max = 86.dp)
                     .padding(horizontal = 26.dp, vertical = 0.dp)
-                    .padding(bottom = 6.dp),
-                isShuffleEnabled = isShuffleEnabledProvider(),
-                isShuffleTransitionInProgress = shuffleTransitionInProgress,
-                repeatMode = repeatModeProvider(),
-                isFavoriteProvider = isFavoriteProvider,
-                onShuffleToggle = onShuffleToggle,
-                onRepeatToggle = onRepeatToggle,
-                onFavoriteToggle = onFavoriteToggle
-            )
+                    .padding(bottom = 6.dp)
+            ) {
+                AnimatedContent(
+                    targetState = showLyricsCard,
+                    transitionSpec = {
+                        if (targetState) {
+                            // Toggle -> Lyrics (card de letras "sobe")
+                            (slideInVertically(
+                                initialOffsetY = { it },
+                                animationSpec = tween(420, easing = FastOutSlowInEasing)
+                            ) + fadeIn(tween(300)))
+                                .togetherWith(
+                                    slideOutVertically(
+                                        targetOffsetY = { -it },
+                                        animationSpec = tween(420, easing = FastOutSlowInEasing)
+                                    ) + fadeOut(tween(220)))
+                        } else {
+                            // Lyrics -> Toggle (card de letras "desce" e volta o toggle)
+                            (slideInVertically(
+                                initialOffsetY = { -it },
+                                animationSpec = tween(420, easing = FastOutSlowInEasing)
+                            ) + fadeIn(tween(300)))
+                                .togetherWith(
+                                    slideOutVertically(
+                                        targetOffsetY = { it },
+                                        animationSpec = tween(420, easing = FastOutSlowInEasing)
+                                    ) + fadeOut(tween(220)))
+                        }
+                    },
+                    label = "bottomCardSwap",
+                    modifier = Modifier.fillMaxWidth()
+                ) { showLyrics ->
+                    if (showLyrics && hasSyncedLyrics) {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            InlineLyricsCard(
+                                lyrics = currentLyrics,
+                                playbackPositionFlow = playbackPositionFlow,
+                                onSeekTo = onSeekTo,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            // Botão flutuante para dispensar (seta à direita)
+                            FilledIconButton(
+                                onClick = {
+                                    lyricsCardDismissed = true
+                                    showLyricsCard = false
+                                },
+                                modifier = Modifier
+                                    .align(Alignment.CenterEnd)
+                                    .offset(x = 34.dp)
+                                    .size(36.dp),
+                                colors = IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = LocalMaterialTheme.current.primary,
+                                    contentColor = LocalMaterialTheme.current.onPrimary
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.KeyboardArrowRight,
+                                    contentDescription = "Dispensar letras",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    } else {
+                        BottomToggleRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            isShuffleEnabled = isShuffleEnabledProvider(),
+                            isShuffleTransitionInProgress = shuffleTransitionInProgress,
+                            repeatMode = repeatModeProvider(),
+                            isFavoriteProvider = isFavoriteProvider,
+                            onShuffleToggle = onShuffleToggle,
+                            onRepeatToggle = onRepeatToggle,
+                            onFavoriteToggle = onFavoriteToggle
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -2601,6 +2719,123 @@ private fun BottomToggleRow(
                 iconId = if (isFavorite) R.drawable.round_favorite_24 else R.drawable.rounded_favorite_24,
                 contentDesc = "Favorito"
             )
+        }
+    }
+}
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun InlineLyricsCard(
+    lyrics: Lyrics?,
+    playbackPositionFlow: StateFlow<Long>,
+    onSeekTo: (Long) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val syncedLines = lyrics?.synced.orEmpty()
+    val playbackPosition by playbackPositionFlow.collectAsStateWithLifecycle()
+
+    val currentLineIndex = remember(playbackPosition, syncedLines) {
+        resolveCurrentLineIndex(lines = syncedLines, position = playbackPosition)
+    }
+    val currentLine = syncedLines.getOrNull(currentLineIndex)
+    val nextLine = syncedLines.getOrNull(currentLineIndex + 1)
+
+    val rowCorners = 60.dp
+    val containerColor = LocalMaterialTheme.current.surfaceContainerLowest.copy(alpha = 0.7f)
+    val textColor = LocalMaterialTheme.current.onSurface
+    val accentColor = LocalMaterialTheme.current.primary
+    val secondaryTextColor = LocalMaterialTheme.current.onSurfaceVariant
+
+    Box(
+        modifier = modifier
+            .heightIn(min = 66.dp, max = 86.dp)
+            .background(
+                color = containerColor,
+                shape = AbsoluteSmoothCornerShape(
+                    cornerRadiusBL = rowCorners,
+                    smoothnessAsPercentTR = 60,
+                    cornerRadiusBR = rowCorners,
+                    smoothnessAsPercentBL = 60,
+                    cornerRadiusTL = rowCorners,
+                    smoothnessAsPercentBR = 60,
+                    cornerRadiusTR = rowCorners,
+                    smoothnessAsPercentTL = 60
+                )
+            )
+            .clip(
+                AbsoluteSmoothCornerShape(
+                    cornerRadiusBL = rowCorners,
+                    smoothnessAsPercentTR = 60,
+                    cornerRadiusBR = rowCorners,
+                    smoothnessAsPercentBL = 60,
+                    cornerRadiusTL = rowCorners,
+                    smoothnessAsPercentBR = 60,
+                    cornerRadiusTR = rowCorners,
+                    smoothnessAsPercentTL = 60
+                )
+            )
+            .clickable {
+                currentLine?.let { line ->
+                    onSeekTo(line.time.toLong())
+                }
+            },
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 22.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // Barra/indicador à esquerda
+            Box(
+                modifier = Modifier
+                    .size(width = 4.dp, height = 32.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(accentColor)
+            )
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
+                AnimatedContent(
+                    targetState = currentLine?.line ?: "",
+                    transitionSpec = {
+                        (fadeIn(tween(280)) + slideInVertically(
+                            initialOffsetY = { it / 2 },
+                            animationSpec = tween(320, easing = FastOutSlowInEasing)
+                        )).togetherWith(
+                            fadeOut(tween(180)) + slideOutVertically(
+                                targetOffsetY = { -it / 2 },
+                                animationSpec = tween(220, easing = FastOutSlowInEasing)
+                            )
+                        )
+                    },
+                    label = "currentLyricLine"
+                ) { lineText ->
+                    Text(
+                        text = lineText.ifBlank { "♪" },
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            color = textColor
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                if (!nextLine?.line.isNullOrBlank()) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = nextLine!!.line,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = secondaryTextColor.copy(alpha = 0.7f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
         }
     }
 }

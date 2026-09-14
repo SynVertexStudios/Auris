@@ -140,6 +140,26 @@
                 <data android:mimeType="audio/*" />
             </intent-filter>
         </activity>
+<activity
+    android:name=".presentation.external.ExternalPlayerActivity"
+    android:exported="true"
+    android:launchMode="singleInstance"
+    android:excludeFromRecents="true"
+    android:theme="@style/Theme.Auris.ExternalPlayer">
+    
+    <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <data android:mimeType="audio/*" />
+    </intent-filter>
+    
+    <!-- Opcional: para compartilhamento -->
+    <intent-filter>
+        <action android:name="android.intent.action.SEND" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <data android:mimeType="audio/*" />
+    </intent-filter>
+</activity>
 
         <service
             android:name=".data.service.MusicService"
