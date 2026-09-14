@@ -1,6 +1,6 @@
 package com.goldensystem.auris.presentation.components.player
 
-
+import kotlinx.coroutines.delay
 import com.goldensystem.auris.presentation.components.resolveCurrentLineIndex
 import androidx.compose.foundation.layout.offset
 import kotlinx.coroutines.flow.StateFlow
