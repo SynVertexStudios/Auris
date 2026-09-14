@@ -5,7 +5,7 @@ import com.goldensystem.auris.presentation.components.resolveCurrentLineIndex
 import androidx.compose.foundation.layout.offset
 import kotlinx.coroutines.flow.StateFlow
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -577,11 +577,11 @@ val controlsSection: @Composable () -> Unit = {
         onShuffleToggle = onShuffleToggle,
         onRepeatToggle = onRepeatToggle,
         onFavoriteToggle = onFavoriteToggle,
-        // Novos parâmetros
         lyricsProvider = lyricsProvider,
         songIdProvider = { song.id },
         playbackPositionFlow = playerViewModel.currentPlaybackPosition,
-        onSeekTo = { playerViewModel.seekTo(it) }
+        onSeekTo = { playerViewModel.seekTo(it) },
+        onOpenLyricsSheet = { showLyricsSheet = true }   // NOVO
     )
 }
 
@@ -1126,11 +1126,12 @@ private fun FullPlayerControlsSection(
     onShuffleToggle: () -> Unit,
     onRepeatToggle: () -> Unit,
     onFavoriteToggle: () -> Unit,
-    // NOVOS parâmetros para o card de letras
+    // Parâmetros do card de letras
     lyricsProvider: () -> Lyrics?,
     songIdProvider: () -> String?,
     playbackPositionFlow: StateFlow<Long>,
-    onSeekTo: (Long) -> Unit
+    onSeekTo: (Long) -> Unit,
+    onOpenLyricsSheet: () -> Unit   // NOVO
 ) {
     val stableControlAnimationSpec = remember {
         tween<Float>(durationMillis = 240, easing = FastOutSlowInEasing)
@@ -1141,29 +1142,29 @@ private fun FullPlayerControlsSection(
 
     // ----- Estado do card de letras -----
     var showLyricsCard by remember { mutableStateOf(false) }
+    // `lyricsCardDismissed` = true significa que o usuário escondeu o card;
+    // ele só volta se o usuário tocar no ícone de letras.
     var lyricsCardDismissed by remember(songIdProvider()) { mutableStateOf(false) }
 
     val currentSongId = songIdProvider()
 
-    // Observa mudanças de letras para resetar o estado
     val currentLyrics = lyricsProvider()
     val hasSyncedLyrics = remember(currentLyrics) {
         !currentLyrics?.synced.isNullOrEmpty()
     }
 
-    // Reseta o "dispensado" quando muda a música
+    // Reseta o estado quando muda a música
     LaunchedEffect(currentSongId) {
         lyricsCardDismissed = false
         showLyricsCard = false
     }
 
-    // Timer de 3 segundos para trocar de card
+    // Timer de 3s para trocar de card (só se NÃO foi dispensado)
     LaunchedEffect(currentSongId, hasSyncedLyrics, lyricsCardDismissed, currentSheetState) {
         if (!hasSyncedLyrics || lyricsCardDismissed) {
             showLyricsCard = false
             return@LaunchedEffect
         }
-        // Só conta o timer quando o player estiver expandido
         if (currentSheetState != PlayerSheetState.EXPANDED) {
             showLyricsCard = false
             return@LaunchedEffect
@@ -1237,7 +1238,7 @@ private fun FullPlayerControlsSection(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // ----- NOVO: alterna entre BottomToggleRow e InlineLyricsCard -----
+            // ----- Alterna entre BottomToggleRow (com ícone de letras) e InlineLyricsCard -----
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1281,10 +1282,11 @@ private fun FullPlayerControlsSection(
                                 lyrics = currentLyrics,
                                 playbackPositionFlow = playbackPositionFlow,
                                 onSeekTo = onSeekTo,
+                                onOpenLyricsSheet = onOpenLyricsSheet,
                                 modifier = Modifier.fillMaxWidth()
                             )
 
-                            // Botão flutuante para dispensar (seta à direita)
+                            // Botão flutuante para dispensar (seta para BAIXO)
                             FilledIconButton(
                                 onClick = {
                                     lyricsCardDismissed = true
@@ -1300,14 +1302,14 @@ private fun FullPlayerControlsSection(
                                 )
                             ) {
                                 Icon(
-                                    imageVector = Icons.Rounded.KeyboardArrowRight,
+                                    imageVector = Icons.Rounded.KeyboardArrowDown,
                                     contentDescription = "Dispensar letras",
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
                         }
                     } else {
-                        BottomToggleRow(
+                        BottomToggleRowWithLyrics(
                             modifier = Modifier.fillMaxWidth(),
                             isShuffleEnabled = isShuffleEnabledProvider(),
                             isShuffleTransitionInProgress = shuffleTransitionInProgress,
@@ -1315,7 +1317,13 @@ private fun FullPlayerControlsSection(
                             isFavoriteProvider = isFavoriteProvider,
                             onShuffleToggle = onShuffleToggle,
                             onRepeatToggle = onRepeatToggle,
-                            onFavoriteToggle = onFavoriteToggle
+                            onFavoriteToggle = onFavoriteToggle,
+                            hasSyncedLyrics = hasSyncedLyrics,
+                            onLyricsIconClick = {
+                                // Traz o card de letras de volta (mesmo se tinha sido dispensado)
+                                lyricsCardDismissed = false
+                                showLyricsCard = true
+                            }
                         )
                     }
                 }
@@ -2623,7 +2631,7 @@ private fun expressiveSkipButtonColors(colorScheme: ColorScheme): TransportButto
 }
 
 @Composable
-private fun BottomToggleRow(
+private fun BottomToggleRowWithLyrics(
     modifier: Modifier,
     isShuffleEnabled: Boolean,
     isShuffleTransitionInProgress: Boolean,
@@ -2631,13 +2639,14 @@ private fun BottomToggleRow(
     isFavoriteProvider: () -> Boolean,
     onShuffleToggle: () -> Unit,
     onRepeatToggle: () -> Unit,
-    onFavoriteToggle: () -> Unit
+    onFavoriteToggle: () -> Unit,
+    hasSyncedLyrics: Boolean,
+    onLyricsIconClick: () -> Unit
 ) {
     val isFavorite = isFavoriteProvider()
     val rowCorners = 60.dp
     val inactiveBg = LocalMaterialTheme.current.onSurface.copy(alpha = 0.07f)
     val inactiveContentColor = LocalMaterialTheme.current.onSurface
-
 
     Box(
         modifier = modifier.background(
@@ -2675,6 +2684,23 @@ private fun BottomToggleRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             val commonModifier = Modifier.weight(1f)
+
+            // Botão extra de letras — só aparece se houver letra sincronizada
+            if (hasSyncedLyrics) {
+                ToggleSegmentButton(
+                    modifier = commonModifier,
+                    active = false, // é um botão de ação, não um toggle
+                    enabled = true,
+                    activeColor = LocalMaterialTheme.current.primaryFixed,
+                    activeCornerRadius = rowCorners,
+                    activeContentColor = LocalMaterialTheme.current.onPrimaryFixed,
+                    inactiveColor = inactiveBg,
+                    inactiveContentColor = inactiveContentColor,
+                    onClick = onLyricsIconClick,
+                    iconId = R.drawable.rounded_lyrics_24,
+                    contentDesc = "Mostrar letra"
+                )
+            }
 
             ToggleSegmentButton(
                 modifier = commonModifier,
@@ -2728,6 +2754,7 @@ private fun InlineLyricsCard(
     lyrics: Lyrics?,
     playbackPositionFlow: StateFlow<Long>,
     onSeekTo: (Long) -> Unit,
+    onOpenLyricsSheet: () -> Unit,   // NOVO
     modifier: Modifier = Modifier
 ) {
     val syncedLines = lyrics?.synced.orEmpty()
@@ -2773,11 +2800,8 @@ private fun InlineLyricsCard(
                     smoothnessAsPercentTL = 60
                 )
             )
-            .clickable {
-                currentLine?.let { line ->
-                    onSeekTo(line.time.toLong())
-                }
-            },
+            // Click em qualquer lugar do card abre o sheet de letras
+            .clickable { onOpenLyricsSheet() },
         contentAlignment = Alignment.CenterStart
     ) {
         Row(
