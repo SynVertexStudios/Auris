@@ -1,5 +1,6 @@
 package com.goldensystem.auris.presentation.components.external
 
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.FastOutSlowInEasing
