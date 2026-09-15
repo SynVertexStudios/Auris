@@ -257,18 +257,16 @@ fun ExternalPlayerOverlay(
 private fun EdgeGlowBorder(modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "EdgeGlow")
 
-    // Respiração suave (não pulsa com a música)
     val breathe by infiniteTransition.animateFloat(
-        initialValue = 0.55f,
-        targetValue = 0.9f,
+        initialValue = 0.5f,
+        targetValue = 0.8f,
         animationSpec = infiniteRepeatable(
-            animation = tween(3500, easing = FastOutSlowInEasing),
+            animation = tween(3800, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "BreatheAlpha"
     )
 
-    // Deslocamento lento do gradiente diagonal (dá sensação de "vivo")
     val gradientShift by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -285,83 +283,93 @@ private fun EdgeGlowBorder(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
-        // Borda fina, tipo "meio dedo"
-        val border = 28.dp.toPx()
-        // Raio do brilho nos cantos — também pequeno
-        val cornerRadius = 120.dp.toPx()
+        val border = 26.dp.toPx()
+        val corner = 80.dp.toPx()  // arredondamento dos cantos do glow
 
-        // Topo
-        drawRect(
-            brush = Brush.verticalGradient(
-                0f to purple.copy(alpha = breathe * 0.9f),
-                1f to Color.Transparent,
-                startY = 0f,
-                endY = border
-            ),
-            topLeft = Offset.Zero,
-            size = Size(w, border)
-        )
-
-        // Base
-        drawRect(
-            brush = Brush.verticalGradient(
-                0f to Color.Transparent,
-                1f to blue.copy(alpha = breathe * 0.9f),
-                startY = h - border,
-                endY = h
-            ),
-            topLeft = Offset(0f, h - border),
-            size = Size(w, border)
-        )
-
-        // Esquerda
+        // 1) Moldura superior: gradiente azul → roxo no horizontal
         drawRect(
             brush = Brush.horizontalGradient(
-                0f to blue.copy(alpha = breathe * 0.85f),
-                1f to Color.Transparent,
+                colors = listOf(
+                    blue.copy(alpha = breathe * 0.8f * (1f - gradientShift * 0.2f)),
+                    purple.copy(alpha = breathe * 0.8f * (0.8f + gradientShift * 0.2f))
+                ),
                 startX = 0f,
-                endX = border
-            ),
-            topLeft = Offset.Zero,
-            size = Size(border, h)
-        )
-
-        // Direita
-        drawRect(
-            brush = Brush.horizontalGradient(
-                0f to Color.Transparent,
-                1f to purple.copy(alpha = breathe * 0.85f),
-                startX = w - border,
                 endX = w
             ),
-            topLeft = Offset(w - border, 0f),
-            size = Size(border, h)
+            topLeft = Offset(0f, 0f),
+            size = Size(w, border),
+            alpha = 1f
         )
 
-        // Brilho suave no canto superior esquerdo (azul), bem pequeno
+        // 2) Moldura inferior: mesmo gradiente, mas invertido
         drawRect(
-            brush = Brush.radialGradient(
+            brush = Brush.horizontalGradient(
                 colors = listOf(
-                    blue.copy(alpha = breathe * 0.6f * (1f - gradientShift * 0.3f)),
-                    Color.Transparent
+                    blue.copy(alpha = breathe * 0.7f),
+                    purple.copy(alpha = breathe * 0.7f)
                 ),
-                center = Offset(0f, 0f),
-                radius = cornerRadius
+                startX = 0f,
+                endX = w
             ),
-            size = Size(w, h)
+            topLeft = Offset(0f, h - border),
+            size = Size(w, border),
+            alpha = 1f
         )
 
-        // Brilho suave no canto inferior direito (roxo), bem pequeno
+        // 3) Moldura esquerda: vertical, azul → transparente
         drawRect(
-            brush = Brush.radialGradient(
+            brush = Brush.verticalGradient(
                 colors = listOf(
-                    purple.copy(alpha = breathe * 0.6f * (0.7f + gradientShift * 0.3f)),
-                    Color.Transparent
+                    blue.copy(alpha = breathe * 0.7f),
+                    blue.copy(alpha = breathe * 0.7f)
                 ),
-                center = Offset(w, h),
-                radius = cornerRadius
+                startY = 0f,
+                endY = h
             ),
-            size = Size(w, h)
+            topLeft = Offset(0f, border),
+            size = Size(border, h - border * 2),
+            alpha = 1f
         )
+
+        // 4) Moldura direita: vertical, roxo
+        drawRect(
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    purple.copy(alpha = breathe * 0.7f),
+                    purple.copy(alpha = breathe * 0.7f)
+                ),
+                startY = 0f,
+                endY = h
+            ),
+            topLeft = Offset(w - border, border),
+            size = Size(border, h - border * 2),
+            alpha = 1f
+        )
+
+        // 5) Cantos arredondados: 4 radiais pequenos que "amaciam" a quina
+        //    — usam BlendMode.SrcOver pra somar suave, não estourar alpha
+        val cornerRadius = corner
+        listOf(
+            Offset(0f, 0f),           // sup. esquerdo → azul
+            Offset(w, 0f),            // sup. direito → roxo
+            Offset(0f, h),            // inf. esquerdo → azul
+            Offset(w, h)              // inf. direito → roxo
+        ).forEachIndexed { i, center ->
+            val color = if (i % 2 == 0) blue else purple
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        color.copy(alpha = breathe * 0.55f),
+                        Color.Transparent
+                    ),
+                    center = center,
+                    radius = cornerRadius
+                ),
+                radius = cornerRadius,
+                center = center,
+                alpha = 1f,
+                blendMode = androidx.compose.ui.graphics.BlendMode.SrcOver
+            )
+        }
     }
 }
