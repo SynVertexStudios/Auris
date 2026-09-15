@@ -2,13 +2,16 @@ package com.goldensystem.auris.presentation.components.external
 
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,19 +29,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,21 +43,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
-import com.goldensystem.auris.R
 import com.goldensystem.auris.presentation.components.OptimizedAlbumArt
 import com.goldensystem.auris.presentation.components.WavyMusicSlider
 import com.goldensystem.auris.presentation.components.player.AnimatedPlaybackControls
 import com.goldensystem.auris.presentation.viewmodel.PlayerViewModel
 import com.goldensystem.auris.utils.formatDuration
 import kotlin.math.roundToLong
-import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -73,24 +71,17 @@ fun ExternalPlayerOverlay(
     val playbackPosition by playerViewModel.currentPlaybackPosition.collectAsStateWithLifecycle()
     val remotePosition by playerViewModel.remotePosition.collectAsStateWithLifecycle()
     val isRemotePlaybackActive by playerViewModel.isRemotePlaybackActive.collectAsStateWithLifecycle()
-    val navBarCornerRadius by playerViewModel.navBarCornerRadius.collectAsStateWithLifecycle()
     val currentSong = stablePlayerState.currentSong
 
-    var sheetVisible by remember { mutableStateOf(true) }
-    var awaitingSong by remember { mutableStateOf(true) }
+    // Sem card visível: só fecha quando não há mais música
+    LaunchedEffect(currentSong) {
+        if (currentSong == null) {
+            onDismiss()
+        }
+    }
 
-    val sheetShape = remember(navBarCornerRadius) {
-        val radiusDp = navBarCornerRadius.dp
-        AbsoluteSmoothCornerShape(
-            cornerRadiusTL = radiusDp,
-            smoothnessAsPercentTR = 60,
-            cornerRadiusTR = radiusDp,
-            smoothnessAsPercentTL = 60,
-            cornerRadiusBL = radiusDp,
-            smoothnessAsPercentBR = 60,
-            cornerRadiusBR = radiusDp,
-            smoothnessAsPercentBL = 60
-        )
+    BackHandler {
+        onDismiss()
     }
 
     val controlAnimationSpec = remember {
@@ -100,244 +91,274 @@ fun ExternalPlayerOverlay(
         )
     }
 
-    LaunchedEffect(currentSong) {
-        if (currentSong != null) {
-            awaitingSong = false
-            sheetVisible = true
-        } else if (!awaitingSong) {
-            sheetVisible = false
-            onDismiss()
-        }
-    }
-
-    BackHandler(enabled = sheetVisible) {
-        onDismiss()
-    }
-
-    val backgroundScrim = androidx.compose.ui.graphics.Color.Transparent
     val safePadding = WindowInsets.safeDrawing.asPaddingValues()
     val bottomPadding = safePadding.calculateBottomPadding()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        AnimatedVisibility(
-            visible = sheetVisible,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(backgroundScrim)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { onDismiss() }
-            )
-        }
 
-        AnimatedVisibility(
-            visible = sheetVisible,
-            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
-            modifier = Modifier.align(Alignment.BottomCenter)
-        ) {
-            Surface(
-                tonalElevation = 12.dp,
-                shadowElevation = 20.dp,
-                shape = sheetShape,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 16.dp)
-            ) {
-                if (currentSong == null) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                } else {
-                    val totalDuration = stablePlayerState.totalDuration.coerceAtLeast(0L)
-                    val rawPosition = if (isRemotePlaybackActive) remotePosition else playbackPosition
-                    val position = rawPosition.coerceIn(0L, totalDuration)
-                    val progressFraction = if (totalDuration > 0) position.toFloat() / totalDuration else 0f
+        // 1. Brilho gradiente nas bordas
+        EdgeGlowBorder(modifier = Modifier.fillMaxSize())
 
-                    var sliderPosition by remember(currentSong.id) { mutableStateOf(progressFraction) }
-                    var isUserScrubbing by remember { mutableStateOf(false) }
+        // 2. Área clicável no centro vazio → fecha o player
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { onDismiss() }
+        )
 
-                    LaunchedEffect(progressFraction) {
-                        if (!isUserScrubbing) {
-                            sliderPosition = progressFraction
-                        }
-                    }
+        // 3. Conteúdo do player, tudo embaixo
+        if (currentSong != null) {
+            val totalDuration = stablePlayerState.totalDuration.coerceAtLeast(0L)
+            val rawPosition = if (isRemotePlaybackActive) remotePosition else playbackPosition
+            val position = rawPosition.coerceIn(0L, totalDuration)
+            val progressFraction = if (totalDuration > 0) position.toFloat() / totalDuration else 0f
 
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 16.dp, end = 16.dp, top = 24.dp)
-                            .padding(bottom = bottomPadding)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp)
-                        ) {
-                            Spacer(
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .width(40.dp)
-                                    .height(5.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                            )
-//                            IconButton(
-//                                onClick = onDismiss,
-//                                modifier = Modifier
-//                                    .align(Alignment.TopEnd)
-//                                    .size(32.dp)
-//                            ) {
-//                                Icon(
-//                                    painter = painterResource(id = R.drawable.rounded_close_24),
-//                                    contentDescription = stringResource(id = R.string.close_external_player),
-//                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-//                                )
-//                            }
-                        }
+            var sliderPosition by remember(currentSong.id) { mutableStateOf(progressFraction) }
+            var isUserScrubbing by remember { mutableStateOf(false) }
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(18.dp),
-                                tonalElevation = 4.dp
-                            ) {
-                                OptimizedAlbumArt(
-                                    uri = currentSong.albumArtUriString,
-                                    title = currentSong.title,
-                                    modifier = Modifier
-                                        .size(96.dp)
-                                        .clip(RoundedCornerShape(18.dp))
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(16.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = currentSong.title,
-                                    style = MaterialTheme.typography.headlineSmall.copy(
-                                        fontSize = 22.sp,
-                                        fontWeight = FontWeight.SemiBold
-                                    ),
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = currentSong.displayArtist,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = currentSong.album,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        WavyMusicSlider(
-                            value = sliderPosition,
-                            onValueChange = { newValue ->
-                                isUserScrubbing = true
-                                sliderPosition = newValue.coerceIn(0f, 1f)
-                            },
-                            onValueChangeFinished = {
-                                val targetPosition = (sliderPosition * totalDuration).roundToLong()
-                                playerViewModel.seekTo(targetPosition)
-                                isUserScrubbing = false
-                            },
-                            waveLength = 30.dp,
-                            isPlaying = stablePlayerState.isPlaying,
-                            isWaveEligible = true,
-                            semanticsLabel = "Playback position"
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = formatDuration(position),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = formatDuration(totalDuration),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        AnimatedPlaybackControls(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp),
-                            isPlayingProvider = { stablePlayerState.isPlaying },
-                            onPrevious = playerViewModel::previousSong,
-                            onPlayPause = playerViewModel::playPause,
-                            onNext = playerViewModel::nextSong,
-                            height = 76.dp,
-                            pressAnimationSpec = controlAnimationSpec,
-                            colorOtherButtons = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                            colorPlayPause = MaterialTheme.colorScheme.primary,
-                            tintPlayPauseIcon = MaterialTheme.colorScheme.onPrimary,
-                            tintOtherIcons = MaterialTheme.colorScheme.primary
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Button(
-                            onClick = onOpenFullPlayer,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = AbsoluteSmoothCornerShape(
-                                cornerRadiusTR = 16.dp,
-                                smoothnessAsPercentTR = 60,
-                                cornerRadiusBL = 16.dp,
-                                smoothnessAsPercentTL = 60,
-                                cornerRadiusTL = 16.dp,
-                                smoothnessAsPercentBL = 60,
-                                cornerRadiusBR = 16.dp,
-                                smoothnessAsPercentBR = 60
-                            ),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
-                        ) {
-                            Text(
-                                modifier = Modifier.padding(vertical = 10.dp),
-                                text = stringResource(id = R.string.open_full_player),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
-                    }
+            LaunchedEffect(progressFraction) {
+                if (!isUserScrubbing) {
+                    sliderPosition = progressFraction
                 }
             }
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = bottomPadding + 16.dp)
+                    .clickable(
+                        // evita que o clique no card feche o player
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { /* consume */ },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Capa + texto
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OptimizedAlbumArt(
+                        uri = currentSong.albumArtUriString,
+                        title = currentSong.title,
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                    )
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = currentSong.title,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = currentSong.displayArtist,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.7f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                // Barra de progresso
+                WavyMusicSlider(
+                    value = sliderPosition,
+                    onValueChange = { newValue ->
+                        isUserScrubbing = true
+                        sliderPosition = newValue.coerceIn(0f, 1f)
+                    },
+                    onValueChangeFinished = {
+                        val targetPosition = (sliderPosition * totalDuration).roundToLong()
+                        playerViewModel.seekTo(targetPosition)
+                        isUserScrubbing = false
+                    },
+                    waveLength = 30.dp,
+                    isPlaying = stablePlayerState.isPlaying,
+                    isWaveEligible = true,
+                    semanticsLabel = "Playback position"
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // Tempos
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = formatDuration(position),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                    Text(
+                        text = formatDuration(totalDuration),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                // Controles
+                AnimatedPlaybackControls(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    isPlayingProvider = { stablePlayerState.isPlaying },
+                    onPrevious = playerViewModel::previousSong,
+                    onPlayPause = playerViewModel::playPause,
+                    onNext = playerViewModel::nextSong,
+                    height = 68.dp,
+                    pressAnimationSpec = controlAnimationSpec,
+                    colorOtherButtons = Color.White.copy(alpha = 0.15f),
+                    colorPlayPause = Color.White.copy(alpha = 0.25f),
+                    tintPlayPauseIcon = Color.White,
+                    tintOtherIcons = Color.White
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        } else {
+            // Aguardando carregar a música
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = bottomPadding + 40.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
+            }
         }
+    }
+}
+
+/**
+ * Brilho gradiente nas bordas: azul → roxo, mais forte na borda,
+ * desvanecendo em direção ao centro. Animação lenta de "respiração".
+ */
+@Composable
+private fun EdgeGlowBorder(modifier: Modifier = Modifier) {
+    val infiniteTransition = rememberInfiniteTransition(label = "EdgeGlow")
+
+    // Respiração suave (não pulsa com a música)
+    val breathe by infiniteTransition.animateFloat(
+        initialValue = 0.55f,
+        targetValue = 0.9f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "BreatheAlpha"
+    )
+
+    // Deslocamento lento do gradiente diagonal (dá sensação de "vivo")
+    val gradientShift by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(9000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "GradientShift"
+    )
+
+    val blue = Color(0xFF3B82F6)
+    val purple = Color(0xFF8B5CF6)
+
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val border = 140.dp.toPx()
+
+        // Topo
+        drawRect(
+            brush = Brush.verticalGradient(
+                0f to purple.copy(alpha = breathe * 0.9f),
+                1f to Color.Transparent,
+                startY = 0f,
+                endY = border
+            ),
+            topLeft = Offset.Zero,
+            size = Size(w, border)
+        )
+
+        // Base
+        drawRect(
+            brush = Brush.verticalGradient(
+                0f to Color.Transparent,
+                1f to blue.copy(alpha = breathe * 0.9f),
+                startY = h - border,
+                endY = h
+            ),
+            topLeft = Offset(0f, h - border),
+            size = Size(w, border)
+        )
+
+        // Esquerda
+        drawRect(
+            brush = Brush.horizontalGradient(
+                0f to blue.copy(alpha = breathe * 0.85f),
+                1f to Color.Transparent,
+                startX = 0f,
+                endX = border
+            ),
+            topLeft = Offset.Zero,
+            size = Size(border, h)
+        )
+
+        // Direita
+        drawRect(
+            brush = Brush.horizontalGradient(
+                0f to Color.Transparent,
+                1f to purple.copy(alpha = breathe * 0.85f),
+                startX = w - border,
+                endX = w
+            ),
+            topLeft = Offset(w - border, 0f),
+            size = Size(border, h)
+        )
+
+        // Brilho extra no canto superior esquerdo (azul)
+        drawRect(
+            brush = Brush.radialGradient(
+                colors = listOf(
+                    blue.copy(alpha = breathe * 0.55f * (1f - gradientShift * 0.4f)),
+                    Color.Transparent
+                ),
+                center = Offset(0f, 0f),
+                radius = w * 0.55f
+            ),
+            size = Size(w, h)
+        )
+
+        // Brilho extra no canto inferior direito (roxo)
+        drawRect(
+            brush = Brush.radialGradient(
+                colors = listOf(
+                    purple.copy(alpha = breathe * 0.55f * (0.6f + gradientShift * 0.4f)),
+                    Color.Transparent
+                ),
+                center = Offset(w, h),
+                radius = w * 0.55f
+            ),
+            size = Size(w, h)
+        )
     }
 }
