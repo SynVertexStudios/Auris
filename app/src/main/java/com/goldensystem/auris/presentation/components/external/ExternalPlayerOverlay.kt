@@ -259,7 +259,7 @@ private fun EdgeGlowBorder(modifier: Modifier = Modifier) {
 
     val breathe by infiniteTransition.animateFloat(
         initialValue = 0.5f,
-        targetValue = 0.8f,
+        targetValue = 0.85f,
         animationSpec = infiniteRepeatable(
             animation = tween(3800, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
@@ -283,92 +283,47 @@ private fun EdgeGlowBorder(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
-        val border = 26.dp.toPx()
-        val corner = 80.dp.toPx()  // arredondamento dos cantos do glow
 
-        // 1) Moldura superior: gradiente azul → roxo no horizontal
-        drawRect(
-            brush = Brush.horizontalGradient(
-                colors = listOf(
-                    blue.copy(alpha = breathe * 0.8f * (1f - gradientShift * 0.2f)),
-                    purple.copy(alpha = breathe * 0.8f * (0.8f + gradientShift * 0.2f))
-                ),
-                startX = 0f,
-                endX = w
+        // Deslocamento interno pra não cortar o stroke
+        val inset = 2.dp.toPx()
+        val corner = 48.dp.toPx()   // quina do glow (bem arredondada)
+
+        // Gradiente diagonal azul→roxo, mudando suavemente com o tempo
+        val brush = Brush.linearGradient(
+            colors = listOf(
+                blue.copy(alpha = breathe * (1f - gradientShift * 0.25f)),
+                purple.copy(alpha = breathe * (0.75f + gradientShift * 0.25f))
             ),
-            topLeft = Offset(0f, 0f),
-            size = Size(w, border),
-            alpha = 1f
+            start = Offset(0f, 0f),
+            end = Offset(w, h)
         )
 
-        // 2) Moldura inferior: mesmo gradiente, mas invertido
-        drawRect(
-            brush = Brush.horizontalGradient(
-                colors = listOf(
-                    blue.copy(alpha = breathe * 0.7f),
-                    purple.copy(alpha = breathe * 0.7f)
-                ),
-                startX = 0f,
-                endX = w
-            ),
-            topLeft = Offset(0f, h - border),
-            size = Size(w, border),
-            alpha = 1f
+        // 3 strokes concêntricos: de dentro pra fora, alpha decrescente.
+        // Isso cria o efeito "vai desvanecendo em direção ao centro".
+        val strokes = listOf(
+            6.dp to 1.00f,   // linha mais grossa, mais opaca
+            14.dp to 0.55f,  // média
+            24.dp to 0.25f   // fina, quase transparente
         )
 
-        // 3) Moldura esquerda: vertical, azul → transparente
-        drawRect(
-            brush = Brush.verticalGradient(
-                colors = listOf(
-                    blue.copy(alpha = breathe * 0.7f),
-                    blue.copy(alpha = breathe * 0.7f)
+        strokes.forEach { (thickness, alpha) ->
+            val strokePx = thickness.toPx() / 2f   // metade pra dentro, metade pra fora
+            drawRoundRect(
+                brush = brush,
+                topLeft = Offset(
+                    inset + strokePx,
+                    inset + strokePx
                 ),
-                startY = 0f,
-                endY = h
-            ),
-            topLeft = Offset(0f, border),
-            size = Size(border, h - border * 2),
-            alpha = 1f
-        )
-
-        // 4) Moldura direita: vertical, roxo
-        drawRect(
-            brush = Brush.verticalGradient(
-                colors = listOf(
-                    purple.copy(alpha = breathe * 0.7f),
-                    purple.copy(alpha = breathe * 0.7f)
+                size = Size(
+                    w - (inset + strokePx) * 2,
+                    h - (inset + strokePx) * 2
                 ),
-                startY = 0f,
-                endY = h
-            ),
-            topLeft = Offset(w - border, border),
-            size = Size(border, h - border * 2),
-            alpha = 1f
-        )
-
-        // 5) Cantos arredondados: 4 radiais pequenos que "amaciam" a quina
-        //    — usam BlendMode.SrcOver pra somar suave, não estourar alpha
-        val cornerRadius = corner
-        listOf(
-            Offset(0f, 0f),           // sup. esquerdo → azul
-            Offset(w, 0f),            // sup. direito → roxo
-            Offset(0f, h),            // inf. esquerdo → azul
-            Offset(w, h)              // inf. direito → roxo
-        ).forEachIndexed { i, center ->
-            val color = if (i % 2 == 0) blue else purple
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        color.copy(alpha = breathe * 0.55f),
-                        Color.Transparent
-                    ),
-                    center = center,
-                    radius = cornerRadius
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(corner),
+                style = Stroke(
+                    width = thickness.toPx(),
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round
                 ),
-                radius = cornerRadius,
-                center = center,
-                alpha = 1f,
-                blendMode = androidx.compose.ui.graphics.BlendMode.SrcOver
+                alpha = alpha
             )
         }
     }
