@@ -2,6 +2,7 @@ package com.goldensystem.auris
 
 import android.content.Intent
 import android.net.Uri
+import com.goldensystem.auris.ui.theme.ExternalPlayerTheme
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -51,7 +52,7 @@ class ExternalPlayerActivity : ComponentActivity() {
                 AppThemeMode.LIGHT -> false
                 else -> systemDarkTheme
             }
-            ExternalPlayerTheme(darkTheme = useDarkTheme) {
+    ExternalPlayerTheme(darkTheme = useDarkTheme) {
                 ExternalPlayerOverlay(
                     playerViewModel = playerViewModel,
                     onDismiss = { finish() },
