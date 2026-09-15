@@ -114,7 +114,7 @@ fun ExternalPlayerOverlay(
         onDismiss()
     }
 
-    val backgroundScrim = MaterialTheme.colorScheme.scrim.copy(alpha = 0.35f)
+    val backgroundScrim = androidx.compose.ui.graphics.Color.Transparent
     val safePadding = WindowInsets.safeDrawing.asPaddingValues()
     val bottomPadding = safePadding.calculateBottomPadding()
 
