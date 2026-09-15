@@ -223,74 +223,78 @@ fun SettingsScreen(
                 item {
                     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
                     ExpressiveSettingsGroup {
-                        val mainCategories = SettingsCategory.entries.filter {
-                            it != SettingsCategory.ABOUT && 
-                            it != SettingsCategory.DEVICE_CAPABILITIES
-                        }
+    val mainCategories = SettingsCategory.entries.filter {
+        it != SettingsCategory.ABOUT && 
+        it != SettingsCategory.DEVICE_CAPABILITIES
+    }
 
-                        val totalItems = mainCategories.size + 3 // Device + Accounts + About
-                        fun shapeFor(index: Int) =
-                            when {
-                                totalItems == 1 -> RoundedCornerShape(24.dp)
-                                index == 0 -> RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 4.dp, bottomEnd = 4.dp)
-                                index == totalItems - 1 -> RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 24.dp, bottomEnd = 24.dp)
-                                else -> RoundedCornerShape(4.dp)
-                            }
+    val totalItems = mainCategories.size + 3 // Accounts + Device + About
+    fun shapeFor(index: Int) =
+        when {
+            totalItems == 1 -> RoundedCornerShape(24.dp)
+            index == 0 -> RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 4.dp, bottomEnd = 4.dp)
+            index == totalItems - 1 -> RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 24.dp, bottomEnd = 24.dp)
+            else -> RoundedCornerShape(4.dp)
+        }
 
-                        var itemIndex = 0
+    var itemIndex = 0
 
-                        mainCategories.forEach { category ->
-                            val colors = getCategoryColors(category, isDark)
+    // ✅ 1º LUGAR: Contas
+    ExpressiveNavigationItem(
+        title = stringResource(R.string.settings_accounts_row_title),
+        subtitle = stringResource(R.string.settings_accounts_row_subtitle),
+        icon = Icons.Rounded.AccountCircle,
+        colors = getAccountsColors(isDark),
+        onClick = { navController.navigateSafely(Screen.Accounts.route) },
+        shape = shapeFor(itemIndex)
+    )
+    if (itemIndex < totalItems - 1) {
+        Spacer(modifier = Modifier.height(2.dp))
+    }
+    itemIndex++
 
-                            ExpressiveCategoryItem(
-                                category = category,
-                                customColors = colors,
-                                onClick = {
-                                    if (category == SettingsCategory.EQUALIZER) {
-                                        navController.navigateSafely(Screen.Equalizer.route)
-                                    } else {
-                                        navController.navigateSafely(Screen.SettingsCategory.createRoute(category.id))
-                                    }
-                                },
-                                shape = shapeFor(itemIndex)
-                            )
-                            if (itemIndex < totalItems - 1) {
-                                Spacer(modifier = Modifier.height(2.dp))
-                            }
-                            itemIndex++
-                        }
+    // 2º em diante: categorias principais
+    mainCategories.forEach { category ->
+        val colors = getCategoryColors(category, isDark)
 
-                        ExpressiveCategoryItem(
-                            category = SettingsCategory.DEVICE_CAPABILITIES,
-                            customColors = getCategoryColors(SettingsCategory.DEVICE_CAPABILITIES, isDark),
-                            onClick = { navController.navigateSafely(Screen.DeviceCapabilities.route) },
-                            shape = shapeFor(itemIndex)
-                        )
-                        if (itemIndex < totalItems - 1) {
-                            Spacer(modifier = Modifier.height(2.dp))
-                        }
-                        itemIndex++
+        ExpressiveCategoryItem(
+            category = category,
+            customColors = colors,
+            onClick = {
+                if (category == SettingsCategory.EQUALIZER) {
+                    navController.navigateSafely(Screen.Equalizer.route)
+                } else {
+                    navController.navigateSafely(Screen.SettingsCategory.createRoute(category.id))
+                }
+            },
+            shape = shapeFor(itemIndex)
+        )
+        if (itemIndex < totalItems - 1) {
+            Spacer(modifier = Modifier.height(2.dp))
+        }
+        itemIndex++
+    }
 
-                        ExpressiveNavigationItem(
-                            title = stringResource(R.string.settings_accounts_row_title),
-                            subtitle = stringResource(R.string.settings_accounts_row_subtitle),
-                            icon = Icons.Rounded.AccountCircle,
-                            colors = getAccountsColors(isDark),
-                            onClick = { navController.navigateSafely(Screen.Accounts.route) },
-                            shape = shapeFor(itemIndex)
-                        )
-                        if (itemIndex < totalItems - 1) {
-                            Spacer(modifier = Modifier.height(2.dp))
-                        }
-                        itemIndex++
+    // Device Capabilities
+    ExpressiveCategoryItem(
+        category = SettingsCategory.DEVICE_CAPABILITIES,
+        customColors = getCategoryColors(SettingsCategory.DEVICE_CAPABILITIES, isDark),
+        onClick = { navController.navigateSafely(Screen.DeviceCapabilities.route) },
+        shape = shapeFor(itemIndex)
+    )
+    if (itemIndex < totalItems - 1) {
+        Spacer(modifier = Modifier.height(2.dp))
+    }
+    itemIndex++
 
-                        ExpressiveCategoryItem(
-                            category = SettingsCategory.ABOUT,
-                            customColors = getCategoryColors(SettingsCategory.ABOUT, isDark),
-                            onClick = { navController.navigateSafely("about") },
-                            shape = shapeFor(itemIndex)
-                        )
-                    }
+    // About (último)
+    ExpressiveCategoryItem(
+        category = SettingsCategory.ABOUT,
+        customColors = getCategoryColors(SettingsCategory.ABOUT, isDark),
+        onClick = { navController.navigateSafely("about") },
+        shape = shapeFor(itemIndex)
+    )
+}
 
                     // for player active:
                     Spacer(modifier = Modifier.height(32.dp))
