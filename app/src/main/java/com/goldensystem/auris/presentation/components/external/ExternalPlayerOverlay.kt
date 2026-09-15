@@ -285,7 +285,10 @@ private fun EdgeGlowBorder(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
-        val border = 140.dp.toPx()
+        // Borda fina, tipo "meio dedo"
+        val border = 28.dp.toPx()
+        // Raio do brilho nos cantos — também pequeno
+        val cornerRadius = 120.dp.toPx()
 
         // Topo
         drawRect(
@@ -335,28 +338,28 @@ private fun EdgeGlowBorder(modifier: Modifier = Modifier) {
             size = Size(border, h)
         )
 
-        // Brilho extra no canto superior esquerdo (azul)
+        // Brilho suave no canto superior esquerdo (azul), bem pequeno
         drawRect(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    blue.copy(alpha = breathe * 0.55f * (1f - gradientShift * 0.4f)),
+                    blue.copy(alpha = breathe * 0.6f * (1f - gradientShift * 0.3f)),
                     Color.Transparent
                 ),
                 center = Offset(0f, 0f),
-                radius = w * 0.55f
+                radius = cornerRadius
             ),
             size = Size(w, h)
         )
 
-        // Brilho extra no canto inferior direito (roxo)
+        // Brilho suave no canto inferior direito (roxo), bem pequeno
         drawRect(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    purple.copy(alpha = breathe * 0.55f * (0.6f + gradientShift * 0.4f)),
+                    purple.copy(alpha = breathe * 0.6f * (0.7f + gradientShift * 0.3f)),
                     Color.Transparent
                 ),
                 center = Offset(w, h),
-                radius = w * 0.55f
+                radius = cornerRadius
             ),
             size = Size(w, h)
         )
