@@ -5,13 +5,19 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <!-- Splash screen theme can still extend Theme.SplashScreen, but ensure it transitions to the correct base theme -->
-    <!-- For dark mode, postSplashScreenTheme should ideally point to a dark version of Theme.Auris if specific overrides are needed -->
-    <!-- However, since Theme.Auris itself will be resolved from values-night, this setup should work. -->
+    <!-- ADICIONAR ISSO AQUI -->
+    <style name="Theme.Auris.ExternalPlayer" parent="Theme.Material3.DynamicColors.DayNight">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
+    </style>
+
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
-<!--        <item name="windowSplashScreenBackground">@color/pixel_play_purple_dark</item>-->
-<!--        &lt;!&ndash; icon and animation can be the same or specific for dark theme &ndash;&gt;-->
-<!--        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>-->
-<!--        <item name="postSplashScreenTheme">@style/Theme.Auris</item>-->
     </style>
 </resources>
