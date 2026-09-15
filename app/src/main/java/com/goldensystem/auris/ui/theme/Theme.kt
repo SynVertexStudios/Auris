@@ -267,3 +267,17 @@ fun AurisTheme(
 }
     }
 }
+
+@Composable
+fun ExternalPlayerTheme(
+    darkTheme: Boolean,
+    content: @Composable () -> Unit
+) {
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = Typography,
+        shapes = Shapes,
+        content = content
+    )
+}
