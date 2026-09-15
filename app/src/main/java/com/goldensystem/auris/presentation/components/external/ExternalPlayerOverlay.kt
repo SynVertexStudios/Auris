@@ -14,16 +14,12 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -32,22 +28,13 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,17 +44,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -85,78 +73,72 @@ import kotlin.math.roundToLong
 @Composable
 fun ExternalPlayerOverlay(
     playerViewModel: PlayerViewModel,
-    onDismiss: () -> Unit,
-    onOpenFullPlayer: () -> Unit
+    onDismiss: () -> Unit
 ) {
-    val stablePlayerState by playerViewModel.stablePlayerState.collectAsStateWithLifecycle()
-    val playbackPosition by playerViewModel.currentPlaybackPosition.collectAsStateWithLifecycle()
-    val remotePosition by playerViewModel.remotePosition.collectAsStateWithLifecycle()
-    val isRemotePlaybackActive by playerViewModel.isRemotePlaybackActive.collectAsStateWithLifecycle()
+    val stablePlayerState by
+        playerViewModel.stablePlayerState.collectAsStateWithLifecycle()
+
+    val playbackPosition by
+        playerViewModel.currentPlaybackPosition.collectAsStateWithLifecycle()
+
+    val remotePosition by
+        playerViewModel.remotePosition.collectAsStateWithLifecycle()
+
+    val isRemotePlaybackActive by
+        playerViewModel.isRemotePlaybackActive.collectAsStateWithLifecycle()
 
     val currentSong = stablePlayerState.currentSong
 
-    val safePadding = WindowInsets.safeDrawing.asPaddingValues()
-    val navigationBottom = WindowInsets.navigationBars.asPaddingValues()
-        .calculateBottomPadding()
-
-    val bottomPadding = maxOf(
-        safePadding.calculateBottomPadding(),
-        navigationBottom
-    )
-
+    /*
+     * Se a música desaparecer do estado do player,
+     * o overlay desaparece automaticamente.
+     */
     LaunchedEffect(currentSong) {
         if (currentSong == null) {
             onDismiss()
         }
     }
 
+    /*
+     * Back continua funcionando normalmente.
+     * Não existe botão visual de fechar.
+     */
     BackHandler {
         onDismiss()
     }
 
-    val infiniteTransition = rememberInfiniteTransition(
-        label = "ExternalPlayerAnimation"
-    )
+    val safePadding = WindowInsets.safeDrawing.asPaddingValues()
+    val bottomPadding = safePadding.calculateBottomPadding()
 
-    val ambientProgress by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 7000,
-                easing = LinearEasing
-            ),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "AmbientProgress"
-    )
-
-    val cardScale by androidx.compose.animation.core.animateFloatAsState(
-        targetValue = if (currentSong != null) 1f else 0.96f,
-        animationSpec = spring(
-            dampingRatio = 0.72f,
-            stiffness = 380f
-        ),
-        label = "CardScale"
-    )
+    val controlAnimationSpec = remember {
+        spring<Float>(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        )
+    }
 
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
 
         /*
-         * BACKGROUND
+         * Glow de tela inteira.
+         *
+         * Não possui fundo.
+         * O que existe são apenas linhas/glows desenhados
+         * sobre a interface que já estiver atrás.
          */
-
-        ExternalPlayerBackdrop(
+        EdgeGlowBorder(
             modifier = Modifier.fillMaxSize(),
-            animationProgress = ambientProgress
+            isPlaying = stablePlayerState.isPlaying
         )
 
         /*
-         * FECHA AO TOCAR FORA DO PLAYER
+         * Área transparente responsável por fechar.
+         *
+         * Fica atrás do conteúdo, então clicar no player
+         * não dispara o dismiss.
          */
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -170,34 +152,20 @@ fun ExternalPlayerOverlay(
                 }
         )
 
-        /*
-         * BORDA LUMINOSA
-         */
-
-        ExternalPlayerEdgeGlow(
-            modifier = Modifier.fillMaxSize(),
-            animationProgress = ambientProgress
-        )
-
-        /*
-         * PLAYER
-         */
-
         if (currentSong != null) {
 
-            val totalDuration = stablePlayerState.totalDuration
-                .coerceAtLeast(0L)
+            val totalDuration =
+                stablePlayerState.totalDuration.coerceAtLeast(0L)
 
-            val rawPosition = if (isRemotePlaybackActive) {
-                remotePosition
-            } else {
-                playbackPosition
-            }
+            val rawPosition =
+                if (isRemotePlaybackActive) {
+                    remotePosition
+                } else {
+                    playbackPosition
+                }
 
-            val position = rawPosition.coerceIn(
-                0L,
-                totalDuration
-            )
+            val position =
+                rawPosition.coerceIn(0L, totalDuration)
 
             val progressFraction =
                 if (totalDuration > 0L) {
@@ -220,492 +188,348 @@ fun ExternalPlayerOverlay(
                 }
             }
 
+            /*
+             * Animação de entrada.
+             */
             AnimatedVisibility(
                 visible = true,
-                enter = fadeIn(
-                    animationSpec = tween(280)
-                ) + slideInVertically(
-                    initialOffsetY = { it / 3 },
-                    animationSpec = spring(
-                        dampingRatio = 0.78f,
-                        stiffness = 350f
-                    )
-                ) + scaleIn(
-                    initialScale = 0.96f,
-                    animationSpec = spring(
-                        dampingRatio = 0.8f,
-                        stiffness = 350f
-                    )
-                ),
-                exit = fadeOut(
-                    animationSpec = tween(180)
-                ),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(
-                        start = 14.dp,
-                        end = 14.dp,
-                        bottom = bottomPadding + 12.dp
+                    .fillMaxWidth(),
+                enter = fadeIn(
+                    animationSpec = tween(
+                        durationMillis = 350,
+                        easing = FastOutSlowInEasing
                     )
+                ) + scaleIn(
+                    initialScale = 0.97f,
+                    animationSpec = tween(
+                        durationMillis = 400,
+                        easing = FastOutSlowInEasing
+                    )
+                )
             ) {
 
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .scale(cardScale)
+                        .padding(horizontal = 20.dp)
+                        .padding(
+                            bottom = bottomPadding + 18.dp
+                        )
+                        /*
+                         * Esse drawBehind adiciona uma pequena
+                         * sombra/glow somente atrás do conteúdo.
+                         *
+                         * Não cria card.
+                         * Não cria fundo.
+                         */
+                        .drawBehind {
+
+                            val centerY = size.height * 0.55f
+
+                            drawRect(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        Color(0xFF2563EB)
+                                            .copy(alpha = 0.10f),
+                                        Color.Transparent
+                                    ),
+                                    center = Offset(
+                                        size.width * 0.5f,
+                                        centerY
+                                    ),
+                                    radius = size.width * 0.72f
+                                ),
+                                blendMode = BlendMode.Screen
+                            )
+                        }
+                        /*
+                         * Impede o clique do conteúdo de chegar
+                         * no detector transparente de fora.
+                         */
                         .clickable(
                             interactionSource = remember {
                                 MutableInteractionSource()
                             },
                             indication = null
-                        ) {
-                            // Consome o toque.
-                        }
+                        ) {},
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
                     /*
-                     * GLOW ATRÁS DO CARD
+                     * ─────────────────────────────
+                     * CAPA + INFORMAÇÕES
+                     * ─────────────────────────────
                      */
 
-                    PlayerCardAmbientGlow(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .padding(
-                                horizontal = 18.dp,
-                                vertical = 10.dp
-                            ),
-                        progress = ambientProgress
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        /*
+                         * Pequeno glow atrás da capa.
+                         */
+                        Box(
+                            modifier = Modifier.size(76.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+
+                            AlbumArtGlow()
+
+                            OptimizedAlbumArt(
+                                uri = currentSong.albumArtUriString,
+                                title = currentSong.title,
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .clip(
+                                        RoundedCornerShape(16.dp)
+                                    )
+                            )
+                        }
+
+                        Spacer(
+                            modifier = Modifier.width(15.dp)
+                        )
+
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+
+                            Text(
+                                text = currentSong.title,
+                                style = MaterialTheme
+                                    .typography
+                                    .titleMedium
+                                    .copy(
+                                        fontSize = 18.sp,
+                                        fontWeight =
+                                            FontWeight.SemiBold
+                                    ),
+                                color = Color.White,
+                                maxLines = 1,
+                                overflow =
+                                    TextOverflow.Ellipsis
+                            )
+
+                            Spacer(
+                                modifier = Modifier.height(3.dp)
+                            )
+
+                            Text(
+                                text = currentSong.displayArtist,
+                                style = MaterialTheme
+                                    .typography
+                                    .bodySmall
+                                    .copy(
+                                        fontSize = 13.sp
+                                    ),
+                                color = Color.White.copy(
+                                    alpha = 0.62f
+                                ),
+                                maxLines = 1,
+                                overflow =
+                                    TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+
+                    Spacer(
+                        modifier = Modifier.height(19.dp)
                     )
 
                     /*
-                     * CARD PRINCIPAL
+                     * ─────────────────────────────
+                     * SLIDER
+                     * ─────────────────────────────
                      */
 
-                    Surface(
+                    WavyMusicSlider(
+                        value = sliderPosition,
+
+                        onValueChange = { newValue ->
+                            isUserScrubbing = true
+
+                            sliderPosition =
+                                newValue.coerceIn(
+                                    0f,
+                                    1f
+                                )
+                        },
+
+                        onValueChangeFinished = {
+                            val targetPosition =
+                                (
+                                    sliderPosition *
+                                        totalDuration
+                                    ).roundToLong()
+
+                            playerViewModel.seekTo(
+                                targetPosition
+                            )
+
+                            isUserScrubbing = false
+                        },
+
+                        waveLength = 30.dp,
+                        isPlaying =
+                            stablePlayerState.isPlaying,
+                        isWaveEligible = true,
+                        semanticsLabel =
+                            "Playback position"
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(6.dp)
+                    )
+
+                    /*
+                     * ─────────────────────────────
+                     * TEMPOS
+                     * ─────────────────────────────
+                     */
+
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(30.dp),
-                        color = Color(0xFF080A12).copy(alpha = 0.88f),
-                        tonalElevation = 0.dp,
-                        shadowElevation = 20.dp
+                        horizontalArrangement =
+                            Arrangement.SpaceBetween
                     ) {
 
-                        Box(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
+                        Text(
+                            text = formatDuration(position),
+                            style = MaterialTheme
+                                .typography
+                                .labelSmall
+                                .copy(
+                                    fontSize = 11.sp,
+                                    fontWeight =
+                                        FontWeight.Medium
+                                ),
+                            color = Color.White.copy(
+                                alpha = 0.58f
+                            )
+                        )
 
-                            /*
-                             * TEXTURA INTERNA
-                             */
-
-                            Canvas(
-                                modifier = Modifier.matchParentSize()
-                            ) {
-                                drawRoundRect(
-                                    brush = Brush.verticalGradient(
-                                        colors = listOf(
-                                            Color.White.copy(alpha = 0.055f),
-                                            Color.Transparent,
-                                            Color.Black.copy(alpha = 0.08f)
-                                        )
-                                    ),
-                                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(
-                                        30.dp.toPx()
-                                    )
-                                )
-                            }
-
-                            /*
-                             * CONTEÚDO
-                             */
-
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(
-                                        start = 18.dp,
-                                        end = 18.dp,
-                                        top = 14.dp,
-                                        bottom = 15.dp
-                                    )
-                            ) {
-
-                                /*
-                                 * TOPO
-                                 */
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(start = 2.dp)
-                                    ) {
-
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(7.dp)
-                                                    .clip(CircleShape)
-                                                    .background(
-                                                        if (stablePlayerState.isPlaying) {
-                                                            Color(0xFF60A5FA)
-                                                        } else {
-                                                            Color.White.copy(alpha = 0.35f)
-                                                        }
-                                                    )
-                                            )
-
-                                            Spacer(
-                                                modifier = Modifier.width(8.dp)
-                                            )
-
-                                            Text(
-                                                text = if (
-                                                    stablePlayerState.isPlaying
-                                                ) {
-                                                    "TOCANDO AGORA"
-                                                } else {
-                                                    "PAUSADO"
-                                                },
-                                                color = Color.White.copy(
-                                                    alpha = 0.52f
-                                                ),
-                                                fontSize = 9.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                letterSpacing = 1.4.sp
-                                            )
-                                        }
-                                    }
-
-                                    ExternalPlayerTopButton(
-                                        icon = Icons.Default.ExpandLess,
-                                        contentDescription = "Abrir player completo",
-                                        onClick = onOpenFullPlayer
-                                    )
-
-                                    Spacer(
-                                        modifier = Modifier.width(7.dp)
-                                    )
-
-                                    ExternalPlayerTopButton(
-                                        icon = Icons.Default.Close,
-                                        contentDescription = "Fechar",
-                                        onClick = onDismiss
-                                    )
-                                }
-
-                                Spacer(
-                                    modifier = Modifier.height(14.dp)
-                                )
-
-                                /*
-                                 * CAPA + INFORMAÇÕES
-                                 */
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-
-                                    Box(
-                                        modifier = Modifier.size(82.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-
-                                        AlbumArtGlow(
-                                            modifier = Modifier.fillMaxSize(),
-                                            isPlaying = stablePlayerState.isPlaying
-                                        )
-
-                                        OptimizedAlbumArt(
-                                            uri = currentSong.albumArtUriString,
-                                            title = currentSong.title,
-                                            modifier = Modifier
-                                                .size(76.dp)
-                                                .clip(
-                                                    RoundedCornerShape(19.dp)
-                                                )
-                                        )
-                                    }
-
-                                    Spacer(
-                                        modifier = Modifier.width(15.dp)
-                                    )
-
-                                    Column(
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-
-                                        Text(
-                                            text = currentSong.title,
-                                            color = Color.White,
-                                            fontSize = 18.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-
-                                        Spacer(
-                                            modifier = Modifier.height(4.dp)
-                                        )
-
-                                        Text(
-                                            text = currentSong.displayArtist,
-                                            color = Color.White.copy(
-                                                alpha = 0.58f
-                                            ),
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Normal,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-
-                                        Spacer(
-                                            modifier = Modifier.height(9.dp)
-                                        )
-
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-
-                                            Icon(
-                                                imageVector =
-                                                    if (isRemotePlaybackActive) {
-                                                        Icons.Default.GraphicEq
-                                                    } else {
-                                                        Icons.Default.MusicNote
-                                                    },
-                                                contentDescription = null,
-                                                modifier = Modifier.size(13.dp),
-                                                tint = Color.White.copy(
-                                                    alpha = 0.4f
-                                                )
-                                            )
-
-                                            Spacer(
-                                                modifier = Modifier.width(5.dp)
-                                            )
-
-                                            Text(
-                                                text = if (
-                                                    isRemotePlaybackActive
-                                                ) {
-                                                    "REPRODUÇÃO REMOTA"
-                                                } else {
-                                                    "AURIS PLAYER"
-                                                },
-                                                color = Color.White.copy(
-                                                    alpha = 0.4f
-                                                ),
-                                                fontSize = 8.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                letterSpacing = 1.sp
-                                            )
-                                        }
-                                    }
-                                }
-
-                                Spacer(
-                                    modifier = Modifier.height(19.dp)
-                                )
-
-                                /*
-                                 * SLIDER
-                                 */
-
-                                Box(
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-
-                                    WavyMusicSlider(
-                                        value = sliderPosition,
-                                        onValueChange = { newValue ->
-                                            isUserScrubbing = true
-
-                                            sliderPosition =
-                                                newValue.coerceIn(
-                                                    0f,
-                                                    1f
-                                                )
-                                        },
-                                        onValueChangeFinished = {
-                                            val targetPosition =
-                                                (
-                                                    sliderPosition *
-                                                        totalDuration
-                                                ).roundToLong()
-
-                                            playerViewModel.seekTo(
-                                                targetPosition
-                                            )
-
-                                            isUserScrubbing = false
-                                        },
-                                        waveLength = 26.dp,
-                                        isPlaying =
-                                            stablePlayerState.isPlaying,
-                                        isWaveEligible = true,
-                                        semanticsLabel =
-                                            "Posição da reprodução"
-                                    )
-                                }
-
-                                Spacer(
-                                    modifier = Modifier.height(4.dp)
-                                )
-
-                                /*
-                                 * TEMPOS
-                                 */
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement =
-                                        Arrangement.SpaceBetween
-                                ) {
-
-                                    Text(
-                                        text = formatDuration(
-                                            if (isUserScrubbing) {
-                                                (
-                                                    sliderPosition *
-                                                        totalDuration
-                                                ).roundToLong()
-                                            } else {
-                                                position
-                                            }
-                                        ),
-                                        color = Color.White.copy(
-                                            alpha = 0.48f
-                                        ),
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-
-                                    Text(
-                                        text = formatDuration(
-                                            totalDuration
-                                        ),
-                                        color = Color.White.copy(
-                                            alpha = 0.48f
-                                        ),
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-
-                                Spacer(
-                                    modifier = Modifier.height(11.dp)
-                                )
-
-                                /*
-                                 * CONTROLES
-                                 */
-
-                                AnimatedPlaybackControls(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(
-                                            horizontal = 8.dp
-                                        ),
-                                    isPlayingProvider = {
-                                        stablePlayerState.isPlaying
-                                    },
-                                    onPrevious =
-                                        playerViewModel::previousSong,
-                                    onPlayPause =
-                                        playerViewModel::playPause,
-                                    onNext =
-                                        playerViewModel::nextSong,
-                                    height = 66.dp,
-                                    pressAnimationSpec = remember {
-                                        spring<Float>(
-                                            dampingRatio =
-                                                Spring.DampingRatioNoBouncy,
-                                            stiffness =
-                                                Spring.StiffnessMedium
-                                        )
-                                    },
-                                    colorOtherButtons =
-                                        Color.White.copy(
-                                            alpha = 0.11f
-                                        ),
-                                    colorPlayPause =
-                                        Color.White.copy(
-                                            alpha = 0.18f
-                                        ),
-                                    tintPlayPauseIcon =
-                                        Color.White,
-                                    tintOtherIcons =
-                                        Color.White
-                                )
-                            }
-
-                            /*
-                             * LINHA DE BRILHO NO TOPO
-                             */
-
-                            Canvas(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(1.dp)
-                                    .align(Alignment.TopCenter)
-                            ) {
-
-                                drawLine(
-                                    brush = Brush.horizontalGradient(
-                                        colors = listOf(
-                                            Color.Transparent,
-                                            lerp(
-                                                Color(0xFF60A5FA),
-                                                Color(0xFFA78BFA),
-                                                ambientProgress
-                                            ).copy(
-                                                alpha = 0.85f
-                                            ),
-                                            Color.Transparent
-                                        )
-                                    ),
-                                    start = Offset(0f, 0f),
-                                    end = Offset(size.width, 0f),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            }
-                        }
+                        Text(
+                            text =
+                                formatDuration(totalDuration),
+                            style = MaterialTheme
+                                .typography
+                                .labelSmall
+                                .copy(
+                                    fontSize = 11.sp,
+                                    fontWeight =
+                                        FontWeight.Medium
+                                ),
+                            color = Color.White.copy(
+                                alpha = 0.58f
+                            )
+                        )
                     }
+
+                    Spacer(
+                        modifier = Modifier.height(14.dp)
+                    )
+
+                    /*
+                     * ─────────────────────────────
+                     * CONTROLES
+                     *
+                     * A ideia aqui é deixar os botões
+                     * visíveis sem aquela aparência de
+                     * três manchas brancas.
+                     * ─────────────────────────────
+                     */
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp)
+                    ) {
+
+                        ControlGlow(
+                            isPlaying =
+                                stablePlayerState.isPlaying
+                        )
+
+                        AnimatedPlaybackControls(
+                            modifier = Modifier.fillMaxWidth(),
+
+                            isPlayingProvider = {
+                                stablePlayerState.isPlaying
+                            },
+
+                            onPrevious =
+                                playerViewModel::previousSong,
+
+                            onPlayPause =
+                                playerViewModel::playPause,
+
+                            onNext =
+                                playerViewModel::nextSong,
+
+                            height = 66.dp,
+
+                            pressAnimationSpec =
+                                controlAnimationSpec,
+
+                            /*
+                             * Antes os valores eram muito
+                             * claros e os controles acabavam
+                             * parecendo uma interface branca.
+                             *
+                             * Agora os fundos são quase
+                             * transparentes e os ícones
+                             * continuam claramente visíveis.
+                             */
+                            colorOtherButtons =
+                                Color.White.copy(
+                                    alpha = 0.09f
+                                ),
+
+                            colorPlayPause =
+                                Color.White.copy(
+                                    alpha = 0.16f
+                                ),
+
+                            tintPlayPauseIcon =
+                                Color.White.copy(
+                                    alpha = 0.96f
+                                ),
+
+                            tintOtherIcons =
+                                Color.White.copy(
+                                    alpha = 0.82f
+                                )
+                        )
+                    }
+
+                    Spacer(
+                        modifier = Modifier.height(4.dp)
+                    )
                 }
             }
-
         } else {
 
             /*
-             * LOADING
+             * Loading totalmente transparente.
              */
-
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(
-                        bottom = bottomPadding + 40.dp
-                    )
-                    .size(54.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Color(0xFF0A0C14).copy(alpha = 0.85f)
+                        bottom = bottomPadding + 42.dp
                     ),
                 contentAlignment = Alignment.Center
             ) {
 
                 CircularProgressIndicator(
-                    modifier = Modifier.size(25.dp),
-                    strokeWidth = 2.dp,
-                    color = Color.White.copy(alpha = 0.85f)
+                    modifier = Modifier.size(26.dp),
+                    color = Color.White.copy(
+                        alpha = 0.78f
+                    ),
+                    strokeWidth = 2.dp
                 )
             }
         }
@@ -713,86 +537,145 @@ fun ExternalPlayerOverlay(
 }
 
 
-/*
- * ============================================================
- * BACKGROUND
- * ============================================================
- */
+/* ═══════════════════════════════════════════════
+ *
+ * GLOW DA CAPA
+ *
+ * ═══════════════════════════════════════════════ */
 
 @Composable
-private fun ExternalPlayerBackdrop(
-    modifier: Modifier = Modifier,
-    animationProgress: Float
-) {
+private fun AlbumArtGlow() {
+
+    val transition =
+        rememberInfiniteTransition(
+            label = "AlbumArtGlow"
+        )
+
+    val alpha by transition.animateFloat(
+        initialValue = 0.18f,
+        targetValue = 0.34f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 2800,
+                easing = FastOutSlowInEasing
+            ),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "AlbumGlowAlpha"
+    )
+
     Canvas(
-        modifier = modifier
+        modifier = Modifier.fillMaxSize()
     ) {
 
-        val w = size.width
-        val h = size.height
-
-        val shift = animationProgress * w * 0.22f
-
-        drawRect(
+        drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    Color(0xFF263B70).copy(alpha = 0.20f),
-                    Color(0xFF11162A).copy(alpha = 0.13f),
+                    Color(0xFF6366F1)
+                        .copy(alpha = alpha),
+                    Color(0xFF2563EB)
+                        .copy(alpha = alpha * 0.35f),
                     Color.Transparent
-                ),
-                center = Offset(
-                    w * 0.12f + shift,
-                    h * 0.82f
-                ),
-                radius = w * 0.85f
-            )
-        )
-
-        drawRect(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    Color(0xFF693A9E).copy(alpha = 0.18f),
-                    Color.Transparent
-                ),
-                center = Offset(
-                    w * 0.88f - shift,
-                    h * 0.18f
-                ),
-                radius = w * 0.7f
-            )
-        )
-
-        drawRect(
-            brush = Brush.verticalGradient(
-                colors = listOf(
-                    Color.Black.copy(alpha = 0.14f),
-                    Color.Black.copy(alpha = 0.42f),
-                    Color.Black.copy(alpha = 0.58f)
                 )
+            ),
+            radius = size.minDimension * 0.62f
+        )
+    }
+}
+
+
+/* ═══════════════════════════════════════════════
+ *
+ * GLOW ATRÁS DOS CONTROLES
+ *
+ * ═══════════════════════════════════════════════ */
+
+@Composable
+private fun ControlGlow(
+    isPlaying: Boolean
+) {
+
+    val transition =
+        rememberInfiniteTransition(
+            label = "ControlGlow"
+        )
+
+    val alpha by transition.animateFloat(
+        initialValue = 0.08f,
+        targetValue = if (isPlaying) 0.20f else 0.12f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 2600,
+                easing = FastOutSlowInEasing
+            ),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "ControlGlowAlpha"
+    )
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp)
+    ) {
+
+        drawOval(
+            brush = Brush.radialGradient(
+                colors = listOf(
+                    Color(0xFF6366F1)
+                        .copy(alpha = alpha),
+                    Color(0xFF3B82F6)
+                        .copy(alpha = alpha * 0.35f),
+                    Color.Transparent
+                ),
+                center = Offset(
+                    size.width / 2f,
+                    size.height / 2f
+                ),
+                radius = size.width * 0.55f
+            ),
+            size = Size(
+                size.width * 0.9f,
+                size.height * 0.9f
+            ),
+            topLeft = Offset(
+                size.width * 0.05f,
+                size.height * 0.05f
             )
         )
     }
 }
 
 
-/*
- * ============================================================
- * EDGE GLOW
- * ============================================================
- */
+/* ═══════════════════════════════════════════════
+ *
+ * BORDA GLOW
+ *
+ * A versão anterior usava vários drawRect().
+ * Isso fazia os cantos parecerem quadrados.
+ *
+ * Aqui o glow é desenhado seguindo uma trajetória
+ * arredondada próxima da borda da tela.
+ *
+ * ═══════════════════════════════════════════════ */
 
 @Composable
-private fun ExternalPlayerEdgeGlow(
+private fun EdgeGlowBorder(
     modifier: Modifier = Modifier,
-    animationProgress: Float
+    isPlaying: Boolean
 ) {
-    val infiniteTransition = rememberInfiniteTransition(
-        label = "EdgeGlow"
-    )
 
+    val infiniteTransition =
+        rememberInfiniteTransition(
+            label = "EdgeGlow"
+        )
+
+    /*
+     * Respiração geral.
+     */
     val breathe by infiniteTransition.animateFloat(
-        initialValue = 0.38f,
-        targetValue = 0.82f,
+        initialValue = 0.52f,
+        targetValue = 0.88f,
         animationSpec = infiniteRepeatable(
             animation = tween(
                 durationMillis = 3600,
@@ -800,8 +683,41 @@ private fun ExternalPlayerEdgeGlow(
             ),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "EdgeBreathe"
+        label = "Breathe"
     )
+
+    /*
+     * Movimento contínuo do ponto de luz.
+     */
+    val flow by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 9000,
+                easing = LinearEasing
+            ),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "Flow"
+    )
+
+    /*
+     * Pequena variação quando existe reprodução.
+     * Não é um "visualizer" exagerado.
+     */
+    val playbackEnergy by animateFloatAsState(
+        targetValue = if (isPlaying) 1f else 0.72f,
+        animationSpec = tween(
+            durationMillis = 700,
+            easing = FastOutSlowInEasing
+        ),
+        label = "PlaybackEnergy"
+    )
+
+    val blue = Color(0xFF3B82F6)
+    val cyan = Color(0xFF22D3EE)
+    val purple = Color(0xFF8B5CF6)
 
     Canvas(
         modifier = modifier
@@ -810,248 +726,281 @@ private fun ExternalPlayerEdgeGlow(
         val w = size.width
         val h = size.height
 
-        val edgeWidth = 42.dp.toPx()
-        val corner = 150.dp.toPx()
-
-        val blue = Color(0xFF3B82F6)
-        val purple = Color(0xFF8B5CF6)
+        /*
+         * Margem da linha em relação à borda.
+         */
+        val inset = 9.dp.toPx()
 
         /*
-         * Esquerda
+         * Raio suficientemente grande para acompanhar
+         * os cantos arredondados da tela.
          */
+        val radius = 34.dp.toPx()
 
-        drawRect(
-            brush = Brush.horizontalGradient(
-                colors = listOf(
-                    blue.copy(alpha = breathe * 0.65f),
-                    blue.copy(alpha = breathe * 0.25f),
-                    Color.Transparent
+        /*
+         * Caminho arredondado.
+         *
+         * Não é um retângulo preenchido.
+         * É literalmente uma linha seguindo a borda.
+         */
+        val path = Path().apply {
+
+            moveTo(
+                inset + radius,
+                inset
+            )
+
+            lineTo(
+                w - inset - radius,
+                inset
+            )
+
+            arcTo(
+                rect = Rect(
+                    left = w - inset - radius * 2f,
+                    top = inset,
+                    right = w - inset,
+                    bottom = inset + radius * 2f
                 ),
-                startX = 0f,
-                endX = edgeWidth
+                startAngleDegrees = -90f,
+                sweepAngleDegrees = 90f,
+                forceMoveTo = false
+            )
+
+            lineTo(
+                w - inset,
+                h - inset - radius
+            )
+
+            arcTo(
+                rect = Rect(
+                    left = w - inset - radius * 2f,
+                    top = h - inset - radius * 2f,
+                    right = w - inset,
+                    bottom = h - inset
+                ),
+                startAngleDegrees = 0f,
+                sweepAngleDegrees = 90f,
+                forceMoveTo = false
+            )
+
+            lineTo(
+                inset + radius,
+                h - inset
+            )
+
+            arcTo(
+                rect = Rect(
+                    left = inset,
+                    top = h - inset - radius * 2f,
+                    right = inset + radius * 2f,
+                    bottom = h - inset
+                ),
+                startAngleDegrees = 90f,
+                sweepAngleDegrees = 90f,
+                forceMoveTo = false
+            )
+
+            lineTo(
+                inset,
+                inset + radius
+            )
+
+            arcTo(
+                rect = Rect(
+                    left = inset,
+                    top = inset,
+                    right = inset + radius * 2f,
+                    bottom = inset + radius * 2f
+                ),
+                startAngleDegrees = 180f,
+                sweepAngleDegrees = 90f,
+                forceMoveTo = false
+            )
+
+            close()
+        }
+
+        /*
+         * Gradiente que percorre a borda.
+         *
+         * O flow altera a posição das cores,
+         * criando movimento sem parecer uma animação
+         * chamativa demais.
+         */
+        val gradientOffset =
+            w * (flow - 0.5f)
+
+        val edgeBrush = Brush.linearGradient(
+            colors = listOf(
+                blue.copy(
+                    alpha =
+                        breathe *
+                            playbackEnergy *
+                            0.90f
+                ),
+                cyan.copy(
+                    alpha =
+                        breathe *
+                            playbackEnergy *
+                            0.74f
+                ),
+                purple.copy(
+                    alpha =
+                        breathe *
+                            playbackEnergy *
+                            0.90f
+                ),
+                blue.copy(
+                    alpha =
+                        breathe *
+                            playbackEnergy *
+                            0.74f
+                )
             ),
-            size = Size(edgeWidth, h)
+            start = Offset(
+                -w + gradientOffset,
+                h
+            ),
+            end = Offset(
+                w + gradientOffset,
+                -h
+            )
         )
 
         /*
-         * Direita
+         * Halo grande.
          */
-
-        drawRect(
-            brush = Brush.horizontalGradient(
-                colors = listOf(
-                    Color.Transparent,
-                    purple.copy(alpha = breathe * 0.25f),
-                    purple.copy(alpha = breathe * 0.68f)
-                ),
-                startX = w - edgeWidth,
-                endX = w
+        drawPath(
+            path = path,
+            brush = edgeBrush,
+            style = Stroke(
+                width = 18.dp.toPx(),
+                cap = StrokeCap.Round,
+                join = StrokeJoin.Round
             ),
-            topLeft = Offset(w - edgeWidth, 0f),
-            size = Size(edgeWidth, h)
+            alpha = 0.16f
         )
 
         /*
-         * Topo
+         * Halo intermediário.
          */
-
-        drawRect(
-            brush = Brush.verticalGradient(
-                colors = listOf(
-                    purple.copy(alpha = breathe * 0.65f),
-                    purple.copy(alpha = breathe * 0.18f),
-                    Color.Transparent
-                ),
-                startY = 0f,
-                endY = edgeWidth
+        drawPath(
+            path = path,
+            brush = edgeBrush,
+            style = Stroke(
+                width = 9.dp.toPx(),
+                cap = StrokeCap.Round,
+                join = StrokeJoin.Round
             ),
-            size = Size(w, edgeWidth)
+            alpha = 0.25f
         )
 
         /*
-         * Base
+         * Linha principal extremamente fina.
+         * É ela que deixa a borda definida sem virar
+         * uma moldura grossa.
          */
-
-        drawRect(
-            brush = Brush.verticalGradient(
-                colors = listOf(
-                    Color.Transparent,
-                    blue.copy(alpha = breathe * 0.18f),
-                    blue.copy(alpha = breathe * 0.68f)
-                ),
-                startY = h - edgeWidth,
-                endY = h
+        drawPath(
+            path = path,
+            brush = edgeBrush,
+            style = Stroke(
+                width = 2.2.dp.toPx(),
+                cap = StrokeCap.Round,
+                join = StrokeJoin.Round
             ),
-            topLeft = Offset(0f, h - edgeWidth),
-            size = Size(w, edgeWidth)
+            alpha = 0.72f
         )
 
         /*
-         * Cantos
+         * Pontos de luz nos quatro cantos.
+         *
+         * Eles são círculos/gradientes, não quadrados.
          */
+        val cornerRadius = 85.dp.toPx()
 
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    blue.copy(
-                        alpha = breathe *
-                            (0.32f + animationProgress * 0.12f)
+                    cyan.copy(
+                        alpha =
+                            breathe *
+                                playbackEnergy *
+                                0.24f
                     ),
                     Color.Transparent
-                )
+                ),
+                radius = cornerRadius
             ),
-            radius = corner,
-            center = Offset(0f, 0f)
+            radius = cornerRadius,
+            center = Offset(
+                inset + radius * 0.25f,
+                inset + radius * 0.25f
+            ),
+            alpha = 0.75f
         )
 
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
                     purple.copy(
-                        alpha = breathe *
-                            (0.34f + animationProgress * 0.12f)
-                    ),
-                    Color.Transparent
-                )
-            ),
-            radius = corner,
-            center = Offset(w, h)
-        )
-    }
-}
-
-
-/*
- * ============================================================
- * CARD GLOW
- * ============================================================
- */
-
-@Composable
-private fun PlayerCardAmbientGlow(
-    modifier: Modifier = Modifier,
-    progress: Float
-) {
-    Canvas(
-        modifier = modifier
-    ) {
-
-        val w = size.width
-        val h = size.height
-
-        drawRoundRect(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    Color(0xFF4F8CFF).copy(
-                        alpha = 0.13f + progress * 0.07f
-                    ),
-                    Color(0xFF8B5CF6).copy(
-                        alpha = 0.08f
+                        alpha =
+                            breathe *
+                                playbackEnergy *
+                                0.25f
                     ),
                     Color.Transparent
                 ),
-                center = Offset(
-                    w * (0.25f + progress * 0.5f),
-                    h * 0.5f
-                ),
-                radius = w * 0.9f
+                radius = cornerRadius
             ),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(
-                35.dp.toPx()
-            )
+            radius = cornerRadius,
+            center = Offset(
+                w - inset - radius * 0.25f,
+                inset + radius * 0.25f
+            ),
+            alpha = 0.75f
         )
-    }
-}
-
-
-/*
- * ============================================================
- * ALBUM ART GLOW
- * ============================================================
- */
-
-@Composable
-private fun AlbumArtGlow(
-    modifier: Modifier = Modifier,
-    isPlaying: Boolean
-) {
-    val infiniteTransition = rememberInfiniteTransition(
-        label = "AlbumGlow"
-    )
-
-    val pulse by infiniteTransition.animateFloat(
-        initialValue = 0.35f,
-        targetValue = if (isPlaying) 0.72f else 0.42f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 2100,
-                easing = FastOutSlowInEasing
-            ),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "AlbumGlowPulse"
-    )
-
-    Canvas(
-        modifier = modifier
-    ) {
 
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    Color(0xFF60A5FA).copy(
-                        alpha = pulse * 0.38f
-                    ),
-                    Color(0xFF8B5CF6).copy(
-                        alpha = pulse * 0.18f
+                    blue.copy(
+                        alpha =
+                            breathe *
+                                playbackEnergy *
+                                0.22f
                     ),
                     Color.Transparent
-                )
+                ),
+                radius = cornerRadius
             ),
-            radius = size.minDimension * 0.68f,
+            radius = cornerRadius,
             center = Offset(
-                size.width / 2f,
-                size.height / 2f
-            )
-        )
-    }
-}
-
-
-/*
- * ============================================================
- * TOP BUTTON
- * ============================================================
- */
-
-@Composable
-private fun ExternalPlayerTopButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .size(34.dp)
-            .clip(CircleShape)
-            .background(
-                Color.White.copy(alpha = 0.075f)
-            )
-            .clickable(
-                interactionSource = remember {
-                    MutableInteractionSource()
-                },
-                indication = null,
-                onClick = onClick
+                inset + radius * 0.25f,
+                h - inset - radius * 0.25f
             ),
-        contentAlignment = Alignment.Center
-    ) {
+            alpha = 0.75f
+        )
 
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            modifier = Modifier.size(18.dp),
-            tint = Color.White.copy(alpha = 0.72f)
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(
+                    purple.copy(
+                        alpha =
+                            breathe *
+                                playbackEnergy *
+                                0.22f
+                    ),
+                    Color.Transparent
+                ),
+                radius = cornerRadius
+            ),
+            radius = cornerRadius,
+            center = Offset(
+                w - inset - radius * 0.25f,
+                h - inset - radius * 0.25f
+            ),
+            alpha = 0.75f
         )
     }
 }
