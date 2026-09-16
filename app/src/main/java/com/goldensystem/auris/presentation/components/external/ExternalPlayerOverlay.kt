@@ -303,7 +303,7 @@ private val EDGE_GLOW_SHADER = """
         /*
          * A espessura total da borda.
          */
-        float halfBorder = 9.0;
+        float halfBorder = 22.0;
 
         float2 center = resolution * 0.5;
 
