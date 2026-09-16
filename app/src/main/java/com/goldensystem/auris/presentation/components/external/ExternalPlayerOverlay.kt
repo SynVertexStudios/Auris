@@ -571,7 +571,6 @@ fun ExternalPlayerOverlay(
     val isRemotePlaybackActive by playerViewModel.isRemotePlaybackActive.collectAsStateWithLifecycle()
     val currentSong = stablePlayerState.currentSong
 
-    // Sem card visível: só fecha quando não há mais música
     LaunchedEffect(currentSong) {
         if (currentSong == null) {
             onDismiss()
@@ -592,30 +591,61 @@ fun ExternalPlayerOverlay(
     val safePadding = WindowInsets.safeDrawing.asPaddingValues()
     val bottomPadding = safePadding.calculateBottomPadding()
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
 
-        // 1. Brilho gradiente nas bordas
-        EdgeGlowBorder(modifier = Modifier.fillMaxSize())
+        // Borda animada
+        EdgeGlowBorder(
+            modifier = Modifier.fillMaxSize()
+        )
 
-        // 2. Área clicável no centro vazio → fecha o player
+        // Área externa → fecha
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
+                    interactionSource = remember {
+                        MutableInteractionSource()
+                    },
                     indication = null
-                ) { onDismiss() }
+                ) {
+                    onDismiss()
+                }
         )
 
-        // 3. Conteúdo do player, tudo embaixo
         if (currentSong != null) {
-            val totalDuration = stablePlayerState.totalDuration.coerceAtLeast(0L)
-            val rawPosition = if (isRemotePlaybackActive) remotePosition else playbackPosition
-            val position = rawPosition.coerceIn(0L, totalDuration)
-            val progressFraction = if (totalDuration > 0) position.toFloat() / totalDuration else 0f
 
-            var sliderPosition by remember(currentSong.id) { mutableStateOf(progressFraction) }
-            var isUserScrubbing by remember { mutableStateOf(false) }
+            val totalDuration =
+                stablePlayerState.totalDuration.coerceAtLeast(0L)
+
+            val rawPosition =
+                if (isRemotePlaybackActive) {
+                    remotePosition
+                } else {
+                    playbackPosition
+                }
+
+            val position =
+                rawPosition.coerceIn(
+                    0L,
+                    totalDuration
+                )
+
+            val progressFraction =
+                if (totalDuration > 0L) {
+                    position.toFloat() / totalDuration
+                } else {
+                    0f
+                }
+
+            var sliderPosition by remember(currentSong.id) {
+                mutableStateOf(progressFraction)
+            }
+
+            var isUserScrubbing by remember {
+                mutableStateOf(false)
+            }
 
             LaunchedEffect(progressFraction) {
                 if (!isUserScrubbing) {
@@ -623,125 +653,228 @@ fun ExternalPlayerOverlay(
                 }
             }
 
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .padding(bottom = bottomPadding + 16.dp)
-                    .clickable(
-                        // evita que o clique no card feche o player
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { /* consume */ },
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Capa + texto
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OptimizedAlbumArt(
-                        uri = currentSong.albumArtUriString,
-                        title = currentSong.title,
-                        modifier = Modifier
-                            .size(72.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                    )
-
-                    Spacer(modifier = Modifier.width(14.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = currentSong.title,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            color = Color.White,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = currentSong.displayArtist,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.7f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(18.dp))
-
-                // Barra de progresso
-                WavyMusicSlider(
-                    value = sliderPosition,
-                    onValueChange = { newValue ->
-                        isUserScrubbing = true
-                        sliderPosition = newValue.coerceIn(0f, 1f)
-                    },
-                    onValueChangeFinished = {
-                        val targetPosition = (sliderPosition * totalDuration).roundToLong()
-                        playerViewModel.seekTo(targetPosition)
-                        isUserScrubbing = false
-                    },
-                    waveLength = 30.dp,
-                    isPlaying = stablePlayerState.isPlaying,
-                    isWaveEligible = true,
-                    semanticsLabel = "Playback position"
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // Tempos
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = formatDuration(position),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(alpha = 0.7f)
-                    )
-                    Text(
-                        text = formatDuration(totalDuration),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(alpha = 0.7f)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(18.dp))
-
-                // Controles
-                AnimatedPlaybackControls(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    isPlayingProvider = { stablePlayerState.isPlaying },
-                    onPrevious = playerViewModel::previousSong,
-                    onPlayPause = playerViewModel::playPause,
-                    onNext = playerViewModel::nextSong,
-                    height = 68.dp,
-                    pressAnimationSpec = controlAnimationSpec,
-                    colorOtherButtons = Color.White.copy(alpha = 0.15f),
-                    colorPlayPause = Color.White.copy(alpha = 0.25f),
-                    tintPlayPauseIcon = Color.White,
-                    tintOtherIcons = Color.White
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        } else {
-            // Aguardando carregar a música
+            /*
+             * Fundo translúcido do player.
+             *
+             * Não é um card sólido:
+             * deixa o conteúdo atrás aparecer,
+             * mas cria contraste suficiente para o player.
+             */
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = bottomPadding + 40.dp),
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp)
+                    .padding(
+                        bottom = bottomPadding + 8.dp
+                    )
+                    .clip(
+                        RoundedCornerShape(24.dp)
+                    )
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color(0xFF071923).copy(alpha = 0.72f),
+                                Color(0xFF0A1024).copy(alpha = 0.78f)
+                            )
+                        )
+                    )
+                    .clickable(
+                        interactionSource = remember {
+                            MutableInteractionSource()
+                        },
+                        indication = null
+                    ) {
+                        // Consome o clique.
+                    }
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 14.dp
+                    )
+            ) {
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    /*
+                     * Capa + informações
+                     */
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        OptimizedAlbumArt(
+                            uri = currentSong.albumArtUriString,
+                            title = currentSong.title,
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(
+                                    RoundedCornerShape(12.dp)
+                                )
+                        )
+
+                        Spacer(
+                            modifier = Modifier.width(12.dp)
+                        )
+
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+
+                            Text(
+                                text = currentSong.title,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                ),
+                                color = Color(0xFFE8FAFF),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+
+                            Spacer(
+                                modifier = Modifier.height(2.dp)
+                            )
+
+                            Text(
+                                text = currentSong.displayArtist,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF9DD9E8),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
+
+                    /*
+                     * Barra de progresso
+                     */
+                    WavyMusicSlider(
+                        value = sliderPosition,
+                        onValueChange = { newValue ->
+                            isUserScrubbing = true
+                            sliderPosition =
+                                newValue.coerceIn(0f, 1f)
+                        },
+                        onValueChangeFinished = {
+                            val targetPosition =
+                                (
+                                    sliderPosition *
+                                        totalDuration
+                                    ).roundToLong()
+
+                            playerViewModel.seekTo(
+                                targetPosition
+                            )
+
+                            isUserScrubbing = false
+                        },
+                        waveLength = 30.dp,
+                        isPlaying = stablePlayerState.isPlaying,
+                        isWaveEligible = true,
+                        semanticsLabel = "Playback position"
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(4.dp)
+                    )
+
+                    /*
+                     * Tempos
+                     */
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement =
+                            Arrangement.SpaceBetween
+                    ) {
+
+                        Text(
+                            text = formatDuration(position),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF8CCBD9)
+                        )
+
+                        Text(
+                            text = formatDuration(totalDuration),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF8CCBD9)
+                        )
+                    }
+
+                    Spacer(
+                        modifier = Modifier.height(10.dp)
+                    )
+
+                    /*
+                     * Controles.
+                     *
+                     * O fundo dos botões agora usa a mesma
+                     * família de cores da borda.
+                     */
+                    AnimatedPlaybackControls(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 18.dp),
+
+                        isPlayingProvider = {
+                            stablePlayerState.isPlaying
+                        },
+
+                        onPrevious =
+                            playerViewModel::previousSong,
+
+                        onPlayPause =
+                            playerViewModel::playPause,
+
+                        onNext =
+                            playerViewModel::nextSong,
+
+                        height = 60.dp,
+
+                        pressAnimationSpec =
+                            controlAnimationSpec,
+
+                        colorOtherButtons =
+                            Color(0xFF1D4E67)
+                                .copy(alpha = 0.38f),
+
+                        colorPlayPause =
+                            Color(0xFF16BFD4)
+                                .copy(alpha = 0.30f),
+
+                        tintPlayPauseIcon =
+                            Color(0xFFD9FAFF),
+
+                        tintOtherIcons =
+                            Color(0xFF9DE8F5)
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(2.dp)
+                    )
+                }
+            }
+
+        } else {
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(
+                        bottom = bottomPadding + 40.dp
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color.White)
+                CircularProgressIndicator(
+                    color = Color(0xFF35D5E8)
+                )
             }
         }
     }
