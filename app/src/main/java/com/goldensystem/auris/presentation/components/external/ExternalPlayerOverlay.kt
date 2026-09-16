@@ -1,7 +1,10 @@
 package com.goldensystem.auris.presentation.components.external
 
-import kotlin.math.cos
-import kotlin.math.sin
+import androidx.compose.ui.geometry.CornerRadius
+import android.os.Build
+import android.graphics.RuntimeShader
+import androidx.annotation.RequiresApi
+import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.activity.compose.BackHandler
@@ -63,6 +66,497 @@ import com.goldensystem.auris.presentation.components.player.AnimatedPlaybackCon
 import com.goldensystem.auris.presentation.viewmodel.PlayerViewModel
 import com.goldensystem.auris.utils.formatDuration
 import kotlin.math.roundToLong
+
+private val EDGE_GLOW_SHADER = """
+    uniform float2 resolution;
+    uniform float time;
+
+    const float PI = 3.14159265359;
+
+    /*
+     * Distância assinada de um retângulo arredondado.
+     *
+     * 0 = exatamente na borda
+     * negativo = dentro
+     * positivo = fora
+     */
+    float roundedBoxSdf(float2 p, float2 halfSize, float radius) {
+        float2 q = abs(p) - halfSize + radius;
+
+        return length(max(q, 0.0))
+            + min(max(q.x, q.y), 0.0)
+            - radius;
+    }
+
+    /*
+     * Converte a posição do pixel em uma posição 0..1
+     * ao longo do perímetro do retângulo.
+     *
+     * Começa no topo, no canto superior esquerdo,
+     * e percorre no sentido horário.
+     */
+    float perimeterPosition(
+        float2 p,
+        float width,
+        float height,
+        float radius
+    ) {
+        float straightW = width - radius * 2.0;
+        float straightH = height - radius * 2.0;
+
+        float arc = radius * PI * 0.5;
+
+        float topStart = 0.0;
+        float topEnd = straightW;
+
+        float topRightEnd = topEnd + arc;
+
+        float rightEnd =
+            topRightEnd + straightH;
+
+        float bottomRightEnd =
+            rightEnd + arc;
+
+        float bottomEnd =
+            bottomRightEnd + straightW;
+
+        float bottomLeftEnd =
+            bottomEnd + arc;
+
+        float leftEnd =
+            bottomLeftEnd + straightH;
+
+        float topLeftEnd =
+            leftEnd + arc;
+
+        float perimeter = topLeftEnd;
+
+        float x = p.x;
+        float y = p.y;
+
+        /*
+         * TOPO
+         */
+        if (y <= radius && x >= radius && x <= width - radius) {
+            return clamp(
+                (x - radius) / perimeter,
+                0.0,
+                1.0
+            );
+        }
+
+        /*
+         * CANTO SUPERIOR DIREITO
+         */
+        if (x > width - radius && y < radius) {
+            float2 c = float2(
+                width - radius,
+                radius
+            );
+
+            float angle = atan(
+                y - c.y,
+                x - c.x
+            );
+
+            float localArc =
+                (angle + PI * 0.5) * radius;
+
+            return (
+                topEnd + localArc
+            ) / perimeter;
+        }
+
+        /*
+         * DIREITA
+         */
+        if (x >= width - radius &&
+            y >= radius &&
+            y <= height - radius) {
+
+            return (
+                topRightEnd +
+                (y - radius)
+            ) / perimeter;
+        }
+
+        /*
+         * CANTO INFERIOR DIREITO
+         */
+        if (x > width - radius &&
+            y > height - radius) {
+
+            float2 c = float2(
+                width - radius,
+                height - radius
+            );
+
+            float angle = atan(
+                y - c.y,
+                x - c.x
+            );
+
+            float localArc =
+                angle * radius;
+
+            return (
+                rightEnd +
+                localArc
+            ) / perimeter;
+        }
+
+        /*
+         * INFERIOR
+         */
+        if (y >= height - radius &&
+            x >= radius &&
+            x <= width - radius) {
+
+            return (
+                bottomRightEnd +
+                (width - radius - x)
+            ) / perimeter;
+        }
+
+        /*
+         * CANTO INFERIOR ESQUERDO
+         */
+        if (x < radius &&
+            y > height - radius) {
+
+            float2 c = float2(
+                radius,
+                height - radius
+            );
+
+            float angle = atan(
+                y - c.y,
+                x - c.x
+            );
+
+            float localArc =
+                (PI * 0.5 - angle) * radius;
+
+            return (
+                bottomEnd +
+                localArc
+            ) / perimeter;
+        }
+
+        /*
+         * ESQUERDA
+         */
+        if (x <= radius &&
+            y >= radius &&
+            y <= height - radius) {
+
+            return (
+                bottomLeftEnd +
+                (height - radius - y)
+            ) / perimeter;
+        }
+
+        /*
+         * CANTO SUPERIOR ESQUERDO
+         */
+        float2 c = float2(
+            radius,
+            radius
+        );
+
+        float angle = atan(
+            y - c.y,
+            x - c.x
+        );
+
+        if (angle < 0.0) {
+            angle += PI * 2.0;
+        }
+
+        float localArc =
+            (angle - PI) * radius;
+
+        return (
+            leftEnd +
+            localArc
+        ) / perimeter;
+    }
+
+    /*
+     * Distância circular entre dois pontos 0..1.
+     */
+    float circularDistance(float a, float b) {
+        float d = abs(a - b);
+        return min(d, 1.0 - d);
+    }
+
+    half4 main(float2 fragCoord) {
+
+        float width = resolution.x;
+        float height = resolution.y;
+
+        /*
+         * Mesmo tamanho visual da versão anterior.
+         */
+        float radius = 42.0;
+
+        /*
+         * A espessura total da borda.
+         */
+        float halfBorder = 9.0;
+
+        float2 center = resolution * 0.5;
+
+        float2 p = fragCoord - center;
+
+        float2 halfSize =
+            resolution * 0.5;
+
+        /*
+         * Limita o raio para telas pequenas.
+         */
+        radius = min(
+            radius,
+            min(halfSize.x, halfSize.y) - 2.0
+        );
+
+        /*
+         * ---------------------------------------------------------
+         * DISTÂNCIA DA BORDA
+         * ---------------------------------------------------------
+         */
+
+        float sdf = roundedBoxSdf(
+            p,
+            halfSize,
+            radius
+        );
+
+        float distanceToEdge = abs(sdf);
+
+        /*
+         * Fade matemático da espessura.
+         *
+         * O centro é mais forte.
+         * Conforme chega na extremidade, desaparece
+         * progressivamente.
+         *
+         * Não existe uma faixa sólida.
+         */
+        float edgeMask =
+            1.0 -
+            smoothstep(
+                halfBorder * 0.15,
+                halfBorder,
+                distanceToEdge
+            );
+
+        /*
+         * Anti-aliasing extra.
+         */
+        edgeMask *=
+            1.0 -
+            smoothstep(
+                halfBorder,
+                halfBorder + 1.5,
+                distanceToEdge
+            );
+
+        /*
+         * Fora da região da borda não desenha nada.
+         */
+        if (edgeMask <= 0.001) {
+            return half4(0.0);
+        }
+
+        /*
+         * ---------------------------------------------------------
+         * POSIÇÃO NO PERÍMETRO
+         * ---------------------------------------------------------
+         */
+
+        float2 pixel = fragCoord;
+
+        float perimeterT = perimeterPosition(
+            pixel,
+            width,
+            height,
+            radius
+        );
+
+        /*
+         * ---------------------------------------------------------
+         * ENERGIA SE MOVENDO PELA BORDA
+         * ---------------------------------------------------------
+         *
+         * Não é uma bolinha.
+         *
+         * É uma região enorme e suave de intensidade.
+         */
+        float movingPosition =
+            fract(time * 0.00010);
+
+        float distanceFromEnergy =
+            circularDistance(
+                perimeterT,
+                movingPosition
+            );
+
+        /*
+         * O 0.17 deixa a região bastante larga.
+         */
+        float energy =
+            exp(
+                -pow(
+                    distanceFromEnergy / 0.17,
+                    2.0
+                )
+            );
+
+        /*
+         * Segunda região, mais fraca e mais lenta.
+         *
+         * Isso evita que pareça simplesmente uma única
+         * mancha viajando.
+         */
+        float secondPosition =
+            fract(
+                time * 0.000055 + 0.43
+            );
+
+        float secondDistance =
+            circularDistance(
+                perimeterT,
+                secondPosition
+            );
+
+        float secondaryEnergy =
+            exp(
+                -pow(
+                    secondDistance / 0.23,
+                    2.0
+                )
+            ) * 0.28;
+
+        /*
+         * Respiração geral extremamente leve.
+         */
+        float breathing =
+            0.82 +
+            0.18 *
+            (0.5 + 0.5 * sin(time * 0.0017));
+
+        /*
+         * Intensidade final.
+         */
+        float intensity =
+            0.34 +
+            energy * 0.62 +
+            secondaryEnergy;
+
+        intensity *= breathing;
+
+        /*
+         * ---------------------------------------------------------
+         * CORES
+         * ---------------------------------------------------------
+         *
+         * A cor também muda suavemente ao longo do perímetro.
+         * Não há blocos separados de azul/ciano/roxo.
+         */
+
+        float colorPhase =
+            perimeterT * PI * 2.0
+            - time * 0.00016;
+
+        float cyanWeight =
+            0.5 +
+            0.5 * cos(colorPhase);
+
+        float purpleWeight =
+            0.5 +
+            0.5 * cos(
+                colorPhase - PI * 0.90
+            );
+
+        float blueWeight =
+            0.5 +
+            0.5 * cos(
+                colorPhase + PI * 0.90
+            );
+
+        float total =
+            cyanWeight +
+            purpleWeight +
+            blueWeight;
+
+        cyanWeight /= total;
+        purpleWeight /= total;
+        blueWeight /= total;
+
+        float3 cyan =
+            float3(
+                0.133,
+                0.827,
+                0.933
+            );
+
+        float3 blue =
+            float3(
+                0.231,
+                0.510,
+                0.965
+            );
+
+        float3 purple =
+            float3(
+                0.545,
+                0.361,
+                0.965
+            );
+
+        float3 color =
+            cyan * cyanWeight +
+            blue * blueWeight +
+            purple * purpleWeight;
+
+        /*
+         * ---------------------------------------------------------
+         * PEQUENO NÚCLEO DE LUZ
+         * ---------------------------------------------------------
+         *
+         * Só aparece onde a energia está passando.
+         */
+        float core =
+            pow(
+                energy,
+                2.8
+            );
+
+        color = mix(
+            color,
+            float3(0.82, 0.97, 1.0),
+            core * 0.38
+        );
+
+        /*
+         * Alpha final.
+         */
+        float alpha =
+            edgeMask *
+            intensity *
+            0.72;
+
+        /*
+         * AGSL exige saída premultiplicada
+         * quando usamos transparência.
+         */
+        return half4(
+            color * alpha,
+            alpha
+        );
+    }
+""".trimIndent()
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -253,327 +747,85 @@ fun ExternalPlayerOverlay(
     }
 }
 
-/**
- * Brilho gradiente nas bordas: azul → roxo, mais forte na borda,
- * desvanecendo em direção ao centro. Animação lenta de "respiração".
- */
 @Composable
-private fun EdgeGlowBorder(modifier: Modifier = Modifier) {
-    val infiniteTransition = rememberInfiniteTransition(label = "EdgeGlow")
+private fun EdgeGlowBorder(
+    modifier: Modifier = Modifier
+) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        EdgeGlowBorderShader(modifier)
+    } else {
+        EdgeGlowBorderFallback(modifier)
+    }
+}
 
-    val flow by infiniteTransition.animateFloat(
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@Composable
+private fun EdgeGlowBorderShader(
+    modifier: Modifier = Modifier
+) {
+    val infiniteTransition =
+        rememberInfiniteTransition(
+            label = "EdgeGlowShader"
+        )
+
+    val time by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = 1f,
+        targetValue = 60000f,
         animationSpec = infiniteRepeatable(
             animation = tween(
-                durationMillis = 6500,
+                durationMillis = 60000,
                 easing = LinearEasing
             ),
             repeatMode = RepeatMode.Restart
         ),
-        label = "EdgeFlow"
+        label = "ShaderTime"
     )
 
-    val breathe by infiniteTransition.animateFloat(
-        initialValue = 0.72f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 2600,
-                easing = FastOutSlowInEasing
-            ),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "EdgeBreathing"
-    )
+    val shader = remember {
+        RuntimeShader(
+            EDGE_GLOW_SHADER
+        )
+    }
 
-    val blue = Color(0xFF3B82F6)
-    val cyan = Color(0xFF22D3EE)
-    val purple = Color(0xFF8B5CF6)
+    val shaderBrush = remember(shader) {
+        ShaderBrush(shader)
+    }
 
-    Canvas(modifier = modifier) {
-        if (size.width <= 0f || size.height <= 0f) {
-            return@Canvas
-        }
-
-        val w = size.width
-        val h = size.height
-
-        /*
-         * A borda continua exatamente no mesmo espaço.
-         *
-         * Não existe uma camada gigante de glow invadindo
-         * o centro da tela.
-         */
-        val edgeWidth = 3.5.dp.toPx()
-        val glowWidth = 18.dp.toPx()
-        val cornerRadius = 42.dp.toPx()
-
-        val path = Path().apply {
-            moveTo(cornerRadius, 0f)
-
-            lineTo(w - cornerRadius, 0f)
-
-            quadraticTo(
-                w,
-                0f,
-                w,
-                cornerRadius
-            )
-
-            lineTo(w, h - cornerRadius)
-
-            quadraticTo(
-                w,
-                h,
-                w - cornerRadius,
-                h
-            )
-
-            lineTo(cornerRadius, h)
-
-            quadraticTo(
-                0f,
-                h,
-                0f,
-                h - cornerRadius
-            )
-
-            lineTo(0f, cornerRadius)
-
-            quadraticTo(
-                0f,
-                0f,
-                cornerRadius,
-                0f
-            )
-
-            close()
-        }
-
-        /*
-         * =========================================================
-         * MOVIMENTO DA BORDA
-         * =========================================================
-         *
-         * Em vez de partículas, criamos regiões de energia.
-         *
-         * O gradiente percorre a borda lentamente:
-         *
-         * apagado -> suave -> forte -> suave -> apagado
-         *
-         * Isso faz parecer que a própria borda está "respirando"
-         * e se deslocando pelo perímetro.
-         */
-
-        val movement = flow * Math.PI.toFloat() * 2f
-
-        val offsetX =
-            kotlin.math.cos(movement) * w * 0.45f
-
-        val offsetY =
-            kotlin.math.sin(movement * 0.73f) * h * 0.45f
-
-        /*
-         * =========================================================
-         * 1. GLOW EXTERNO SUAVE
-         * =========================================================
-         *
-         * Não é uma faixa colorida.
-         *
-         * A intensidade nasce da borda e desaparece suavemente.
-         */
-
-        val outerGradient = Brush.radialGradient(
-            colorStops = arrayOf(
-                0.00f to Color.White.copy(
-                    alpha = 0.04f * breathe
-                ),
-                0.20f to cyan.copy(
-                    alpha = 0.10f * breathe
-                ),
-                0.42f to blue.copy(
-                    alpha = 0.07f * breathe
-                ),
-                0.68f to purple.copy(
-                    alpha = 0.035f * breathe
-                ),
-                1.00f to Color.Transparent
-            ),
-            center = Offset(
-                w / 2f + offsetX,
-                h / 2f + offsetY
-            ),
-            radius = maxOf(w, h) * 0.72f
+    Canvas(
+        modifier = modifier
+    ) {
+        shader.setFloatUniform(
+            "resolution",
+            size.width,
+            size.height
         )
 
-        /*
-         * Esse glow é bem fraco.
-         * A borda continua sendo o elemento principal.
-         */
-        drawPath(
-            path = path,
-            brush = outerGradient,
-            style = Stroke(width = glowWidth)
+        shader.setFloatUniform(
+            "time",
+            time
         )
 
-        /*
-         * =========================================================
-         * 2. BORDA PRINCIPAL
-         * =========================================================
-         *
-         * Muitos pontos próximos entre si evitam aquelas
-         * transições duras de "faixa azul -> faixa roxa".
-         *
-         * A mudança de cor acontece de maneira contínua.
-         */
-
-        val mainGradient = Brush.linearGradient(
-            colorStops = arrayOf(
-                0.00f to cyan.copy(alpha = 0.22f * breathe),
-                0.08f to cyan.copy(alpha = 0.28f * breathe),
-                0.18f to blue.copy(alpha = 0.34f * breathe),
-                0.30f to blue.copy(alpha = 0.20f * breathe),
-                0.42f to purple.copy(alpha = 0.27f * breathe),
-                0.54f to purple.copy(alpha = 0.17f * breathe),
-                0.66f to blue.copy(alpha = 0.30f * breathe),
-                0.78f to cyan.copy(alpha = 0.25f * breathe),
-                0.90f to cyan.copy(alpha = 0.34f * breathe),
-                1.00f to blue.copy(alpha = 0.18f * breathe)
-            ),
-            start = Offset(
-                x = -w * 0.35f + offsetX,
-                y = -h * 0.15f + offsetY
-            ),
-            end = Offset(
-                x = w * 1.35f + offsetX,
-                y = h * 1.15f + offsetY
-            )
+        drawRect(
+            brush = shaderBrush
         )
+    }
+}
 
-        /*
-         * Glow intermediário.
-         *
-         * Mais largo, porém extremamente transparente.
-         */
-        drawPath(
-            path = path,
-            brush = mainGradient,
+@Composable
+private fun EdgeGlowBorderFallback(
+    modifier: Modifier = Modifier
+) {
+    Canvas(
+        modifier = modifier
+    ) {
+        drawRoundRect(
+            color = Color(0xFF3B82F6).copy(alpha = 0.45f),
             style = Stroke(
-                width = glowWidth
-            )
-        )
-
-        /*
-         * =========================================================
-         * 3. NÚCLEO DA BORDA
-         * =========================================================
-         *
-         * É aqui que fica a linha realmente visível.
-         * Bem fina para não parecer uma faixa.
-         */
-
-        drawPath(
-            path = path,
-            brush = mainGradient,
-            style = Stroke(
-                width = edgeWidth
-            )
-        )
-
-        /*
-         * =========================================================
-         * 4. "ONDA" DE INTENSIDADE
-         * =========================================================
-         *
-         * Não é uma bolinha nem uma partícula.
-         *
-         * É uma região grande da própria borda que fica
-         * gradualmente mais forte e depois desaparece.
-         */
-
-        val wavePosition = flow
-
-        val waveGradient = Brush.sweepGradient(
-            colorStops = arrayOf(
-                0.00f to Color.Transparent,
-                0.16f to Color.Transparent,
-                0.28f to cyan.copy(
-                    alpha = 0.04f * breathe
-                ),
-                0.38f to blue.copy(
-                    alpha = 0.10f * breathe
-                ),
-                0.46f to cyan.copy(
-                    alpha = 0.24f * breathe
-                ),
-                0.50f to Color.White.copy(
-                    alpha = 0.34f * breathe
-                ),
-                0.54f to cyan.copy(
-                    alpha = 0.20f * breathe
-                ),
-                0.63f to blue.copy(
-                    alpha = 0.08f * breathe
-                ),
-                0.74f to Color.Transparent,
-                1.00f to Color.Transparent
+                width = 3.5.dp.toPx()
             ),
-            center = Offset(
-                x = w / 2f +
-                    kotlin.math.cos(
-                        wavePosition * Math.PI.toFloat() * 2f
-                    ) * w * 0.28f,
-
-                y = h / 2f +
-                    kotlin.math.sin(
-                        wavePosition * Math.PI.toFloat() * 2f
-                    ) * h * 0.28f
-            )
-        )
-
-        drawPath(
-            path = path,
-            brush = waveGradient,
-            style = Stroke(
-                width = 4.5.dp.toPx()
-            )
-        )
-
-        /*
-         * =========================================================
-         * 5. MICRO-BRILHO
-         * =========================================================
-         *
-         * Uma linha quase branca muito transparente.
-         * Dá aquele aspecto de material luminoso em vez
-         * de uma simples linha neon.
-         */
-
-        val highlightGradient = Brush.linearGradient(
-            colorStops = arrayOf(
-                0.00f to Color.Transparent,
-                0.20f to cyan.copy(alpha = 0.10f * breathe),
-                0.40f to Color.White.copy(alpha = 0.16f * breathe),
-                0.55f to cyan.copy(alpha = 0.08f * breathe),
-                0.72f to purple.copy(alpha = 0.12f * breathe),
-                1.00f to Color.Transparent
-            ),
-            start = Offset(
-                x = -w * 0.20f + offsetX,
-                y = 0f
-            ),
-            end = Offset(
-                x = w * 1.20f + offsetX,
-                y = h
-            )
-        )
-
-        drawPath(
-            path = path,
-            brush = highlightGradient,
-            style = Stroke(
-                width = 1.dp.toPx()
+            cornerRadius = CornerRadius(
+                42.dp.toPx(),
+                42.dp.toPx()
             )
         )
     }
