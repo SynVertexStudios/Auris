@@ -571,11 +571,14 @@ fun ExternalPlayerOverlay(
     val isRemotePlaybackActive by playerViewModel.isRemotePlaybackActive.collectAsStateWithLifecycle()
     val currentSong = stablePlayerState.currentSong
 
-    LaunchedEffect(currentSong) {
-        if (currentSong == null) {
-            onDismiss()
-        }
+    val isMediaControllerReady by playerViewModel.isMediaControllerReady
+    .collectAsStateWithLifecycle()
+
+LaunchedEffect(currentSong, isMediaControllerReady) {
+    if (isMediaControllerReady && currentSong == null) {
+        onDismiss()
     }
+}
 
     BackHandler {
         onDismiss()
