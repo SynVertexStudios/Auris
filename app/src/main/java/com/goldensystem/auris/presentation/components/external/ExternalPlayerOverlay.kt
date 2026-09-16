@@ -1,5 +1,7 @@
 package com.goldensystem.auris.presentation.components.external
 
+import kotlin.math.cos
+import kotlin.math.sin
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.activity.compose.BackHandler
@@ -259,60 +261,30 @@ fun ExternalPlayerOverlay(
 private fun EdgeGlowBorder(modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "EdgeGlow")
 
-    // Movimento principal da energia ao redor da tela
     val flow by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(
-                durationMillis = 7000,
+                durationMillis = 6500,
                 easing = LinearEasing
             ),
             repeatMode = RepeatMode.Restart
         ),
-        label = "EnergyFlow"
+        label = "EdgeFlow"
     )
 
-    // Segunda onda, mais lenta
-    val secondaryFlow by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 11500,
-                easing = LinearEasing
-            ),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "SecondaryFlow"
-    )
-
-    // Respiração geral
     val breathe by infiniteTransition.animateFloat(
-        initialValue = 0.65f,
+        initialValue = 0.72f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(
-                durationMillis = 2800,
+                durationMillis = 2600,
                 easing = FastOutSlowInEasing
             ),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "GlowBreathing"
-    )
-
-    // Pulsação dos hotspots
-    val pulse by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 1900,
-                easing = FastOutSlowInEasing
-            ),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "HotspotPulse"
+        label = "EdgeBreathing"
     )
 
     val blue = Color(0xFF3B82F6)
@@ -320,25 +292,23 @@ private fun EdgeGlowBorder(modifier: Modifier = Modifier) {
     val purple = Color(0xFF8B5CF6)
 
     Canvas(modifier = modifier) {
-        if (size.width <= 0f || size.height <= 0f) return@Canvas
+        if (size.width <= 0f || size.height <= 0f) {
+            return@Canvas
+        }
 
         val w = size.width
         val h = size.height
 
-        val density = this
-
+        /*
+         * A borda continua exatamente no mesmo espaço.
+         *
+         * Não existe uma camada gigante de glow invadindo
+         * o centro da tela.
+         */
         val edgeWidth = 3.5.dp.toPx()
         val glowWidth = 18.dp.toPx()
         val cornerRadius = 42.dp.toPx()
 
-        /*
-         * Caminho contínuo ao redor da tela.
-         *
-         * Isso é importante:
-         * em vez de quatro linhas independentes,
-         * temos um único fluxo de energia percorrendo
-         * todo o perímetro.
-         */
         val path = Path().apply {
             moveTo(cornerRadius, 0f)
 
@@ -382,351 +352,229 @@ private fun EdgeGlowBorder(modifier: Modifier = Modifier) {
         }
 
         /*
-         * ------------------------------------------------
-         * 1. ATMOSFERA EXTERNA
-         * ------------------------------------------------
+         * =========================================================
+         * MOVIMENTO DA BORDA
+         * =========================================================
+         *
+         * Em vez de partículas, criamos regiões de energia.
+         *
+         * O gradiente percorre a borda lentamente:
+         *
+         * apagado -> suave -> forte -> suave -> apagado
+         *
+         * Isso faz parecer que a própria borda está "respirando"
+         * e se deslocando pelo perímetro.
          */
 
-        // Glow azul
+        val movement = flow * Math.PI.toFloat() * 2f
+
+        val offsetX =
+            kotlin.math.cos(movement) * w * 0.45f
+
+        val offsetY =
+            kotlin.math.sin(movement * 0.73f) * h * 0.45f
+
+        /*
+         * =========================================================
+         * 1. GLOW EXTERNO SUAVE
+         * =========================================================
+         *
+         * Não é uma faixa colorida.
+         *
+         * A intensidade nasce da borda e desaparece suavemente.
+         */
+
+        val outerGradient = Brush.radialGradient(
+            colorStops = arrayOf(
+                0.00f to Color.White.copy(
+                    alpha = 0.04f * breathe
+                ),
+                0.20f to cyan.copy(
+                    alpha = 0.10f * breathe
+                ),
+                0.42f to blue.copy(
+                    alpha = 0.07f * breathe
+                ),
+                0.68f to purple.copy(
+                    alpha = 0.035f * breathe
+                ),
+                1.00f to Color.Transparent
+            ),
+            center = Offset(
+                w / 2f + offsetX,
+                h / 2f + offsetY
+            ),
+            radius = maxOf(w, h) * 0.72f
+        )
+
+        /*
+         * Esse glow é bem fraco.
+         * A borda continua sendo o elemento principal.
+         */
         drawPath(
             path = path,
-            brush = Brush.linearGradient(
-                colors = listOf(
-                    blue.copy(alpha = 0.10f * breathe),
-                    cyan.copy(alpha = 0.04f * breathe),
-                    purple.copy(alpha = 0.08f * breathe),
-                    blue.copy(alpha = 0.05f * breathe)
-                ),
-                start = Offset(
-                    x = w * flow,
-                    y = 0f
-                ),
-                end = Offset(
-                    x = w * (1f - flow),
-                    y = h
-                )
-            ),
+            brush = outerGradient,
             style = Stroke(width = glowWidth)
         )
 
-        // Segunda camada de glow
-        drawPath(
-            path = path,
-            brush = Brush.sweepGradient(
-                colors = listOf(
-                    blue.copy(alpha = 0.10f * breathe),
-                    cyan.copy(alpha = 0.18f * breathe),
-                    Color.Transparent,
-                    purple.copy(alpha = 0.16f * breathe),
-                    blue.copy(alpha = 0.08f * breathe),
-                    Color.Transparent
-                ),
-                center = Offset(w / 2f, h / 2f)
-            ),
-            style = Stroke(width = 10.dp.toPx())
-        )
-
         /*
-         * ------------------------------------------------
-         * 2. LINHA BASE
-         * ------------------------------------------------
-         */
-
-        drawPath(
-            path = path,
-            brush = Brush.sweepGradient(
-                colors = listOf(
-                    blue.copy(alpha = 0.30f * breathe),
-                    cyan.copy(alpha = 0.18f * breathe),
-                    purple.copy(alpha = 0.28f * breathe),
-                    blue.copy(alpha = 0.14f * breathe),
-                    cyan.copy(alpha = 0.25f * breathe),
-                    blue.copy(alpha = 0.30f * breathe)
-                ),
-                center = Offset(w / 2f, h / 2f)
-            ),
-            style = Stroke(width = edgeWidth)
-        )
-
-        /*
-         * ------------------------------------------------
-         * 3. FEIXE PRINCIPAL DE ENERGIA
-         * ------------------------------------------------
+         * =========================================================
+         * 2. BORDA PRINCIPAL
+         * =========================================================
          *
-         * O gradiente se move pelo perímetro.
-         * A região clara funciona como um "feixe".
-         */
-
-        val flowPosition = flow
-
-        drawPath(
-            path = path,
-            brush = Brush.sweepGradient(
-                colors = listOf(
-                    Color.Transparent,
-                    Color.Transparent,
-                    blue.copy(alpha = 0.15f * breathe),
-                    cyan.copy(alpha = 0.95f * breathe),
-                    Color.White.copy(alpha = 0.85f * breathe),
-                    cyan.copy(alpha = 0.60f * breathe),
-                    purple.copy(alpha = 0.25f * breathe),
-                    Color.Transparent,
-                    Color.Transparent
-                ),
-                center = Offset(
-                    x = w / 2f + (w * 0.25f * kotlin.math.cos(flowPosition * Math.PI * 2)).toFloat(),
-                    y = h / 2f + (h * 0.25f * kotlin.math.sin(flowPosition * Math.PI * 2)).toFloat()
-                )
-            ),
-            style = Stroke(width = edgeWidth * 1.8f)
-        )
-
-        /*
-         * ------------------------------------------------
-         * 4. SEGUNDO FEIXE
-         * ------------------------------------------------
-         */
-
-        drawPath(
-            path = path,
-            brush = Brush.sweepGradient(
-                colors = listOf(
-                    Color.Transparent,
-                    purple.copy(alpha = 0.15f),
-                    Color.Transparent,
-                    Color.Transparent,
-                    blue.copy(alpha = 0.30f),
-                    cyan.copy(alpha = 0.65f),
-                    Color.Transparent,
-                    Color.Transparent
-                ),
-                center = Offset(
-                    x = w / 2f + (
-                        w * 0.30f *
-                            kotlin.math.cos(
-                                secondaryFlow * Math.PI * 2
-                            )
-                    ).toFloat(),
-                    y = h / 2f + (
-                        h * 0.30f *
-                            kotlin.math.sin(
-                                secondaryFlow * Math.PI * 2
-                            )
-                    ).toFloat()
-                )
-            ),
-            style = Stroke(width = 2.dp.toPx())
-        )
-
-        /*
-         * ------------------------------------------------
-         * 5. HOTSPOTS DOS CANTOS
-         * ------------------------------------------------
-         */
-
-        val hotspotRadius = 105.dp.toPx()
-
-        // Superior esquerdo
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    cyan.copy(alpha = 0.45f * breathe * (0.7f + pulse * 0.3f)),
-                    blue.copy(alpha = 0.20f * breathe),
-                    Color.Transparent
-                ),
-                center = Offset.Zero,
-                radius = hotspotRadius
-            ),
-            radius = hotspotRadius,
-            center = Offset.Zero
-        )
-
-        // Superior direito
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    purple.copy(alpha = 0.42f * breathe),
-                    blue.copy(alpha = 0.16f * breathe),
-                    Color.Transparent
-                ),
-                radius = hotspotRadius
-            ),
-            radius = hotspotRadius,
-            center = Offset(w, 0f)
-        )
-
-        // Inferior esquerdo
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    blue.copy(alpha = 0.32f * breathe),
-                    cyan.copy(alpha = 0.12f * breathe),
-                    Color.Transparent
-                ),
-                radius = hotspotRadius
-            ),
-            radius = hotspotRadius,
-            center = Offset(0f, h)
-        )
-
-        // Inferior direito
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    purple.copy(alpha = 0.48f * breathe * (0.75f + pulse * 0.25f)),
-                    blue.copy(alpha = 0.18f * breathe),
-                    Color.Transparent
-                ),
-                radius = hotspotRadius
-            ),
-            radius = hotspotRadius,
-            center = Offset(w, h)
-        )
-
-        /*
-         * ------------------------------------------------
-         * 6. PEQUENOS NÚCLEOS DE LUZ NOS CANTOS
-         * ------------------------------------------------
-         */
-
-        val coreRadius = 5.dp.toPx()
-
-        drawCircle(
-            color = cyan.copy(alpha = 0.8f * breathe),
-            radius = coreRadius,
-            center = Offset(0f, 0f)
-        )
-
-        drawCircle(
-            color = purple.copy(alpha = 0.8f * breathe),
-            radius = coreRadius,
-            center = Offset(w, 0f)
-        )
-
-        drawCircle(
-            color = blue.copy(alpha = 0.7f * breathe),
-            radius = coreRadius,
-            center = Offset(0f, h)
-        )
-
-        drawCircle(
-            color = purple.copy(alpha = 0.9f * breathe),
-            radius = coreRadius,
-            center = Offset(w, h)
-        )
-
-        /*
-         * ------------------------------------------------
-         * 7. PARTÍCULAS / PONTOS DE ENERGIA
-         * ------------------------------------------------
+         * Muitos pontos próximos entre si evitam aquelas
+         * transições duras de "faixa azul -> faixa roxa".
          *
-         * Movem-se independentemente pelo perímetro.
+         * A mudança de cor acontece de maneira contínua.
          */
 
-        val particles = listOf(
-            Triple(0.13f, 0.75f, cyan),
-            Triple(0.31f, 0.42f, blue),
-            Triple(0.57f, 0.88f, purple),
-            Triple(0.76f, 0.30f, cyan),
-            Triple(0.91f, 0.64f, blue),
-            Triple(0.46f, 0.18f, purple)
+        val mainGradient = Brush.linearGradient(
+            colorStops = arrayOf(
+                0.00f to cyan.copy(alpha = 0.22f * breathe),
+                0.08f to cyan.copy(alpha = 0.28f * breathe),
+                0.18f to blue.copy(alpha = 0.34f * breathe),
+                0.30f to blue.copy(alpha = 0.20f * breathe),
+                0.42f to purple.copy(alpha = 0.27f * breathe),
+                0.54f to purple.copy(alpha = 0.17f * breathe),
+                0.66f to blue.copy(alpha = 0.30f * breathe),
+                0.78f to cyan.copy(alpha = 0.25f * breathe),
+                0.90f to cyan.copy(alpha = 0.34f * breathe),
+                1.00f to blue.copy(alpha = 0.18f * breathe)
+            ),
+            start = Offset(
+                x = -w * 0.35f + offsetX,
+                y = -h * 0.15f + offsetY
+            ),
+            end = Offset(
+                x = w * 1.35f + offsetX,
+                y = h * 1.15f + offsetY
+            )
         )
 
-        particles.forEachIndexed { index, particle ->
-            val base = particle.first
-            val speed = particle.second
-            val color = particle.third
+        /*
+         * Glow intermediário.
+         *
+         * Mais largo, porém extremamente transparente.
+         */
+        drawPath(
+            path = path,
+            brush = mainGradient,
+            style = Stroke(
+                width = glowWidth
+            )
+        )
 
-            val position = (
-                base +
-                    flow * (0.25f + speed * 0.4f) +
-                    index * 0.07f
-                ) % 1f
+        /*
+         * =========================================================
+         * 3. NÚCLEO DA BORDA
+         * =========================================================
+         *
+         * É aqui que fica a linha realmente visível.
+         * Bem fina para não parecer uma faixa.
+         */
 
-            /*
-             * Converte posição 0..1 em posição no perímetro.
-             */
-            val perimeter = 2f * (w + h)
+        drawPath(
+            path = path,
+            brush = mainGradient,
+            style = Stroke(
+                width = edgeWidth
+            )
+        )
 
-            val distance = position * perimeter
+        /*
+         * =========================================================
+         * 4. "ONDA" DE INTENSIDADE
+         * =========================================================
+         *
+         * Não é uma bolinha nem uma partícula.
+         *
+         * É uma região grande da própria borda que fica
+         * gradualmente mais forte e depois desaparece.
+         */
 
-            val point = when {
-                distance < w -> {
-                    Offset(distance, 0f)
-                }
+        val wavePosition = flow
 
-                distance < w + h -> {
-                    Offset(w, distance - w)
-                }
+        val waveGradient = Brush.sweepGradient(
+            colorStops = arrayOf(
+                0.00f to Color.Transparent,
+                0.16f to Color.Transparent,
+                0.28f to cyan.copy(
+                    alpha = 0.04f * breathe
+                ),
+                0.38f to blue.copy(
+                    alpha = 0.10f * breathe
+                ),
+                0.46f to cyan.copy(
+                    alpha = 0.24f * breathe
+                ),
+                0.50f to Color.White.copy(
+                    alpha = 0.34f * breathe
+                ),
+                0.54f to cyan.copy(
+                    alpha = 0.20f * breathe
+                ),
+                0.63f to blue.copy(
+                    alpha = 0.08f * breathe
+                ),
+                0.74f to Color.Transparent,
+                1.00f to Color.Transparent
+            ),
+            center = Offset(
+                x = w / 2f +
+                    kotlin.math.cos(
+                        wavePosition * Math.PI.toFloat() * 2f
+                    ) * w * 0.28f,
 
-                distance < (2f * w) + h -> {
-                    Offset(
-                        w - (distance - (w + h)),
-                        h
-                    )
-                }
-
-                else -> {
-                    Offset(
-                        0f,
-                        h - (distance - (2f * w + h))
-                    )
-                }
-            }
-
-            val particlePulse =
-                0.35f +
-                    0.65f *
+                y = h / 2f +
                     kotlin.math.sin(
-                        (
-                            flow * Math.PI * 4 +
-                                index
-                        )
-                    ).toFloat().let { (it + 1f) / 2f }
-
-            drawCircle(
-                color = color.copy(
-                    alpha = particlePulse * 0.9f
-                ),
-                radius = 2.5.dp.toPx(),
-                center = point
+                        wavePosition * Math.PI.toFloat() * 2f
+                    ) * h * 0.28f
             )
-
-            // Pequeno halo da partícula
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        color.copy(alpha = particlePulse * 0.25f),
-                        Color.Transparent
-                    ),
-                    radius = 16.dp.toPx()
-                ),
-                radius = 16.dp.toPx(),
-                center = point
-            )
-        }
-
-        /*
-         * ------------------------------------------------
-         * 8. PEQUENOS "TRAILS" NOS FEIXES
-         * ------------------------------------------------
-         */
-
-        val trailAlpha = 0.20f + breathe * 0.12f
+        )
 
         drawPath(
             path = path,
-            brush = Brush.sweepGradient(
-                colors = listOf(
-                    Color.Transparent,
-                    Color.Transparent,
-                    cyan.copy(alpha = trailAlpha),
-                    Color.Transparent,
-                    Color.Transparent
-                ),
-                center = Offset(w / 2f, h / 2f)
+            brush = waveGradient,
+            style = Stroke(
+                width = 4.5.dp.toPx()
+            )
+        )
+
+        /*
+         * =========================================================
+         * 5. MICRO-BRILHO
+         * =========================================================
+         *
+         * Uma linha quase branca muito transparente.
+         * Dá aquele aspecto de material luminoso em vez
+         * de uma simples linha neon.
+         */
+
+        val highlightGradient = Brush.linearGradient(
+            colorStops = arrayOf(
+                0.00f to Color.Transparent,
+                0.20f to cyan.copy(alpha = 0.10f * breathe),
+                0.40f to Color.White.copy(alpha = 0.16f * breathe),
+                0.55f to cyan.copy(alpha = 0.08f * breathe),
+                0.72f to purple.copy(alpha = 0.12f * breathe),
+                1.00f to Color.Transparent
             ),
-            style = Stroke(width = 1.dp.toPx())
+            start = Offset(
+                x = -w * 0.20f + offsetX,
+                y = 0f
+            ),
+            end = Offset(
+                x = w * 1.20f + offsetX,
+                y = h
+            )
+        )
+
+        drawPath(
+            path = path,
+            brush = highlightGradient,
+            style = Stroke(
+                width = 1.dp.toPx()
+            )
         )
     }
 }
