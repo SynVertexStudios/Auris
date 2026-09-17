@@ -224,6 +224,8 @@ class PlayerViewModel @Inject constructor(
     val musicRepository: MusicRepository,
     //conversor gdrive
     private val gdriveStreamProxy: GDriveStreamProxy,
+    private val _externalPlaybackError = MutableStateFlow<String?>(null)
+    val externalPlaybackError: StateFlow<String?> = _externalPlaybackError.asStateFlow()
     private val aurisOnlineRepository: AurisOnlineRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     val playlistPreferencesRepository: PlaylistPreferencesRepository, 
@@ -2805,10 +2807,13 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun playExternalUri(uri: Uri) {
-        viewModelScope.launch {
+    viewModelScope.launch {
+        try {
+            _externalPlaybackError.value = null
+
             val externalResult = externalMediaStateHolder.buildExternalSongFromUri(uri)
             if (externalResult == null) {
-                sendToast(context.getString(R.string.external_playback_error))
+                _externalPlaybackError.value = "buildExternalSongFromUri retornou null"
                 return@launch
             }
 
@@ -2844,10 +2849,19 @@ class PlayerViewModel @Inject constructor(
             _sheetState.value = PlayerSheetState.COLLAPSED
             _isSheetVisible.value = true
 
-            internalPlaySongs(queueSongs, externalResult.song, context.getString(R.string.external_queue_label), null)
+            internalPlaySongs(
+                queueSongs,
+                externalResult.song,
+                context.getString(R.string.external_queue_label),
+                null
+            )
             showPlayer()
+        } catch (t: Throwable) {
+            _externalPlaybackError.value =
+                "playExternalUri: ${t.javaClass.simpleName}: ${t.message}"
         }
     }
+}
 
     fun showPlayer() {
         if (stablePlayerState.value.currentSong != null) {

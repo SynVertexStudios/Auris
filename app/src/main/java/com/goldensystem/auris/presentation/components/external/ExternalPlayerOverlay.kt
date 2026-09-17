@@ -570,6 +570,7 @@ fun ExternalPlayerOverlay(
     val remotePosition by playerViewModel.remotePosition.collectAsStateWithLifecycle()
     val isRemotePlaybackActive by playerViewModel.isRemotePlaybackActive.collectAsStateWithLifecycle()
     val currentSong = stablePlayerState.currentSong
+    val externalError by playerViewModel.externalPlaybackError.collectAsStateWithLifecycle()
 
    var hasEverHadSong by remember { mutableStateOf(false) }
 
@@ -603,6 +604,24 @@ LaunchedEffect(currentSong) {
         EdgeGlowBorder(
             modifier = Modifier.fillMaxSize()
         )
+        // Faixa de erro visível independente do estado do player
+if (externalError != null) {
+    Box(
+        modifier = Modifier
+            .align(Alignment.TopCenter)
+            .fillMaxWidth()
+            .padding(top = safePadding.calculateTopPadding() + 24.dp)
+            .padding(horizontal = 16.dp)
+    ) {
+        Text(
+            text = "ERRO:\n$externalError",
+            color = Color(0xFFFF5252),
+            fontSize = 13.sp,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
 
         // Área externa → fecha
         Box(
