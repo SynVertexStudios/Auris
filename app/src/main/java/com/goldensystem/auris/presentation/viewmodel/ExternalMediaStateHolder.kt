@@ -28,6 +28,17 @@ class ExternalMediaStateHolder @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
 
+    private fun showDebugToast(message: String) {
+        try {
+            android.widget.Toast.makeText(
+                context,
+                message,
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+        } catch (_: Exception) {
+        }
+    }
+
     suspend fun buildExternalQueue(
         result: ExternalSongLoadResult,
         originalUri: Uri
@@ -115,8 +126,6 @@ class ExternalMediaStateHolder @Inject constructor(
         val candidates = if (startIndex != -1) {
             siblings.drop(startIndex + 1)
         } else {
-            // Include everything except target if not found in list (fallback) or logic implies future only?
-            // "drop startIndex + 1" implies queue continues AFTER current song.
             siblings.filterNot { (itemUri, displayName) ->
                 itemUri == originalUri ||
                     itemUri.toString() == normalizedTargetUri ||
@@ -142,6 +151,9 @@ class ExternalMediaStateHolder @Inject constructor(
         uri: Uri,
         captureFolderInfo: Boolean = true
     ): ExternalSongLoadResult? = withContext(Dispatchers.IO) {
+
+        showDebugToast("A - Iniciando leitura: $uri")
+
         val resolver = context.contentResolver
 
         var displayName: String? = null
@@ -168,6 +180,8 @@ class ExternalMediaStateHolder @Inject constructor(
             MediaStore.Audio.Media.DATE_ADDED
         )
 
+        showDebugToast("B - Vai consultar MediaStore")
+
         try {
             resolver.query(uri, projection, null, null, null)?.use { cursor ->
                 if (cursor.moveToFirst()) {
@@ -191,67 +205,63 @@ class ExternalMediaStateHolder @Inject constructor(
 
                     val albumIndex = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)
                     if (albumIndex != -1) storeAlbum = cursor.getString(albumIndex)
-                    
+
                     val trackIndex = cursor.getColumnIndex(MediaStore.Audio.Media.TRACK)
                     if (trackIndex != -1) storeTrack = cursor.getInt(trackIndex)
-                    
+
                     val yearIndex = cursor.getColumnIndex(MediaStore.Audio.Media.YEAR)
                     if (yearIndex != -1) storeYear = cursor.getInt(yearIndex)
-                    
+
                     val dateAddedIndex = cursor.getColumnIndex(MediaStore.Audio.Media.DATE_ADDED)
                     if (dateAddedIndex != -1) storeDateAddedSeconds = cursor.getLong(dateAddedIndex)
                 }
             }
+            showDebugToast("C - MediaStore OK (displayName=$displayName)")
         } catch (e: Exception) {
-    Timber.e(e, "Error querying MediaStore for uri: $uri")
-    android.widget.Toast.makeText(
-        context,
-        "ERRO MediaStore: ${e.javaClass.simpleName}: ${e.message}",
-        android.widget.Toast.LENGTH_LONG
-    ).show()
-}
-
-        // Fallback or read from file metadata
-        val metadata = AudioMetadataReader.read(context, uri)
-if (metadata == null) {
-    android.widget.Toast.makeText(
-        context,
-        "ERRO: AudioMetadataReader retornou null para $uri",
-        android.widget.Toast.LENGTH_LONG
-    ).show()
-    return@withContext null
-}
-
-        // Try to persist artwork
-        val albumArtUriString = metadata.artwork?.let { artwork ->
-             if (isValidImageData(artwork.bytes)) {
-                 persistExternalAlbumArt(uri, artwork.bytes, artwork.mimeType)
-             } else null
+            Timber.e(e, "Error querying MediaStore for uri: $uri")
+            showDebugToast("ERRO MediaStore: ${e.javaClass.simpleName}: ${e.message}")
         }
+
+        showDebugToast("D - Vai ler AudioMetadataReader")
+
+        val metadata = AudioMetadataReader.read(context, uri)
+        if (metadata == null) {
+            showDebugToast("ERRO: AudioMetadataReader retornou null")
+            return@withContext null
+        }
+
+        showDebugToast("E - AudioMetadataReader OK (title=${metadata.title})")
+
+        val albumArtUriString = metadata.artwork?.let { artwork ->
+            if (isValidImageData(artwork.bytes)) {
+                persistExternalAlbumArt(uri, artwork.bytes, artwork.mimeType)
+            } else null
+        }
+
+        showDebugToast("F - Vai montar Song")
 
         val finalTitle = storeTitle ?: metadata.title ?: displayName ?: "Unknown Title"
         val finalArtist = storeArtist ?: metadata.artist ?: "Unknown Artist"
         val finalAlbum = storeAlbum ?: metadata.album ?: "Unknown Album"
-        // Use metadata duration if store duration is missing or 0
         val finalDuration = storeDuration?.takeIf { it > 0 } ?: metadata.durationMs ?: 0L
 
         val mimeType = context.contentResolver.getType(uri) ?: "audio/*"
-        
-        val songId = "external:${uri}" 
-        
+
+        val songId = "external:${uri}"
+
         val song = Song(
-            id = songId, 
+            id = songId,
             title = finalTitle,
             artist = finalArtist,
-            artistId = -1, // No DB ID
+            artistId = -1,
             album = finalAlbum,
-            albumId = -1, // No DB ID
+            albumId = -1,
             albumArtist = metadata.albumArtist,
-            path = uri.toString(), // Path is URI
+            path = uri.toString(),
             contentUriString = uri.toString(),
             albumArtUriString = albumArtUriString,
             duration = finalDuration,
-            genre = metadata.genre, // Metadata reader might provide genre
+            genre = metadata.genre,
             trackNumber = storeTrack ?: metadata.trackNumber ?: 0,
             year = storeYear ?: metadata.year ?: 0,
             dateAdded = storeDateAddedSeconds ?: (System.currentTimeMillis() / 1000),
@@ -259,7 +269,9 @@ if (metadata == null) {
             bitrate = metadata.bitrate,
             sampleRate = metadata.sampleRate
         )
-        
+
+        showDebugToast("G - Song montada, retornando")
+
         ExternalSongLoadResult(
             song = song,
             relativePath = if (captureFolderInfo) relativePath else null,
