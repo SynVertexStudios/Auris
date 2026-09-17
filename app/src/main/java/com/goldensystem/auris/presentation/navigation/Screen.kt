@@ -58,4 +58,5 @@ sealed class Screen(val route: String) {
     object CustomTheme : Screen("custom_theme_colors")  // ← Nome único para tela de cores
     object Wallpaper : Screen("wallpaper")               // ← ADICIONADO
     object Support : Screen("support")
+    object Login : Screen("login")
 }

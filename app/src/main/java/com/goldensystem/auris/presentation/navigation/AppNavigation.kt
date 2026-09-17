@@ -742,6 +742,26 @@ composable(
                     )
                 }
             }
+            
+            composable(
+    Screen.Login.route,
+    enterTransition = { enterTransition() },
+    exitTransition = { exitTransition() },
+    popEnterTransition = { popEnterTransition() },
+    popExitTransition = { popExitTransition() },
+) {
+    ScreenWrapper(navController = navController, playerViewModel = playerViewModel) {
+        LoginScreen(
+            navController = navController,
+            onBackClick = { navController.popBackStack() },
+            onLoginSuccess = {
+                navController.navigate(Screen.Accounts.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                }
+            }
+        )
+    }
+}
         }
     }
 }

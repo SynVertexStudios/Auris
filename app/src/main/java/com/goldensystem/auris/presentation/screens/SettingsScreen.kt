@@ -245,7 +245,7 @@ fun SettingsScreen(
         subtitle = stringResource(R.string.settings_accounts_row_subtitle),
         icon = Icons.Rounded.AccountCircle,
         colors = getAccountsColors(isDark),
-        onClick = { navController.navigateSafely(Screen.Accounts.route) },
+        onClick = { navController.navigateSafely(Screen.Login.route) },
         shape = shapeFor(itemIndex)
     )
     if (itemIndex < totalItems - 1) {
