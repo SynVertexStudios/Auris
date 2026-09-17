@@ -224,8 +224,10 @@ class PlayerViewModel @Inject constructor(
     val musicRepository: MusicRepository,
     //conversor gdrive
     private val gdriveStreamProxy: GDriveStreamProxy,
-    private val _externalPlaybackError = MutableStateFlow<String?>(null)
-    val externalPlaybackError: StateFlow<String?> = _externalPlaybackError.asStateFlow()
+    
+    private val _externalPlaybackError = MutableStateFlow<String?>(null),
+    val externalPlaybackError: StateFlow<String?> = _externalPlaybackError.asStateFlow(),
+    
     private val aurisOnlineRepository: AurisOnlineRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     val playlistPreferencesRepository: PlaylistPreferencesRepository, 
