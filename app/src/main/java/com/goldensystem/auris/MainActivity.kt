@@ -697,7 +697,7 @@ Trace.endSection()
                 Screen.CustomTheme.route,
                 Screen.CustomThemeSettings.route,
                 Screen.Wallpaper.route,
-                Screen.Support.route
+                Screen.Support.route,
                 Screen.Login.route
             )
         }
