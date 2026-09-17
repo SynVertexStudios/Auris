@@ -9,11 +9,14 @@ import com.goldensystem.auris.data.netease.NeteaseRepository
 import com.goldensystem.auris.data.qqmusic.QqMusicRepository
 import com.goldensystem.auris.data.repository.MusicRepository
 import com.goldensystem.auris.data.telegram.TelegramRepository
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -52,10 +55,30 @@ class AccountsViewModel @Inject constructor(
     private val neteaseRepository: NeteaseRepository,
     private val qqMusicRepository: QqMusicRepository,
     private val navidromeRepository: NavidromeRepository,
-    private val jellyfinRepository: JellyfinRepository
+    private val jellyfinRepository: JellyfinRepository,
+    private val firebaseAuth: FirebaseAuth
 ) : ViewModel() {
 
     private val loggingOutServices = MutableStateFlow<Set<ExternalServiceAccount>>(emptySet())
+
+    // ============ FIREBASE AUTH ============
+    private val _firebaseUser = MutableStateFlow(firebaseAuth.currentUser)
+    val firebaseUser: StateFlow<FirebaseUser?> = _firebaseUser.asStateFlow()
+
+    init {
+        firebaseAuth.addAuthStateListener { auth ->
+            _firebaseUser.value = auth.currentUser
+        }
+    }
+
+    fun isFirebaseLoggedIn(): Boolean = firebaseAuth.currentUser != null
+
+    fun logoutFirebase() {
+        firebaseAuth.signOut()
+        _firebaseUser.value = null
+    }
+
+    // ============ SERVIÇOS EXTERNOS ============
 
     private val telegramStateFlow = combine(
         telegramRepository.authorizationState

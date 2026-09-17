@@ -698,6 +698,7 @@ Trace.endSection()
                 Screen.CustomThemeSettings.route,
                 Screen.Wallpaper.route,
                 Screen.Support.route
+                Screen.Login.route
             )
         }
         val shouldHideNavigationBar by remember(currentRoute, isSearchBarActive) {

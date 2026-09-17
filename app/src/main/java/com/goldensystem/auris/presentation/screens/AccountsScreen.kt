@@ -26,18 +26,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.CloudQueue
 import androidx.compose.material.icons.rounded.Link
-import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Sync
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -49,6 +51,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -59,6 +62,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -74,15 +78,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.goldensystem.auris.R
 import com.goldensystem.auris.presentation.components.CollapsibleCommonTopBar
 import com.goldensystem.auris.presentation.components.MiniPlayerHeight
-import com.goldensystem.auris.presentation.jellyfin.auth.JellyfinLoginActivity
-import com.goldensystem.auris.presentation.navidrome.auth.NavidromeLoginActivity
-import com.goldensystem.auris.presentation.telegram.auth.TelegramLoginActivity
 import com.goldensystem.auris.presentation.viewmodel.AccountsViewModel
 import com.goldensystem.auris.presentation.viewmodel.ExternalAccountUiModel
 import com.goldensystem.auris.presentation.viewmodel.ExternalServiceAccount
+import com.google.firebase.auth.FirebaseUser
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
@@ -93,10 +96,21 @@ fun AccountsScreen(
     onOpenNavidromeDashboard: () -> Unit = {},
     onOpenJellyfinDashboard: () -> Unit = {},
     onOpenGDriveDashboard: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {},
     viewModel: AccountsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val firebaseUser by viewModel.firebaseUser.collectAsStateWithLifecycle()
+
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    // Se o usuário não está logado no Firebase, manda pra tela de login
+    LaunchedEffect(firebaseUser) {
+        if (firebaseUser == null && !viewModel.isFirebaseLoggedIn()) {
+            onNavigateToLogin()
+        }
+    }
 
     val density = LocalDensity.current
     val coroutineScope = rememberCoroutineScope()
@@ -176,12 +190,23 @@ fun AccountsScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            item {
-                   AccountsHeroSection(
-                   connectedCount = uiState.connectedAccounts.size,
-                    disconnectedServices = uiState.disconnectedServices   // passa a lista inteira
-                   )
+            // ============ PERFIL FIREBASE ============
+            firebaseUser?.let { user ->
+                item(key = "firebase_profile") {
+                    FirebaseProfileCard(
+                        user = user,
+                        onLogoutClick = { showLogoutDialog = true }
+                    )
                 }
+            }
+
+            // ============ HERO EXISTENTE ============
+            item {
+                AccountsHeroSection(
+                    connectedCount = uiState.connectedAccounts.size,
+                    disconnectedServices = uiState.disconnectedServices
+                )
+            }
 
             if (uiState.connectedAccounts.isNotEmpty()) {
                 item {
@@ -206,7 +231,7 @@ fun AccountsScreen(
                                 service = account.service,
                                 onOpenNavidromeDashboard = onOpenNavidromeDashboard,
                                 onOpenJellyfinDashboard = onOpenJellyfinDashboard,
-                     onOpenGDriveDashboard = onOpenGDriveDashboard
+                                onOpenGDriveDashboard = onOpenGDriveDashboard
                             )
                         },
                         onLogout = { viewModel.logout(account.service) },
@@ -225,7 +250,7 @@ fun AccountsScreen(
                                 service = service,
                                 onOpenNavidromeDashboard = onOpenNavidromeDashboard,
                                 onOpenJellyfinDashboard = onOpenJellyfinDashboard,
-                     onOpenGDriveDashboard = onOpenGDriveDashboard
+                                onOpenGDriveDashboard = onOpenGDriveDashboard
                             )
                         }
                     )
@@ -242,7 +267,193 @@ fun AccountsScreen(
             collapsedTitleStartPadding = 68.dp
         )
     }
+
+    // ============ DIALOG DE LOGOUT FIREBASE ============
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.Logout,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
+            title = { Text("Sair da conta Auris?") },
+            text = {
+                Text(
+                    "Você poderá entrar novamente a qualquer momento. " +
+                        "Seus serviços externos conectados não serão afetados."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        viewModel.logoutFirebase()
+                        onNavigateToLogin()
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Sair")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 }
+
+// ============================================================
+// PERFIL FIREBASE
+// ============================================================
+
+@Composable
+private fun FirebaseProfileCard(
+    user: FirebaseUser,
+    onLogoutClick: () -> Unit
+) {
+    val displayName = user.displayName?.takeIf { it.isNotBlank() }
+        ?: user.email?.substringBefore("@")?.takeIf { it.isNotBlank() }
+        ?: "Usuário Auris"
+    val email = user.email ?: "Sem e-mail"
+    val photoUrl = user.photoUrl?.toString()
+
+    val sectionShape = AbsoluteSmoothCornerShape(30.dp, 60)
+    val palette = MaterialTheme.colorScheme
+
+    Card(
+        shape = sectionShape,
+        colors = CardDefaults.cardColors(containerColor = palette.surfaceContainerHigh),
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = palette.primaryContainer,
+                    modifier = Modifier.size(56.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        if (photoUrl != null) {
+                            AsyncImage(
+                                model = photoUrl,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(CircleShape)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Rounded.Person,
+                                contentDescription = null,
+                                tint = palette.onPrimaryContainer,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.size(14.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = displayName,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = palette.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = email,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = palette.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Surface(
+                    shape = AbsoluteSmoothCornerShape(12.dp, 60),
+                    color = palette.primaryContainer
+                ) {
+                    Text(
+                        text = "Ativo",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = palette.onPrimaryContainer,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    )
+                }
+            }
+
+            Surface(
+                shape = AbsoluteSmoothCornerShape(14.dp, 60),
+                color = palette.surfaceContainerLow
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Sync,
+                        contentDescription = null,
+                        tint = palette.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.size(8.dp))
+                    Text(
+                        text = "Preferências sincronizadas na nuvem",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = palette.onSurface
+                    )
+                }
+            }
+
+            HorizontalDivider(color = palette.outlineVariant.copy(alpha = 0.28f))
+
+            OutlinedButton(
+                onClick = onLogoutClick,
+                shape = AbsoluteSmoothCornerShape(18.dp, 60),
+                border = BorderStroke(1.dp, palette.error.copy(alpha = 0.45f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.Logout,
+                    contentDescription = null,
+                    tint = palette.error
+                )
+                Spacer(Modifier.size(8.dp))
+                Text(
+                    text = "Sair da conta Auris",
+                    fontWeight = FontWeight.SemiBold,
+                    color = palette.error
+                )
+            }
+        }
+    }
+}
+
+// ============================================================
+// HERO (EXISTENTE — INTOCADO)
+// ============================================================
 
 @Composable
 private fun AccountsHeroSection(
@@ -290,7 +501,7 @@ private fun AccountsHeroSection(
                 HeroStatTile(
                     title = statAvailable,
                     value = (connectedCount + visibleDisconnectedCount).toString(),
-                     modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
@@ -326,6 +537,10 @@ private fun HeroStatTile(
         }
     }
 }
+
+// ============================================================
+// CONNECTED ACCOUNT CARD (EXISTENTE — INTOCADO)
+// ============================================================
 
 @Composable
 private fun ConnectedAccountCard(
@@ -448,7 +663,7 @@ private fun ConnectedAccountCard(
                         tint = palette.iconTint,
                         modifier = Modifier.size(16.dp)
                     )
-                    Spacer(modifier = Modifier.size(8.dp))
+                    Spacer(Modifier.size(8.dp))
                     Text(
                         text = account.syncedContentLabel,
                         style = MaterialTheme.typography.bodyMedium,
@@ -475,7 +690,7 @@ private fun ConnectedAccountCard(
                     imageVector = if (isComingSoon) Icons.Rounded.Link else Icons.AutoMirrored.Rounded.OpenInNew,
                     contentDescription = null
                 )
-                Spacer(modifier = Modifier.size(8.dp))
+                Spacer(Modifier.size(8.dp))
                 Text(
                     text = if (isComingSoon) comingSoonShort else openService,
                     fontWeight = FontWeight.SemiBold
@@ -500,7 +715,7 @@ private fun ConnectedAccountCard(
                         contentDescription = null
                     )
                 }
-                Spacer(modifier = Modifier.size(8.dp))
+                Spacer(Modifier.size(8.dp))
                 Text(
                     text = if (account.isLoggingOut) loggingOut else logOut,
                     fontWeight = FontWeight.SemiBold
@@ -509,6 +724,10 @@ private fun ConnectedAccountCard(
         }
     }
 }
+
+// ============================================================
+// EMPTY ACCOUNTS CARD (EXISTENTE — INTOCADO)
+// ============================================================
 
 @Composable
 private fun EmptyAccountsCard(
@@ -541,12 +760,12 @@ private fun EmptyAccountsCard(
             )
 
             disconnectedServices.filter { service ->
-           serviceDisplayName(service).isNotBlank()
-                 }.forEach { service ->
-            val isComingSoon = service == ExternalServiceAccount.GOOGLE_DRIVE 
-            val painter = when (service) {
-                 ExternalServiceAccount.TELEGRAM -> painterResource(R.drawable.telegram)
-                 else -> null
+                serviceDisplayName(service).isNotBlank()
+            }.forEach { service ->
+                val isComingSoon = service == ExternalServiceAccount.GOOGLE_DRIVE
+                val painter = when (service) {
+                    ExternalServiceAccount.TELEGRAM -> painterResource(R.drawable.telegram)
+                    else -> null
                 }
 
                 FilledTonalButton(
@@ -560,22 +779,28 @@ private fun EmptyAccountsCard(
                     modifier = Modifier.fillMaxWidth().height(48.dp)
                 ) {
                     when {
-                          service == ExternalServiceAccount.GOOGLE_DRIVE -> {
-        // Use um drawable ou ImageVector específico do Drive
-                     Icon(
-                     painter = painterResource(R.drawable.ic_google_drive),
-                      contentDescription = null,
-                     modifier = Modifier.size(18.dp)
-                    )
-                 }
-                   painter != null -> {
-                    Icon(painter = painter, contentDescription = null, modifier = Modifier.size(18.dp))
+                        service == ExternalServiceAccount.GOOGLE_DRIVE -> {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_google_drive),
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        painter != null -> {
+                            Icon(
+                                painter = painter,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        else -> {
+                            Icon(
+                                imageVector = Icons.Rounded.Link,
+                                contentDescription = null
+                            )
+                        }
                     }
-             else -> {
-               Icon(imageVector = Icons.Rounded.Link, contentDescription = null)
-                   }
-                  }
-                    Spacer(modifier = Modifier.size(8.dp))
+                    Spacer(Modifier.size(8.dp))
                     Text(
                         text = if (isComingSoon) {
                             serviceSoonTemplate.format(serviceDisplayName(service))
@@ -588,6 +813,10 @@ private fun EmptyAccountsCard(
         }
     }
 }
+
+// ============================================================
+// PALETTE + ICONS + HELPERS (EXISTENTES — INTOCADOS)
+// ============================================================
 
 private data class ServicePalette(
     val iconContainer: Color,
@@ -665,8 +894,7 @@ private fun ServiceIcon(service: ExternalServiceAccount, tint: Color, modifier: 
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_subsonic),
                 contentDescription = null,
                 tint = Color.Unspecified,
-                modifier = Modifier
-                    .size(32.dp)
+                modifier = Modifier.size(32.dp)
             )
 
             Icon(
@@ -700,10 +928,9 @@ private fun serviceDisplayName(service: ExternalServiceAccount): String {
     return when (service) {
         ExternalServiceAccount.TELEGRAM -> stringResource(R.string.presentation_batch_b_service_telegram)
         ExternalServiceAccount.GOOGLE_DRIVE -> {
-               // ← substitua pelo ID real
-              val name = stringResource(R.string.auth_gdrive_title)
-                  "$name"
-            }
+            val name = stringResource(R.string.auth_gdrive_title)
+            "$name"
+        }
         ExternalServiceAccount.NAVIDROME -> stringResource(R.string.cd_subsonic_logo)
         ExternalServiceAccount.JELLYFIN -> stringResource(R.string.auth_jellyfin_title)
         else -> ""
@@ -721,20 +948,19 @@ private fun openService(
         ExternalServiceAccount.TELEGRAM -> {
             safeStartActivity(
                 context = context,
-                intent = Intent(context, TelegramLoginActivity::class.java)
+                intent = Intent(context, com.goldensystem.auris.presentation.telegram.auth.TelegramLoginActivity::class.java)
             )
         }
         ExternalServiceAccount.GOOGLE_DRIVE -> {
-    // Navega para a tela do Google Drive
-    onOpenGDriveDashboard()
-}
+            onOpenGDriveDashboard()
+        }
         ExternalServiceAccount.NAVIDROME -> {
             onOpenNavidromeDashboard()
         }
         ExternalServiceAccount.JELLYFIN -> {
             onOpenJellyfinDashboard()
         }
-        else -> {} // nenhuma ação para NETEASE/QQ_MUSIC
+        else -> {}
     }
 }
 
