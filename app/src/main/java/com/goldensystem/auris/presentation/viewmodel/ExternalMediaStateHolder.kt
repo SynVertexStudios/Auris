@@ -1,5 +1,6 @@
 package com.goldensystem.auris.presentation.viewmodel
 
+import kotlinx.coroutines.withTimeoutOrNull
 import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
@@ -224,11 +225,7 @@ class ExternalMediaStateHolder @Inject constructor(
 
         showDebugToast("D - Vai ler AudioMetadataReader")
 
-        val metadata = AudioMetadataReader.read(context, uri)
-        if (metadata == null) {
-            showDebugToast("ERRO: AudioMetadataReader retornou null")
-            return@withContext null
-        }
+        val metadata = readMetadataSafely(uri) ?: return@withContext null
 
         showDebugToast("E - AudioMetadataReader OK (title=${metadata.title})")
 
@@ -304,5 +301,35 @@ class ExternalMediaStateHolder @Inject constructor(
         }.onFailure { throwable ->
             Timber.w(throwable, "Unable to persist album art for external uri: $uri")
         }.getOrNull()
+    }
+    
+private suspend fun readMetadataSafely(uri: Uri): com.goldensystem.auris.data.media.AudioMetadata? =
+    withContext(Dispatchers.IO) {
+        // 1. Tenta ler direto
+        runCatching {
+            withTimeoutOrNull(3000L) {
+                AudioMetadataReader.read(context, uri)
+            }
+        }.getOrNull()?.let { return@withContext it }
+
+        // 2. Se travou ou falhou, copia para cache e lê do arquivo local
+        val tempFile = runCatching {
+            val dir = File(context.cacheDir, "external_temp")
+            if (!dir.exists()) dir.mkdirs()
+            val f = File(dir, "ext_${uri.toString().hashCode()}_${System.currentTimeMillis()}.tmp")
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                f.outputStream().use { output -> input.copyTo(output) }
+            } ?: return@withContext null
+            f
+        }.getOrNull() ?: return@withContext null
+
+        try {
+            val localUri = Uri.fromFile(tempFile)
+            withTimeoutOrNull(5000L) {
+                AudioMetadataReader.read(context, localUri)
+            }
+        } finally {
+            runCatching { tempFile.delete() }
+        }
     }
 }
