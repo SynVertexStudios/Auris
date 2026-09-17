@@ -224,10 +224,6 @@ class PlayerViewModel @Inject constructor(
     val musicRepository: MusicRepository,
     //conversor gdrive
     private val gdriveStreamProxy: GDriveStreamProxy,
-    
-    private val _externalPlaybackError = MutableStateFlow<String?>(null),
-    val externalPlaybackError: StateFlow<String?> = _externalPlaybackError.asStateFlow(),
-    
     private val aurisOnlineRepository: AurisOnlineRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     val playlistPreferencesRepository: PlaylistPreferencesRepository, 
@@ -266,6 +262,8 @@ class PlayerViewModel @Inject constructor(
     private val mediaControllerFactory: com.goldensystem.auris.data.media.MediaControllerFactory,
 ) : ViewModel() {
 
+    private val _externalPlaybackError = MutableStateFlow<String?>(null)
+    val externalPlaybackError: StateFlow<String?> = _externalPlaybackError.asStateFlow()
     private val _playerUiState = MutableStateFlow(PlayerUiState())
     val playerUiState: StateFlow<PlayerUiState> = _playerUiState.asStateFlow()
     val queueFlow: StateFlow<ImmutableList<Song>> = _playerUiState
