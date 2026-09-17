@@ -203,11 +203,24 @@ class ExternalMediaStateHolder @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error querying MediaStore for uri: $uri")
-        }
+    Timber.e(e, "Error querying MediaStore for uri: $uri")
+    android.widget.Toast.makeText(
+        context,
+        "ERRO MediaStore: ${e.javaClass.simpleName}: ${e.message}",
+        android.widget.Toast.LENGTH_LONG
+    ).show()
+}
 
         // Fallback or read from file metadata
-        val metadata = AudioMetadataReader.read(context, uri) ?: return@withContext null
+        val metadata = AudioMetadataReader.read(context, uri)
+if (metadata == null) {
+    android.widget.Toast.makeText(
+        context,
+        "ERRO: AudioMetadataReader retornou null para $uri",
+        android.widget.Toast.LENGTH_LONG
+    ).show()
+    return@withContext null
+}
 
         // Try to persist artwork
         val albumArtUriString = metadata.artwork?.let { artwork ->
