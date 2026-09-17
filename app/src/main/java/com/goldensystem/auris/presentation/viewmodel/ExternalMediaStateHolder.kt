@@ -136,7 +136,7 @@ class ExternalMediaStateHolder @Inject constructor(
 
         if (candidates.isEmpty()) return@withContext emptyList()
 
-        val maxSiblings = 50
+        val maxSiblings = 5
 val limitedCandidates = candidates.take(maxSiblings)
 
 val resolved = mutableListOf<Song>()
