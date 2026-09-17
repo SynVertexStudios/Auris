@@ -2808,57 +2808,80 @@ class PlayerViewModel @Inject constructor(
 
     fun playExternalUri(uri: Uri) {
     viewModelScope.launch {
-        try {
-            _externalPlaybackError.value = null
+        val externalResult = externalMediaStateHolder.buildExternalSongFromUri(uri)
+        if (externalResult == null) {
+            sendToast(context.getString(R.string.external_playback_error))
+            return@launch
+        }
 
-            val externalResult = externalMediaStateHolder.buildExternalSongFromUri(uri)
-            if (externalResult == null) {
-                _externalPlaybackError.value = "buildExternalSongFromUri retornou null"
-                return@launch
-            }
+        transitionSchedulerJob?.cancel()
 
-            transitionSchedulerJob?.cancel()
+        val singleSongQueue = listOf(externalResult.song)
 
-            val queueSongs = externalMediaStateHolder.buildExternalQueue(externalResult, uri)
-            val immutableQueue = queueSongs.toPlaybackQueue()
-
-            _playerUiState.update { state ->
-                state.copy(
-                    currentPlaybackQueue = immutableQueue,
-                    currentQueueSourceName = context.getString(R.string.external_queue_label),
-                    showDismissUndoBar = false,
-                    dismissedSong = null,
-                    dismissedQueue = persistentListOf(),
-                    dismissedQueueName = "",
-                    dismissedPosition = 0L
-                )
-            }
-            playbackStateHolder.setCurrentPosition(0L)
-
-            playbackStateHolder.updateStablePlayerState { state ->
-                state.copy(
-                    currentSong = externalResult.song,
-                    isPlaying = true,
-                    playWhenReady = true,
-                    totalDuration = externalResult.song.duration,
-                    lyrics = null,
-                    isLoadingLyrics = false
-                )
-            }
-
-            _sheetState.value = PlayerSheetState.COLLAPSED
-            _isSheetVisible.value = true
-
-            internalPlaySongs(
-                queueSongs,
-                externalResult.song,
-                context.getString(R.string.external_queue_label),
-                null
+        _playerUiState.update { state ->
+            state.copy(
+                currentPlaybackQueue = singleSongQueue.toPlaybackQueue(),
+                currentQueueSourceName = context.getString(R.string.external_queue_label),
+                showDismissUndoBar = false,
+                dismissedSong = null,
+                dismissedQueue = persistentListOf(),
+                dismissedQueueName = "",
+                dismissedPosition = 0L
             )
-            showPlayer()
-        } catch (t: Throwable) {
-            _externalPlaybackError.value =
-                "playExternalUri: ${t.javaClass.simpleName}: ${t.message}"
+        }
+        playbackStateHolder.setCurrentPosition(0L)
+
+        playbackStateHolder.updateStablePlayerState { state ->
+            state.copy(
+                currentSong = externalResult.song,
+                isPlaying = true,
+                playWhenReady = true,
+                totalDuration = externalResult.song.duration,
+                lyrics = null,
+                isLoadingLyrics = false
+            )
+        }
+
+        _sheetState.value = PlayerSheetState.COLLAPSED
+        _isSheetVisible.value = true
+
+        // Toca IMEDIATAMENTE só com a música clicada
+        internalPlaySongs(
+            singleSongQueue,
+            externalResult.song,
+            context.getString(R.string.external_queue_label),
+            null
+        )
+        showPlayer()
+
+        // Em background, monta a fila da pasta e adiciona
+        launch {
+            val additionalSongs = runCatching {
+                externalMediaStateHolder.buildExternalQueue(externalResult, uri)
+            }.getOrNull().orEmpty()
+
+            if (additionalSongs.size > 1) {
+                val fullQueue = additionalSongs.toPlaybackQueue()
+                _playerUiState.update { state ->
+                    state.copy(currentPlaybackQueue = fullQueue)
+                }
+                val controller = mediaController ?: return@launch
+                // Substitui a fila atual pela fila completa, mantendo a música atual no começo
+                val prepared = preparePlaybackQueue(
+                    songsToPlay = additionalSongs,
+                    startSongId = externalResult.song.id,
+                    playlistId = null
+                )
+                if (prepared.mediaItems.isNotEmpty()) {
+                    controller.setMediaItems(
+                        prepared.mediaItems,
+                        prepared.startIndex,
+                        controller.currentPosition.coerceAtLeast(0L)
+                    )
+                    controller.prepare()
+                    controller.play()
+                }
+            }
         }
     }
 }

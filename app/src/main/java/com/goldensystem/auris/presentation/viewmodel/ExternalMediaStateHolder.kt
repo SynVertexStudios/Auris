@@ -136,16 +136,19 @@ class ExternalMediaStateHolder @Inject constructor(
 
         if (candidates.isEmpty()) return@withContext emptyList()
 
-        val resolved = mutableListOf<Song>()
-        for ((candidateUri, _) in candidates) {
-            val additional = buildExternalSongFromUri(candidateUri, captureFolderInfo = false)
-            val song = additional?.song ?: continue
-            if (song.id != reference.song.id) {
-                resolved.add(song)
-            }
-        }
+        val maxSiblings = 50
+val limitedCandidates = candidates.take(maxSiblings)
 
-        resolved
+val resolved = mutableListOf<Song>()
+for ((candidateUri, _) in limitedCandidates) {
+    val additional = buildExternalSongFromUri(candidateUri, captureFolderInfo = false)
+    val song = additional?.song ?: continue
+    if (song.id != reference.song.id) {
+        resolved.add(song)
+    }
+}
+
+resolved
     }
 
     suspend fun buildExternalSongFromUri(
