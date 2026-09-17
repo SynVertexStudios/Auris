@@ -571,11 +571,12 @@ fun ExternalPlayerOverlay(
     val isRemotePlaybackActive by playerViewModel.isRemotePlaybackActive.collectAsStateWithLifecycle()
     val currentSong = stablePlayerState.currentSong
 
-    val isMediaControllerReady by playerViewModel.isMediaControllerReady
-    .collectAsStateWithLifecycle()
+   var hasEverHadSong by remember { mutableStateOf(false) }
 
-LaunchedEffect(currentSong, isMediaControllerReady) {
-    if (isMediaControllerReady && currentSong == null) {
+LaunchedEffect(currentSong) {
+    if (currentSong != null) {
+        hasEverHadSong = true
+    } else if (hasEverHadSong) {
         onDismiss()
     }
 }
