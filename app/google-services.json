@@ -43,6 +43,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "352494419760-0spjai8969iabv6feeqai46e1h4544ku.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.goldensystem.auris.beta",
+            "certificate_hash": "cb2e3319bd117b45a9accf0298cde62bc49b8ecd"
+          }
+        },
+        {
           "client_id": "352494419760-a9n365ps07jk2u2v2radbadnkgstbgju.apps.googleusercontent.com",
           "client_type": 3
         }
