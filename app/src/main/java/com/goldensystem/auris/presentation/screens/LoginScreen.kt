@@ -134,29 +134,43 @@ fun LoginScreen(
         }
     }
 
-    val googleLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            try {
-                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-                val account = task.getResult(ApiException::class.java)
-
-                account.idToken?.let(viewModel::signInWithGoogle)
-                    ?: Toast.makeText(
-                        context,
-                        "Não foi possível obter o token do Google.",
-                        Toast.LENGTH_LONG
-                    ).show()
-            } catch (e: ApiException) {
-                Toast.makeText(
-                    context,
-                    "Falha ao entrar com Google: ${e.message}",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        }
+    
+val googleLauncher = rememberLauncherForActivityResult(
+    ActivityResultContracts.StartActivityForResult()
+) { result ->
+    if (result.resultCode != Activity.RESULT_OK) {
+        Toast.makeText(
+            context,
+            "O Google cancelou ou não concluiu o login. Código: ${result.resultCode}",
+            Toast.LENGTH_LONG
+        ).show()
+        return@rememberLauncherForActivityResult
     }
+
+    try {
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        val account = task.getResult(ApiException::class.java)
+
+        val idToken = account.idToken
+
+        if (idToken.isNullOrBlank()) {
+            Toast.makeText(
+                context,
+                "Erro: o Google não forneceu o token. Verifique o OAuth e o Firebase.",
+                Toast.LENGTH_LONG
+            ).show()
+        } else {
+            viewModel.signInWithGoogle(idToken)
+        }
+    } catch (e: ApiException) {
+        Toast.makeText(
+            context,
+            "Erro do Google (${e.statusCode}): ${e.localizedMessage}",
+            Toast.LENGTH_LONG
+        ).show()
+    }
+}
+
 
     val colors = MaterialTheme.colorScheme
 
