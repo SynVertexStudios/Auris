@@ -691,9 +691,9 @@ fun LoginScreen(
 private fun AuthProviderButton(
     text: String,
     enabled: Boolean,
-    onClick: () -> Unit,
     iconRes: Int? = null,
-    icon: (@Composable () -> Unit)? = null
+    icon: (@Composable () -> Unit)? = null,
+    onClick: () -> Unit
 ) {
     val colors = MaterialTheme.colorScheme
 
