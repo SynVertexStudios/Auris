@@ -339,8 +339,11 @@ val googleLauncher = rememberLauncherForActivityResult(
                                 .build()
 
                             googleLauncher.launch(
-                                GoogleSignIn.getClient(context, options).signInIntent
-                            )
+                                activity?.let { act ->
+    googleLauncher.launch(
+        GoogleSignIn.getClient(act, options).signInIntent
+    )
+} ?: Toast.makeText(context, "Activity indisponível.", Toast.LENGTH_SHORT).show()
                         }
 
                         AuthProviderButton(
