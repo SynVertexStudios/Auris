@@ -338,8 +338,7 @@ val googleLauncher = rememberLauncherForActivityResult(
                                 .requestEmail()
                                 .build()
 
-                            googleLauncher.launch(
-                                activity?.let { act ->
+                            activity?.let { act ->
     googleLauncher.launch(
         GoogleSignIn.getClient(act, options).signInIntent
     )
