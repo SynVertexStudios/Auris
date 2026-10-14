@@ -1,241 +1,277 @@
-package com.goldensystem.auris.presentation.components
+package com.goldensystem.auris.presentation.components.scoped
 
-import com.goldensystem.auris.presentation.navigation.navigateToTopLevelSafely
-
-import android.os.SystemClock
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import com.goldensystem.auris.BottomNavItem
-import com.goldensystem.auris.data.preferences.NavBarStyle
-import com.goldensystem.auris.presentation.components.scoped.CustomNavigationBarItem
-import com.goldensystem.auris.presentation.navigation.Screen
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import androidx.compose.ui.unit.sp
 
-internal val NavBarContentHeight = 90.dp // Altura del contenido de la barra de navegación
-internal val NavBarCompactContentHeight = 64.dp
-internal val NavBarContentHeightFullWidth = NavBarContentHeight // Altura del contenido de la barra de navegación en modo completo
-// Some OEM freeform/floating-window modes can report a bottom inset close to the whole window height.
-internal val MaxNavigationBarBottomInset = 96.dp
-
-internal fun sanitizeNavigationBarBottomInset(systemNavBarInset: Dp): Dp {
-    if (!systemNavBarInset.value.isFinite()) return 0.dp
-    return systemNavBarInset.coerceIn(0.dp, MaxNavigationBarBottomInset)
-}
-
-internal fun calculatePlayerSheetCollapsedTargetY(
-    containerHeightPx: Float,
-    collapsedContentHeightPx: Float,
-    bottomMarginPx: Float,
-    bottomSpacerPx: Float
-): Float {
-    val safeContainerHeightPx = containerHeightPx.takeIf { it.isFinite() }?.coerceAtLeast(0f) ?: 0f
-    val safeCollapsedContentHeightPx = collapsedContentHeightPx.takeIf { it.isFinite() }?.coerceAtLeast(0f) ?: 0f
-    val safeBottomMarginPx = bottomMarginPx.takeIf { it.isFinite() }?.coerceAtLeast(0f) ?: 0f
-    val safeBottomSpacerPx = bottomSpacerPx.takeIf { it.isFinite() }?.coerceAtLeast(0f) ?: 0f
-    val maxTargetY = (safeContainerHeightPx - safeCollapsedContentHeightPx).coerceAtLeast(0f)
-
-    return (safeContainerHeightPx - safeCollapsedContentHeightPx - safeBottomMarginPx - safeBottomSpacerPx)
-        .coerceIn(0f, maxTargetY)
-}
-
-internal fun resolveNavBarContentHeight(compactMode: Boolean): Dp =
-    if (compactMode) NavBarCompactContentHeight else NavBarContentHeight
-
-internal fun resolveNavBarSurfaceHeight(
-    navBarStyle: String,
-    systemNavBarInset: Dp,
-    compactMode: Boolean
-): Dp {
-    val contentHeight = resolveNavBarContentHeight(compactMode)
-    return if (navBarStyle == NavBarStyle.FULL_WIDTH) {
-        contentHeight + systemNavBarInset
-    } else {
-        contentHeight
-    }
-}
-
-internal fun resolveNavBarOccupiedHeight(
-    systemNavBarInset: Dp,
-    compactMode: Boolean
-): Dp = resolveNavBarContentHeight(compactMode) + systemNavBarInset
-
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun PlayerInternalNavigationItemsRow(
-    navController: NavHostController,
-    navItems: ImmutableList<BottomNavItem>,
-    currentRoute: String?,
+fun RowScope.CustomNavigationBarItem(
+    selected: Boolean,
+    onClick: () -> Unit,
+    icon: @Composable () -> Unit,
+    selectedIcon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    navBarStyle: String,
-    compactMode: Boolean,
-    bottomBarPadding: Dp,
-    onSearchIconDoubleTap: () -> Unit
+    enabled: Boolean = true,
+    compactMode: Boolean = false,
+    label: @Composable (() -> Unit)? = null,
+    contentDescription: String? = null,
+    alwaysShowLabel: Boolean = true,
+    selectedIconColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+    unselectedIconColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    selectedTextColor: Color = MaterialTheme.colorScheme.onSurface,
+    unselectedTextColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    indicatorColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 ) {
-    val navBarInsetPadding = sanitizeNavigationBarBottomInset(
-        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val scheme = MaterialTheme.colorScheme
+
+    // ── Cores animadas
+    val iconColor by animateColorAsState(
+        targetValue = if (selected) selectedIconColor else unselectedIconColor,
+        animationSpec = tween(durationMillis = 220),
+        label = "iconColor"
     )
-    // Maintain invariant: bottomBarPadding + innerRowPadding = the sanitized system nav bar inset.
-    // This prevents nav items from appearing behind the gesture bar during style transitions,
-    // e.g. FULL_WIDTH→DEFAULT where bottomBarPadding starts at 0 and animates to systemNavBarInset.
-    val innerRowPadding = (navBarInsetPadding - bottomBarPadding).coerceAtLeast(0.dp)
-    val latestCurrentRoute by rememberUpdatedState(currentRoute)
-    val latestOnSearchIconDoubleTap by rememberUpdatedState(onSearchIconDoubleTap)
-    val latestNavigationEnabled by rememberUpdatedState(currentRoute != null)
+    val textColor by animateColorAsState(
+        targetValue = if (selected) selectedTextColor else unselectedTextColor,
+        animationSpec = tween(durationMillis = 220),
+        label = "textColor"
+    )
 
-    val rowModifier = if (navBarStyle == NavBarStyle.FULL_WIDTH) {
-        modifier
-            .fillMaxWidth()
-            .padding(top = 0.dp, bottom = innerRowPadding, start = 12.dp, end = 12.dp)
-    } else {
-        modifier
-            .padding(start = 10.dp, end = 10.dp, bottom = innerRowPadding)
-            .fillMaxWidth()
-    }
-    Row(
-        modifier = rowModifier,
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        val scope = rememberCoroutineScope()
-        var lastSearchTapTimestamp by remember { mutableStateOf(0L) }
-        navItems.forEach { item ->
-            val isSelected = currentRoute != null && currentRoute == item.screen.route
-            val selectedColor = MaterialTheme.colorScheme.primary
-            val unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
-            val indicatorColorFromTheme = MaterialTheme.colorScheme.secondaryContainer
+    // ── Microinterações spring (mais vivas que o original)
+    val iconScale by animateFloatAsState(
+        targetValue = if (selected) 1.14f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "iconScale"
+    )
+    val indicatorScale by animateFloatAsState(
+        targetValue = if (selected) 1f else 0.85f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "indicatorScale"
+    )
+    // ✨ Novo: glow do item selecionado
+    val glowAlpha by animateFloatAsState(
+        targetValue = if (selected) 0.42f else 0f,
+        animationSpec = tween(durationMillis = 320),
+        label = "glowAlpha"
+    )
 
-            val iconPainterResId = if (isSelected && item.selectedIconResId != null && item.selectedIconResId != 0) {
-                item.selectedIconResId
-            } else {
-                item.iconResId
-            }
-            val iconLambda: @Composable () -> Unit = remember(iconPainterResId, item.label) {
-                {
-                    Icon(
-                        painter = painterResource(id = iconPainterResId),
-                        contentDescription = item.label
-                    )
-                }
-            }
-            val selectedIconLambda: @Composable () -> Unit = remember(iconPainterResId, item.label) {
-                {
-                    Icon(
-                        painter = painterResource(id = iconPainterResId),
-                        contentDescription = item.label
-                    )
-                }
-            }
-            val labelLambda: (@Composable () -> Unit)? = if (compactMode) {
-                null
-            } else {
-                remember(item.label) {
-                    { Text(item.label) }
-                }
-            }
-            val onClickLambda: () -> Unit = remember(item.screen.route, navController, scope) {
-                click@{
-                    if (!latestNavigationEnabled) {
-                        lastSearchTapTimestamp = 0L
-                        return@click
-                    }
+    val showLabel = label != null && (alwaysShowLabel || selected)
 
-                    val itemRoute = item.screen.route
-                    val isSearchTab = itemRoute == Screen.Search.route
-                    val isAlreadySelected = latestCurrentRoute == itemRoute
+    // ── Dimensões
+    val indicatorWidth = 68.dp
+    val indicatorHeight = 34.dp
+    val iconWidth = 48.dp
+    val iconHeight = 26.dp
+    val indicatorPadding = 4.dp
+    val indicatorShape = RoundedCornerShape(18.dp)
+    val iconShape = RoundedCornerShape(12.dp)
 
-                    if (isSearchTab) {
-                        val now = SystemClock.elapsedRealtime()
-                        val isDoubleTap = now - lastSearchTapTimestamp <= 350L
-                        lastSearchTapTimestamp = now
-
-                        if (!isAlreadySelected) {
-                            if (!navController.navigateToTopLevelSafely(itemRoute)) {
-                                lastSearchTapTimestamp = 0L
-                                return@click
-                            }
-                        }
-
-                        if (isDoubleTap) {
-                            lastSearchTapTimestamp = 0L
-                            if (isAlreadySelected) {
-                                latestOnSearchIconDoubleTap()
-                            } else {
-                                scope.launch {
-                                    delay(160L)
-                                    latestOnSearchIconDoubleTap()
-                                }
-                            }
-                        }
-                    } else if (!isAlreadySelected) {
-                        lastSearchTapTimestamp = 0L
-                        navController.navigateToTopLevelSafely(itemRoute)
-                    } else {
-                        lastSearchTapTimestamp = 0L
-                    }
-                }
-            }
-            CustomNavigationBarItem(
-                modifier = Modifier.weight(1f),
-                selected = isSelected,
-                onClick = onClickLambda,
-                enabled = currentRoute != null,
-                compactMode = compactMode,
-                icon = iconLambda,
-                selectedIcon = selectedIconLambda,
-                label = labelLambda,
-                contentDescription = item.label,
-                alwaysShowLabel = true,
-                selectedIconColor = selectedColor,
-                unselectedIconColor = unselectedColor,
-                selectedTextColor = selectedColor,
-                unselectedTextColor = unselectedColor,
-                indicatorColor = indicatorColorFromTheme
+    // ── Gradiente do indicador (aurora) — primária → terciária
+    val indicatorGradient = remember(indicatorColor, scheme.primary, scheme.tertiary) {
+        Brush.linearGradient(
+            colors = listOf(
+                indicatorColor,
+                scheme.primary.copy(alpha = 0.35f).let { indicatorColor.copy(alpha = 0.85f) },
+                scheme.tertiary.copy(alpha = 0.28f).let { indicatorColor.copy(alpha = 0.65f) },
             )
+        )
+    }
+
+    Column(
+        modifier = modifier
+            .weight(1f)
+            .fillMaxHeight()
+            .clickable(
+                onClick = onClick,
+                enabled = enabled,
+                role = Role.Tab,
+                interactionSource = interactionSource,
+                indication = null
+            )
+            .semantics {
+                if (contentDescription != null) {
+                    this.contentDescription = contentDescription
+                }
+            },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // ── Container do ícone + indicador aurora
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(indicatorWidth, indicatorHeight)
+        ) {
+            // ✨ Glow ambiente atrás do indicador (só quando selecionado)
+            if (glowAlpha > 0.01f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .drawBehind {
+                            drawCircle(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        scheme.primary.copy(alpha = glowAlpha),
+                                        Color.Transparent
+                                    ),
+                                    center = Offset(size.width / 2f, size.height / 2f),
+                                    radius = size.minDimension * 1.1f
+                                ),
+                                radius = size.minDimension * 1.1f
+                            )
+                        }
+                )
+            }
+
+            // ── Indicador com gradiente aurora + borda de vidro
+            AnimatedVisibility(
+                visible = selected,
+                enter = fadeIn(animationSpec = tween(180)) +
+                        scaleIn(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow,
+                                initialVelocity = 0f
+                            ),
+                            initialScale = 0.72f
+                        ),
+                exit = fadeOut(animationSpec = tween(160)) +
+                        scaleOut(
+                            animationSpec = tween(180, easing = EaseInQuart),
+                            targetScale = 0.85f
+                        )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = indicatorPadding)
+                        .graphicsLayer {
+                            scaleX = indicatorScale
+                            scaleY = indicatorScale
+                        }
+                        .shadow(
+                            elevation = 12.dp,
+                            shape = indicatorShape,
+                            clip = false,
+                            ambientColor = scheme.primary,
+                            spotColor = scheme.primary
+                        )
+                        .clip(indicatorShape)
+                        .background(brush = indicatorGradient, shape = indicatorShape)
+                        .border(
+                            width = 1.dp,
+                            brush = Brush.linearGradient(
+                                listOf(
+                                    Color.White.copy(alpha = 0.42f),
+                                    Color.Transparent,
+                                    scheme.tertiary.copy(alpha = 0.30f),
+                                )
+                            ),
+                            shape = indicatorShape
+                        )
+                )
+            }
+
+            // ── Ícone
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(iconWidth, iconHeight)
+                    .clip(iconShape)
+                    .graphicsLayer {
+                        scaleX = iconScale
+                        scaleY = iconScale
+                    }
+            ) {
+                CompositionLocalProvider(LocalContentColor provides iconColor) {
+                    Box(
+                        modifier = Modifier.clearAndSetSemantics {
+                            if (showLabel) {
+                                // semântica gerenciada acima
+                            }
+                        }
+                    ) {
+                        if (selected) selectedIcon() else icon()
+                    }
+                }
+            }
+        }
+
+        // ── Label com fade/slide refinado
+        AnimatedVisibility(
+            visible = showLabel,
+            enter = fadeIn(animationSpec = tween(220, delayMillis = 60)),
+            exit = fadeOut(animationSpec = tween(120))
+        ) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Box(modifier = Modifier.padding(top = 4.dp)) {
+                ProvideTextStyle(
+                    value = MaterialTheme.typography.labelMedium.copy(
+                        color = textColor,
+                        fontSize = 12.sp,
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                        letterSpacing = 0.2.sp
+                    )
+                ) {
+                    label?.invoke()
+                }
+            }
         }
     }
 }
 
-@Composable
-fun PlayerInternalNavigationBar(
-    navController: NavHostController,
-    navItems: ImmutableList<BottomNavItem>,
-    currentRoute: String?,
-    modifier: Modifier = Modifier,
-    navBarStyle: String,
-    compactMode: Boolean,
-    bottomBarPadding: Dp = 0.dp,
-    onSearchIconDoubleTap: () -> Unit = {}
-) {
-    PlayerInternalNavigationItemsRow(
-        navController = navController,
-        navItems = navItems,
-        currentRoute = currentRoute,
-        navBarStyle = navBarStyle,
-        compactMode = compactMode,
-        bottomBarPadding = bottomBarPadding,
-        onSearchIconDoubleTap = onSearchIconDoubleTap,
-        modifier = modifier
-    )
-}
+// Easing curves
+private val EaseInQuart = CubicBezierEasing(0.5f, 0f, 0.75f, 0f)
