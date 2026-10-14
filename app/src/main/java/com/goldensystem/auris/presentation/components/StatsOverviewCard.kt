@@ -25,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,11 +33,11 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.stringResource
 import com.goldensystem.auris.R
 import com.goldensystem.auris.data.stats.PlaybackStatsRepository
 import com.goldensystem.auris.data.stats.StatsTimeRange
@@ -75,7 +76,6 @@ fun StatsOverviewCard(
     ) {
         Box(
             modifier = Modifier.drawBehind {
-                // Aurora ambiente dentro do cartão
                 drawRect(
                     brush = Brush.linearGradient(
                         colors = listOf(
@@ -90,7 +90,6 @@ fun StatsOverviewCard(
             }
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                // ── Header
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

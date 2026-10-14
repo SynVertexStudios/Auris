@@ -21,8 +21,6 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.BlurredEdgeTreatment
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
@@ -59,11 +57,6 @@ data class Config(
     val offsetY: Dp
 )
 
-/**
- * Hero de portadas tipo "mesa de vinis flutuante": cada capa ganha glow ambiente,
- * sombra profunda, anel de vidro e uma leve flutuação senoidal contínua para
- * dar vida sem cansar os olhos. O fundo recebe um sweep aurora sutil.
- */
 @Composable
 fun AlbumArtCollage(
     songs: ImmutableList<Song>,
@@ -91,7 +84,6 @@ fun AlbumArtCollage(
         }.toImmutableList()
     }
 
-    // Sweep aurora do fundo (bem lento — custo quase zero, muda muito a vibe)
     val aurora = rememberInfiniteTransition(label = "collageAurora")
     val auroraAngle by aurora.animateFloat(
         initialValue = 0f,
@@ -102,7 +94,6 @@ fun AlbumArtCollage(
         ),
         label = "auroraAngle"
     )
-    // Respiração comum para a flutuação dos cards
     val floatPhase by aurora.animateFloat(
         initialValue = 0f,
         targetValue = (2.0 * Math.PI).toFloat(),
@@ -115,7 +106,6 @@ fun AlbumArtCollage(
 
     val primary = MaterialTheme.colorScheme.primary
     val tertiary = MaterialTheme.colorScheme.tertiary
-    val secondary = MaterialTheme.colorScheme.secondary
 
     BoxWithConstraints(
         modifier = modifier
@@ -125,7 +115,6 @@ fun AlbumArtCollage(
     ) {
         val boxMaxHeight = maxHeight
 
-        // Fundo aurora — dois radiais que giram pelo sweep para um feel cinematográfico
         Box(
             modifier = Modifier
                 .matchParentSize()
@@ -180,6 +169,7 @@ fun AlbumArtCollage(
                     topConfigs.forEachIndexed { idx, cfg ->
                         songsToShow.getOrNull(idx)?.let { song ->
                             CollageCard(
+                                modifier = Modifier.align(cfg.align),
                                 request = requests[idx],
                                 cfg = cfg,
                                 floatPhase = floatPhase + idx * 0.55f,
@@ -194,6 +184,7 @@ fun AlbumArtCollage(
                     bottomConfigs.forEachIndexed { j, cfg ->
                         songsToShow.getOrNull(j + 3)?.let { song ->
                             CollageCard(
+                                modifier = Modifier.align(cfg.align),
                                 request = requests[j + 3],
                                 cfg = cfg,
                                 floatPhase = floatPhase + (j + 3) * 0.55f,
@@ -237,6 +228,7 @@ fun AlbumArtCollage(
 
 @Composable
 private fun CollageCard(
+    modifier: Modifier,
     request: Any?,
     cfg: Config,
     floatPhase: Float,
@@ -244,7 +236,6 @@ private fun CollageCard(
     song: Song,
     onSongClick: (Song) -> Unit,
 ) {
-    // Flutuação senoidal por card — cada um com fase diferente
     val bob = sin(floatPhase) * 8f
     val sway = cos(floatPhase * 0.7f) * 3f
 
@@ -252,18 +243,15 @@ private fun CollageCard(
     val primary = MaterialTheme.colorScheme.primary
 
     Box(
-        modifier = Modifier
-            .align(cfg.align)
+        modifier = modifier
             .offset(cfg.offsetX, cfg.offsetY)
             .graphicsLayer {
                 translationY = bob
                 translationX = sway
                 rotationZ = cfg.rot + sway * 0.08f
-                // Sombra difusa + profundidade sem ser pesada
                 shadowElevation = 24f
                 shape = cfg.shape
                 clip = false
-                // "Pop" de escala para o primeiro card (herói)
                 val base = if (index == 0) 1.03f else 1f
                 scaleX = base
                 scaleY = base
@@ -274,7 +262,6 @@ private fun CollageCard(
                 indication = null
             ) { onSongClick(song) }
             .drawBehind {
-                // Halo radial suave atrás do card
                 val r = size.maxDimension * 0.9f
                 drawCircle(
                     brush = Brush.radialGradient(
@@ -305,7 +292,6 @@ private fun CollageCard(
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
-        // Vinheta inferior para dar peso de "capa"
         Box(
             modifier = Modifier
                 .fillMaxSize()

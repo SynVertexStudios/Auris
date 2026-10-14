@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -48,7 +47,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -98,7 +96,6 @@ import com.goldensystem.auris.presentation.telegram.auth.TelegramLoginActivity
 import com.goldensystem.auris.presentation.viewmodel.PlayerViewModel
 import com.goldensystem.auris.presentation.viewmodel.SettingsViewModel
 import com.goldensystem.auris.presentation.viewmodel.StatsViewModel
-import com.goldensystem.auris.ui.theme.ExpTitleTypography
 import kotlinx.collections.immutable.persistentListOf
 import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
 import kotlinx.collections.immutable.toImmutableList
@@ -225,18 +222,21 @@ fun HomeScreen(
                 )
             }
         ) { innerPadding ->
+            // ✨ Cores lidas FORA do drawBehind (drawBehind não é composable)
+            val auroraPrimary = MaterialTheme.colorScheme.primary
+            val auroraTertiary = MaterialTheme.colorScheme.tertiary
+
             Box(modifier = Modifier.fillMaxSize()) {
 
-                // ✨ AURORA GLOBAL — camada ambiente atrás de tudo
+                // AURORA GLOBAL
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .drawBehind {
-                            val scheme = androidx.compose.material3.MaterialTheme.colorScheme
                             drawRect(
                                 brush = Brush.radialGradient(
                                     colors = listOf(
-                                        scheme.primary.copy(alpha = 0.14f),
+                                        auroraPrimary.copy(alpha = 0.14f),
                                         Color.Transparent
                                     ),
                                     center = Offset(size.width * 0.15f, size.height * 0.10f),
@@ -246,7 +246,7 @@ fun HomeScreen(
                             drawRect(
                                 brush = Brush.radialGradient(
                                     colors = listOf(
-                                        scheme.tertiary.copy(alpha = 0.12f),
+                                        auroraTertiary.copy(alpha = 0.12f),
                                         Color.Transparent
                                     ),
                                     center = Offset(size.width * 0.95f, size.height * 0.35f),
@@ -265,7 +265,6 @@ fun HomeScreen(
                     ),
                     verticalArrangement = Arrangement.spacedBy(28.dp)
                 ) {
-                    // ── 1. HERO: título + shuffle
                     item(key = "your_mix_header", contentType = "your_mix_header") {
                         YourMixHeader(
                             song = yourMixSong,
@@ -286,7 +285,6 @@ fun HomeScreen(
                         )
                     }
 
-                    // ── 2. HERO COLLAGE
                     if (yourMixSongs.isNotEmpty()) {
                         item(key = "album_art_collage", contentType = "album_art_collage") {
                             val basePattern = settingsUiState.collagePattern
@@ -315,7 +313,6 @@ fun HomeScreen(
                         }
                     }
 
-                    // ── 3. Daily Mix
                     if (dailyMixSongs.isNotEmpty()) {
                         item(key = "daily_mix_section", contentType = "daily_mix_section") {
                             DailyMixSection(
@@ -329,7 +326,6 @@ fun HomeScreen(
                         }
                     }
 
-                    // ── 4. Recently played
                     if (recentlyPlayedSongs.size >= RecentlyPlayedSectionMinSongsToShow) {
                         item(key = "recently_played_section", contentType = "recently_played_section") {
                             RecentlyPlayedSection(
@@ -350,7 +346,6 @@ fun HomeScreen(
                         }
                     }
 
-                    // ── 5. Stats
                     item(key = "listening_stats_preview", contentType = "listening_stats_preview") {
                         StatsOverviewCard(
                             summary = weeklyStats,
@@ -359,7 +354,6 @@ fun HomeScreen(
                     }
                 }
 
-                // Fade inferior para o miniplayer
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -563,7 +557,7 @@ fun SongListItemFavsWrapper(
         cardCorners = 0.dp,
         title = song.title,
         artist = song.displayArtist,
-        albumArtUriString = song.albumArtUriString,
+        albumArtUrl = song.albumArtUriString,
         isPlaying = stablePlayerState.isPlaying,
         isCurrentSong = song.id == stablePlayerState.currentSong?.id,
         onClick = onClick

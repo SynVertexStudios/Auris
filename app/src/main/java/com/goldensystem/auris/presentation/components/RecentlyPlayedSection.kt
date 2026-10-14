@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -250,7 +251,12 @@ private fun RecentlyPlayedPill(
                 width = 1.dp,
                 brush = if (isCurrentSong)
                     Brush.linearGradient(listOf(scheme.primary, scheme.tertiary))
-                else Brush.linearGradient(listOf(scheme.outlineVariant.copy(alpha = 0.45f), scheme.outlineVariant.copy(alpha = 0.15f))),
+                else Brush.linearGradient(
+                    listOf(
+                        scheme.outlineVariant.copy(alpha = 0.45f),
+                        scheme.outlineVariant.copy(alpha = 0.15f)
+                    )
+                ),
                 shape = shape
             )
             .clickable(onClick = onClick)

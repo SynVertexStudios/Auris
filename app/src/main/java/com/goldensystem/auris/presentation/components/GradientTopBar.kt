@@ -6,13 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Cloud
@@ -50,7 +48,11 @@ fun HomeGradientTopBar(
     onVideoGalleryClick: () -> Unit = {},
     onCustomThemeClick: () -> Unit = {},
 ) {
-    val surface = MaterialTheme.colorScheme.surface
+    val scheme = MaterialTheme.colorScheme
+    val surface = scheme.surface
+    val surfaceHigh = scheme.surfaceContainerHigh
+    val primary = scheme.primary
+
     AurisStatusBarStyle(color = Color.Transparent)
 
     val pillShape = remember {
@@ -66,11 +68,21 @@ fun HomeGradientTopBar(
         )
     }
 
-    val glassGradient = remember(surface) {
+    val glassGradient = remember(surface, surfaceHigh) {
         Brush.linearGradient(
             colors = listOf(
                 surface.copy(alpha = 0.72f),
-                MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.55f)
+                surfaceHigh.copy(alpha = 0.55f)
+            )
+        )
+    }
+
+    val borderBrush = remember(primary) {
+        Brush.linearGradient(
+            listOf(
+                Color.White.copy(alpha = 0.35f),
+                Color.Transparent,
+                primary.copy(alpha = 0.30f)
             )
         )
     }
@@ -88,29 +100,18 @@ fun HomeGradientTopBar(
                 .shadow(elevation = 18.dp, shape = pillShape, clip = false)
                 .clip(pillShape)
                 .background(brush = glassGradient, shape = pillShape)
-                .border(
-                    width = 1.dp,
-                    brush = Brush.linearGradient(
-                        listOf(
-                            Color.White.copy(alpha = 0.35f),
-                            Color.Transparent,
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)
-                        )
-                    ),
-                    shape = pillShape
-                )
+                .border(width = 1.dp, brush = borderBrush, shape = pillShape)
                 .padding(start = 6.dp, end = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // ── Marca "Auris?" em pílula com gradiente sutil
             FilledTonalButton(
                 modifier = Modifier.padding(start = 4.dp),
                 shape = CircleShape,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = scheme.surfaceContainerHigh,
+                    contentColor = scheme.onSurface
                 ),
                 onClick = onBetaClick
             ) {
@@ -121,7 +122,6 @@ fun HomeGradientTopBar(
                 )
             }
 
-            // ── Ações em cápsulas individuais
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
