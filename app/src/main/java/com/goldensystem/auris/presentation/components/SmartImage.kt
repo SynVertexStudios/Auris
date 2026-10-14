@@ -1,6 +1,5 @@
 package com.goldensystem.auris.presentation.components
 
-import coil.compose.rememberAsyncImagePainter
 import android.graphics.Bitmap
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -8,38 +7,35 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.BlurredEdgeTreatment
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImagePainter
-import coil.compose.SubcomposeAsyncImage
-import coil.compose.SubcomposeAsyncImageContent
 import coil.request.CachePolicy
 import coil.request.ImageRequest
-import coil.size.Size
+import coil.size.Size // Import Coil's Size
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
 import com.goldensystem.auris.R
 
 val SmartImageCompactListTargetSize = Size(96, 96)
@@ -61,18 +57,12 @@ fun SmartImage(
     targetSize: Size = Size(300, 300),
     colorFilter: ColorFilter? = null,
     alpha: Float = 1f,
-    blurRadius: Dp = 0.dp,
     placeholderModel: Any? = null,
     placeHolderBackgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     onState: ((AsyncImagePainter.State) -> Unit)? = null
 ) {
     val context = LocalContext.current
-    val baseModifier = modifier
-    val clippedModifier = if (blurRadius > 0.dp) {
-        baseModifier.blur(blurRadius, BlurredEdgeTreatment.Unbounded).clip(shape)
-    } else {
-        baseModifier.clip(shape)
-    }
+    val clippedModifier = modifier.clip(shape)
 
     @Suppress("NAME_SHADOWING")
     val model = when (model) {
@@ -105,12 +95,18 @@ fun SmartImage(
                 alpha = alpha
             )
         }
+        // Already rendered or null.
         return
     }
 
     val request = remember(
-        context, model, crossfadeDurationMillis,
-        useDiskCache, useMemoryCache, allowHardware, targetSize
+        context,
+        model,
+        crossfadeDurationMillis,
+        useDiskCache,
+        useMemoryCache,
+        allowHardware,
+        targetSize
     ) {
         when (model) {
             is ImageRequest -> model
@@ -120,87 +116,68 @@ fun SmartImage(
                 .diskCachePolicy(if (useDiskCache) CachePolicy.ENABLED else CachePolicy.DISABLED)
                 .memoryCachePolicy(if (useMemoryCache) CachePolicy.ENABLED else CachePolicy.DISABLED)
                 .allowHardware(allowHardware)
-                .apply { size(targetSize) }
+                .apply {
+                    size(targetSize)
+                }
                 .build()
         }
     }
 
-    
-    val fallbackPainter = painterResource(placeholderResId)
-    val errorPainter = painterResource(errorResId)
-
-    val imagePainter = rememberAsyncImagePainter(
+    SubcomposeAsyncImage(
         model = request,
-        placeholder = fallbackPainter,
-        error = errorPainter
-    )
+        contentDescription = contentDescription,
+        modifier = clippedModifier,
+        contentScale = contentScale,
+        colorFilter = colorFilter,
+        alpha = alpha
+    ) {
+        val state = painter.state
 
-    val placeholderPainter = if (placeholderModel != null) {
-        rememberAsyncImagePainter(
-            model = placeholderModel,
-            placeholder = fallbackPainter,
-            error = errorPainter
-        )
-    } else {
-        null
-    }
-
-    val state = imagePainter.state
-
-    var lastSuccessPainter by remember(request.data) {
-        mutableStateOf<Painter?>(null)
-    }
-
-    LaunchedEffect(state) {
-        onState?.invoke(state)
-
-        if (state is AsyncImagePainter.State.Success) {
-            lastSuccessPainter = state.painter
-        }
-    }
-
-    when (state) {
-        is AsyncImagePainter.State.Success -> {
-            Image(
-                painter = state.painter,
-                contentDescription = contentDescription,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = contentScale,
-                colorFilter = colorFilter,
-                alpha = alpha
-            )
+        LaunchedEffect(state) {
+            onState?.invoke(state)
         }
 
-        AsyncImagePainter.State.Empty,
-        is AsyncImagePainter.State.Loading -> {
-            val cachedPainter = lastSuccessPainter
+        var lastSuccessPainter by remember(request.data) { mutableStateOf<Painter?>(null) }
 
-            when {
-                cachedPainter != null -> {
+        when (state) {
+            is AsyncImagePainter.State.Success -> {
+                lastSuccessPainter = state.painter
+                SubcomposeAsyncImageContent()
+            }
+            AsyncImagePainter.State.Empty,
+            is AsyncImagePainter.State.Loading -> {
+                val cachedPainter = lastSuccessPainter
+                if (cachedPainter != null) {
                     Image(
                         painter = cachedPainter,
                         contentDescription = contentDescription,
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentScale = contentScale,
+                        colorFilter = colorFilter,
+                        alpha = alpha
+                    )
+                } else if (placeholderModel != null) {
+                    // Render placeholder model (e.g. low-res thumbnail)
+                     SubcomposeAsyncImage(
+                        model = placeholderModel,
+                        contentDescription = null, // Decorative placeholder
                         modifier = Modifier.fillMaxSize(),
                         contentScale = contentScale,
                         colorFilter = colorFilter,
-                        alpha = alpha
+                        alpha = alpha,
+                        error = {
+                            Placeholder(
+                                modifier = Modifier.fillMaxSize(),
+                                drawableResId = placeholderResId,
+                                contentDescription = contentDescription,
+                                containerColor = placeHolderBackgroundColor,
+                                iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                alpha = alpha
+                            )
+                        }
                     )
-                }
-
-                placeholderPainter != null -> {
-                    Image(
-                        painter = placeholderPainter,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(placeHolderBackgroundColor),
-                        contentScale = contentScale,
-                        colorFilter = colorFilter,
-                        alpha = alpha
-                    )
-                }
-
-                else -> {
+                } else {
                     Placeholder(
                         modifier = Modifier.fillMaxSize(),
                         drawableResId = placeholderResId,
@@ -211,33 +188,31 @@ fun SmartImage(
                     )
                 }
             }
-        }
-
-        is AsyncImagePainter.State.Error -> {
-            val cachedPainter = lastSuccessPainter
-
-            if (cachedPainter != null) {
-                Image(
-                    painter = cachedPainter,
-                    contentDescription = contentDescription,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = contentScale,
-                    colorFilter = colorFilter,
-                    alpha = alpha
-                )
-            } else {
-                Placeholder(
-                    modifier = Modifier.fillMaxSize(),
-                    drawableResId = errorResId,
-                    contentDescription = contentDescription,
-                    containerColor = placeHolderBackgroundColor,
-                    iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    alpha = alpha
-                )
+            is AsyncImagePainter.State.Error -> {
+                val cachedPainter = lastSuccessPainter
+                if (cachedPainter != null) {
+                    Image(
+                        painter = cachedPainter,
+                        contentDescription = contentDescription,
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentScale = contentScale,
+                        colorFilter = colorFilter,
+                        alpha = alpha
+                    )
+                } else {
+                    Placeholder(
+                        modifier = Modifier.fillMaxSize(),
+                        drawableResId = errorResId,
+                        contentDescription = contentDescription,
+                        containerColor = placeHolderBackgroundColor,
+                        iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        alpha = alpha
+                    )
+                }
             }
         }
     }
-
 }
 
 @Composable
@@ -251,16 +226,48 @@ private fun handleDirectModel(
 ): Any? {
     return when (data) {
         is ImageVector -> {
-            Image(data, contentDescription, modifier, contentScale = contentScale, colorFilter = colorFilter, alpha = alpha); data
+            Image(
+                imageVector = data,
+                contentDescription = contentDescription,
+                modifier = modifier,
+                contentScale = contentScale,
+                colorFilter = colorFilter,
+                alpha = alpha
+            )
+            data
         }
         is Painter -> {
-            Image(data, contentDescription, modifier, contentScale = contentScale, colorFilter = colorFilter, alpha = alpha); data
+            Image(
+                painter = data,
+                contentDescription = contentDescription,
+                modifier = modifier,
+                contentScale = contentScale,
+                colorFilter = colorFilter,
+                alpha = alpha
+            )
+            data
         }
         is ImageBitmap -> {
-            Image(data, contentDescription, modifier, contentScale = contentScale, colorFilter = colorFilter, alpha = alpha); data
+            Image(
+                bitmap = data,
+                contentDescription = contentDescription,
+                modifier = modifier,
+                contentScale = contentScale,
+                colorFilter = colorFilter,
+                alpha = alpha
+            )
+            data
         }
         is Bitmap -> {
-            Image(data.asImageBitmap(), contentDescription, modifier, contentScale = contentScale, colorFilter = colorFilter, alpha = alpha); data
+            Image(
+                bitmap = data.asImageBitmap(),
+                contentDescription = contentDescription,
+                modifier = modifier,
+                contentScale = contentScale,
+                colorFilter = colorFilter,
+                alpha = alpha
+            )
+            data
         }
         else -> null
     }
@@ -276,7 +283,9 @@ private fun Placeholder(
     alpha: Float,
 ) {
     Box(
-        modifier = modifier.alpha(alpha).background(containerColor),
+        modifier = modifier
+            .alpha(alpha)
+            .background(containerColor),
         contentAlignment = Alignment.Center
     ) {
         Image(
