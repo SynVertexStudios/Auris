@@ -7,35 +7,38 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.Alignment
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImagePainter
-import coil.request.CachePolicy
-import coil.request.ImageRequest
-import coil.size.Size // Import Coil's Size
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
+import coil.request.CachePolicy
+import coil.request.ImageRequest
+import coil.size.Size
 import com.goldensystem.auris.R
 
 val SmartImageCompactListTargetSize = Size(96, 96)
@@ -57,12 +60,18 @@ fun SmartImage(
     targetSize: Size = Size(300, 300),
     colorFilter: ColorFilter? = null,
     alpha: Float = 1f,
+    blurRadius: Dp = 0.dp,
     placeholderModel: Any? = null,
     placeHolderBackgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     onState: ((AsyncImagePainter.State) -> Unit)? = null
 ) {
     val context = LocalContext.current
-    val clippedModifier = modifier.clip(shape)
+    val baseModifier = modifier
+    val clippedModifier = if (blurRadius > 0.dp) {
+        baseModifier.blur(blurRadius, BlurredEdgeTreatment.Unbounded).clip(shape)
+    } else {
+        baseModifier.clip(shape)
+    }
 
     @Suppress("NAME_SHADOWING")
     val model = when (model) {
@@ -95,18 +104,12 @@ fun SmartImage(
                 alpha = alpha
             )
         }
-        // Already rendered or null.
         return
     }
 
     val request = remember(
-        context,
-        model,
-        crossfadeDurationMillis,
-        useDiskCache,
-        useMemoryCache,
-        allowHardware,
-        targetSize
+        context, model, crossfadeDurationMillis,
+        useDiskCache, useMemoryCache, allowHardware, targetSize
     ) {
         when (model) {
             is ImageRequest -> model
@@ -116,9 +119,7 @@ fun SmartImage(
                 .diskCachePolicy(if (useDiskCache) CachePolicy.ENABLED else CachePolicy.DISABLED)
                 .memoryCachePolicy(if (useMemoryCache) CachePolicy.ENABLED else CachePolicy.DISABLED)
                 .allowHardware(allowHardware)
-                .apply {
-                    size(targetSize)
-                }
+                .apply { size(targetSize) }
                 .build()
         }
     }
@@ -132,11 +133,7 @@ fun SmartImage(
         alpha = alpha
     ) {
         val state = painter.state
-
-        LaunchedEffect(state) {
-            onState?.invoke(state)
-        }
-
+        LaunchedEffect(state) { onState?.invoke(state) }
         var lastSuccessPainter by remember(request.data) { mutableStateOf<Painter?>(null) }
 
         when (state) {
@@ -151,17 +148,15 @@ fun SmartImage(
                     Image(
                         painter = cachedPainter,
                         contentDescription = contentDescription,
-                        modifier = Modifier
-                            .fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(),
                         contentScale = contentScale,
                         colorFilter = colorFilter,
                         alpha = alpha
                     )
                 } else if (placeholderModel != null) {
-                    // Render placeholder model (e.g. low-res thumbnail)
-                     SubcomposeAsyncImage(
+                    SubcomposeAsyncImage(
                         model = placeholderModel,
-                        contentDescription = null, // Decorative placeholder
+                        contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = contentScale,
                         colorFilter = colorFilter,
@@ -194,8 +189,7 @@ fun SmartImage(
                     Image(
                         painter = cachedPainter,
                         contentDescription = contentDescription,
-                        modifier = Modifier
-                            .fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(),
                         contentScale = contentScale,
                         colorFilter = colorFilter,
                         alpha = alpha
@@ -226,48 +220,16 @@ private fun handleDirectModel(
 ): Any? {
     return when (data) {
         is ImageVector -> {
-            Image(
-                imageVector = data,
-                contentDescription = contentDescription,
-                modifier = modifier,
-                contentScale = contentScale,
-                colorFilter = colorFilter,
-                alpha = alpha
-            )
-            data
+            Image(data, contentDescription, modifier, contentScale = contentScale, colorFilter = colorFilter, alpha = alpha); data
         }
         is Painter -> {
-            Image(
-                painter = data,
-                contentDescription = contentDescription,
-                modifier = modifier,
-                contentScale = contentScale,
-                colorFilter = colorFilter,
-                alpha = alpha
-            )
-            data
+            Image(data, contentDescription, modifier, contentScale = contentScale, colorFilter = colorFilter, alpha = alpha); data
         }
         is ImageBitmap -> {
-            Image(
-                bitmap = data,
-                contentDescription = contentDescription,
-                modifier = modifier,
-                contentScale = contentScale,
-                colorFilter = colorFilter,
-                alpha = alpha
-            )
-            data
+            Image(data, contentDescription, modifier, contentScale = contentScale, colorFilter = colorFilter, alpha = alpha); data
         }
         is Bitmap -> {
-            Image(
-                bitmap = data.asImageBitmap(),
-                contentDescription = contentDescription,
-                modifier = modifier,
-                contentScale = contentScale,
-                colorFilter = colorFilter,
-                alpha = alpha
-            )
-            data
+            Image(data.asImageBitmap(), contentDescription, modifier, contentScale = contentScale, colorFilter = colorFilter, alpha = alpha); data
         }
         else -> null
     }
@@ -283,9 +245,7 @@ private fun Placeholder(
     alpha: Float,
 ) {
     Box(
-        modifier = modifier
-            .alpha(alpha)
-            .background(containerColor),
+        modifier = modifier.alpha(alpha).background(containerColor),
         contentAlignment = Alignment.Center
     ) {
         Image(

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -47,11 +48,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -101,10 +106,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
-import androidx.compose.ui.res.stringResource
 import com.goldensystem.auris.ui.theme.WallpaperBackground
-import androidx.compose.ui.draw.blur
-import com.goldensystem.auris.utils.toBlurRadius
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -207,14 +209,8 @@ fun HomeScreen(
         settingsUiState.beta05CleanInstallDisclaimerDismissed == false &&
             !cleanInstallDisclaimerDismissedThisSession
 
-    // ===== WRAPPER COM WALLPAPER =====
-    WallpaperBackground(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Toda a UI da HomeScreen fica dentro do WallpaperBackground
-        // O WallpaperBackground só mostra o wallpaper se config.isEnabled for true
-        // Se for false, mostra fundo transparente (que deixa o MaterialTheme aparecer)
-        
+    WallpaperBackground(modifier = Modifier.fillMaxSize()) {
+
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = if (config.isEnabled) Color.Transparent else MaterialTheme.colorScheme.background,
@@ -229,122 +225,161 @@ fun HomeScreen(
                 )
             }
         ) { innerPadding ->
-            LazyColumn(
-                state = rememberLazyListState(),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    top = innerPadding.calculateTopPadding(),
-                    bottom = paddingValuesParent.calculateBottomPadding() + 38.dp + bottomPadding
-                ),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                item(key = "your_mix_header", contentType = "your_mix_header") {
-                    YourMixHeader(
-                        song = yourMixSong,
-                        isShuffleEnabled = isShuffleEnabled,
-                        onPlayShuffled = {
-                            if (yourMixSongs.isNotEmpty()) {
-                                if (usesFallbackHomeMix) {
-                                    playerViewModel.shuffleAllSongs(queueName = "Your Mix")
-                                } else {
-                                    playerViewModel.playSongsShuffled(
-                                        songsToPlay = yourMixSongs,
-                                        queueName = "Your Mix",
-                                        startAtZero = true
-                                    )
+            Box(modifier = Modifier.fillMaxSize()) {
+
+                // ✨ AURORA GLOBAL — camada ambiente atrás de tudo
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .drawBehind {
+                            val scheme = androidx.compose.material3.MaterialTheme.colorScheme
+                            drawRect(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        scheme.primary.copy(alpha = 0.14f),
+                                        Color.Transparent
+                                    ),
+                                    center = Offset(size.width * 0.15f, size.height * 0.10f),
+                                    radius = size.minDimension * 1.1f
+                                )
+                            )
+                            drawRect(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        scheme.tertiary.copy(alpha = 0.12f),
+                                        Color.Transparent
+                                    ),
+                                    center = Offset(size.width * 0.95f, size.height * 0.35f),
+                                    radius = size.minDimension * 0.9f
+                                )
+                            )
+                        }
+                )
+
+                LazyColumn(
+                    state = rememberLazyListState(),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        top = innerPadding.calculateTopPadding(),
+                        bottom = paddingValuesParent.calculateBottomPadding() + 48.dp + bottomPadding
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(28.dp)
+                ) {
+                    // ── 1. HERO: título + shuffle
+                    item(key = "your_mix_header", contentType = "your_mix_header") {
+                        YourMixHeader(
+                            song = yourMixSong,
+                            isShuffleEnabled = isShuffleEnabled,
+                            onPlayShuffled = {
+                                if (yourMixSongs.isNotEmpty()) {
+                                    if (usesFallbackHomeMix) {
+                                        playerViewModel.shuffleAllSongs(queueName = "Your Mix")
+                                    } else {
+                                        playerViewModel.playSongsShuffled(
+                                            songsToPlay = yourMixSongs,
+                                            queueName = "Your Mix",
+                                            startAtZero = true
+                                        )
+                                    }
                                 }
                             }
-                        }
-                    )
-                }
+                        )
+                    }
 
-                if (yourMixSongs.isNotEmpty()) {
-                    item(key = "album_art_collage", contentType = "album_art_collage") {
-                        val basePattern = settingsUiState.collagePattern
-                        val isAutoRotate = settingsUiState.collageAutoRotate
-                        val patterns = remember { CollagePattern.entries }
-                        val activePattern = if (isAutoRotate) {
-                            var rotationIndex by rememberSaveable { mutableIntStateOf(-1) }
-                            LaunchedEffect(Unit) { rotationIndex++ }
-                            remember(rotationIndex) { patterns[rotationIndex.coerceAtLeast(0) % patterns.size] }
-                        } else {
-                            basePattern
-                        }
-                        AlbumArtCollage(
-                            modifier = Modifier.fillMaxWidth(),
-                            songs = yourMixSongs,
-                            padding = 14.dp,
-                            height = 400.dp,
-                            pattern = activePattern,
-                            onSongClick = { song ->
-                                if (usesFallbackHomeMix) {
-                                    playerViewModel.showAndPlaySongFromLibrary(song, queueName = "Your Mix")
-                                } else {
-                                    playerViewModel.showAndPlaySong(song, yourMixSongs, "Your Mix")
+                    // ── 2. HERO COLLAGE
+                    if (yourMixSongs.isNotEmpty()) {
+                        item(key = "album_art_collage", contentType = "album_art_collage") {
+                            val basePattern = settingsUiState.collagePattern
+                            val isAutoRotate = settingsUiState.collageAutoRotate
+                            val patterns = remember { CollagePattern.entries }
+                            val activePattern = if (isAutoRotate) {
+                                var rotationIndex by rememberSaveable { mutableIntStateOf(-1) }
+                                LaunchedEffect(Unit) { rotationIndex++ }
+                                remember(rotationIndex) { patterns[rotationIndex.coerceAtLeast(0) % patterns.size] }
+                            } else basePattern
+
+                            AlbumArtCollage(
+                                modifier = Modifier.fillMaxWidth(),
+                                songs = yourMixSongs,
+                                padding = 14.dp,
+                                height = 420.dp,
+                                pattern = activePattern,
+                                onSongClick = { song ->
+                                    if (usesFallbackHomeMix) {
+                                        playerViewModel.showAndPlaySongFromLibrary(song, queueName = "Your Mix")
+                                    } else {
+                                        playerViewModel.showAndPlaySong(song, yourMixSongs, "Your Mix")
+                                    }
                                 }
-                            }
+                            )
+                        }
+                    }
+
+                    // ── 3. Daily Mix
+                    if (dailyMixSongs.isNotEmpty()) {
+                        item(key = "daily_mix_section", contentType = "daily_mix_section") {
+                            DailyMixSection(
+                                songs = dailyMixSongs,
+                                onClickOpen = { navController.navigateSafely(Screen.DailyMixScreen.route) },
+                                onNavigateToAlbum = { song -> navController.navigateSafely(Screen.AlbumDetail.createRoute(song.albumId)) },
+                                onNavigateToArtist = { song -> navController.navigateSafely(Screen.ArtistDetail.createRoute(song.artistId)) },
+                                onNavigateToGenre = { song -> song.genre?.let { navController.navigateSafely(Screen.GenreDetail.createRoute(java.net.URLEncoder.encode(it, "UTF-8"))) } },
+                                playerViewModel = playerViewModel
+                            )
+                        }
+                    }
+
+                    // ── 4. Recently played
+                    if (recentlyPlayedSongs.size >= RecentlyPlayedSectionMinSongsToShow) {
+                        item(key = "recently_played_section", contentType = "recently_played_section") {
+                            RecentlyPlayedSection(
+                                songs = recentlyPlayedSongs,
+                                onSongClick = { song ->
+                                    if (recentlyPlayedQueue.isNotEmpty()) {
+                                        playerViewModel.playSongs(
+                                            songsToPlay = recentlyPlayedQueue,
+                                            startSong = song,
+                                            queueName = "Recently Played"
+                                        )
+                                    }
+                                },
+                                onOpenAllClick = { navController.navigateSafely(Screen.RecentlyPlayed.route) },
+                                currentSongId = currentSong?.id,
+                                contentPadding = PaddingValues(start = 8.dp, end = 24.dp)
+                            )
+                        }
+                    }
+
+                    // ── 5. Stats
+                    item(key = "listening_stats_preview", contentType = "listening_stats_preview") {
+                        StatsOverviewCard(
+                            summary = weeklyStats,
+                            onClick = { navController.navigateSafely(Screen.Stats.route) }
                         )
                     }
                 }
 
-                if (dailyMixSongs.isNotEmpty()) {
-                    item(key = "daily_mix_section", contentType = "daily_mix_section") {
-                        DailyMixSection(
-                            songs = dailyMixSongs,
-                            onClickOpen = { navController.navigateSafely(Screen.DailyMixScreen.route) },
-                            onNavigateToAlbum = { song -> navController.navigateSafely(Screen.AlbumDetail.createRoute(song.albumId)) },
-                            onNavigateToArtist = { song -> navController.navigateSafely(Screen.ArtistDetail.createRoute(song.artistId)) },
-                            onNavigateToGenre = { song -> song.genre?.let { navController.navigateSafely(Screen.GenreDetail.createRoute(java.net.URLEncoder.encode(it, "UTF-8"))) } },
-                            playerViewModel = playerViewModel
+                // Fade inferior para o miniplayer
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .height(170.dp)
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colorStops = arrayOf(
+                                    0.0f to Color.Transparent,
+                                    0.2f to Color.Transparent,
+                                    0.8f to MaterialTheme.colorScheme.surfaceContainer,
+                                    1.0f to MaterialTheme.colorScheme.surfaceContainer
+                                )
+                            )
                         )
-                    }
-                }
-
-                if (recentlyPlayedSongs.size >= RecentlyPlayedSectionMinSongsToShow) {
-                    item(key = "recently_played_section", contentType = "recently_played_section") {
-                        RecentlyPlayedSection(
-                            songs = recentlyPlayedSongs,
-                            onSongClick = { song ->
-                                if (recentlyPlayedQueue.isNotEmpty()) {
-                                    playerViewModel.playSongs(songsToPlay = recentlyPlayedQueue, startSong = song, queueName = "Recently Played")
-                                }
-                            },
-                            onOpenAllClick = { navController.navigateSafely(Screen.RecentlyPlayed.route) },
-                            currentSongId = currentSong?.id,
-                            contentPadding = PaddingValues(start = 8.dp, end = 24.dp)
-                        )
-                    }
-                }
-
-                item(key = "listening_stats_preview", contentType = "listening_stats_preview") {
-                    StatsOverviewCard(summary = weeklyStats, onClick = { navController.navigateSafely(Screen.Stats.route) })
-                }
+                )
             }
         }
+    }
 
-        // Gradiente de fade no fundo
-        // Gradiente de fade no fundo - CORRETO
-      Box(modifier = Modifier.fillMaxSize()) {
-          Box(
-            modifier = Modifier
-            .fillMaxWidth()
-            .align(Alignment.BottomCenter)
-            .height(170.dp)
-            .background(
-                brush = Brush.verticalGradient(
-                    colorStops = arrayOf(
-                        0.0f to Color.Transparent,
-                        0.2f to Color.Transparent,
-                        0.8f to MaterialTheme.colorScheme.surfaceContainer,
-                        1.0f to MaterialTheme.colorScheme.surfaceContainer
-                       )
-                   )
-               )
-           )
-        }
-    }// Fim do WallpaperBackground
-
-    // BottomSheets e dialogs (fora do WallpaperBackground para não serem afetados)
     if (showOptionsBottomSheet) {
         ModalBottomSheet(onDismissRequest = { showOptionsBottomSheet = false }, sheetState = sheetState) {
             HomeOptionsBottomSheet(
@@ -362,9 +397,7 @@ fun HomeScreen(
 
     if (showBetaInfoBottomSheet) {
         ModalBottomSheet(onDismissRequest = { showBetaInfoBottomSheet = false }, sheetState = betaSheetState) {
-            BetaInfoBottomSheet(
-              navController = navController
-            )
+            BetaInfoBottomSheet(navController = navController)
         }
     }
 
@@ -380,7 +413,6 @@ fun HomeScreen(
         )
     }
 
-    // Diálogo de primeira instalação
     if (shouldShowCleanInstallDisclaimer) {
         Beta05CleanInstallDisclaimerDialog(
             onDismiss = { dontShowAgain ->
@@ -401,27 +433,53 @@ fun YourMixHeader(
     onPlayShuffled: () -> Unit
 ) {
     val buttonCorners = 68.dp
-    val colors = MaterialTheme.colorScheme
+    val scheme = MaterialTheme.colorScheme
     val titleStyle = rememberYourMixTitleStyle()
 
-    Box(modifier = Modifier.fillMaxWidth().height(256.dp).padding(16.dp)) {
-        Column(modifier = Modifier.align(Alignment.TopStart).padding(top = 48.dp, start = 12.dp)) {
-            Text(text = stringResource(R.string.home_your_mix_title), style = titleStyle, color = MaterialTheme.colorScheme.onSurface)
-            Text(text = song, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), modifier = Modifier.padding(start = 8.dp))
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(240.dp)
+            .padding(horizontal = 22.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(top = 44.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.home_your_mix_title),
+                style = titleStyle,
+                color = scheme.onSurface
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = song,
+                style = MaterialTheme.typography.bodyMedium,
+                color = scheme.onSurface.copy(alpha = 0.65f),
+                modifier = Modifier.padding(start = 8.dp)
+            )
         }
+
         LargeExtendedFloatingActionButton(
-            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 12.dp),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 4.dp),
             onClick = onPlayShuffled,
-            containerColor = if (isShuffleEnabled) colors.primary else colors.surfaceContainer,
-            contentColor = if (isShuffleEnabled) colors.onPrimary else colors.onSurface,
+            containerColor = if (isShuffleEnabled) scheme.primary else scheme.surfaceContainerHigh,
+            contentColor = if (isShuffleEnabled) scheme.onPrimary else scheme.onSurface,
             shape = AbsoluteSmoothCornerShape(
-                cornerRadiusTL = buttonCorners, smoothnessAsPercentTR = 60,
-                cornerRadiusBR = buttonCorners, smoothnessAsPercentTL = 60,
-                cornerRadiusBL = buttonCorners, smoothnessAsPercentBR = 60,
-                cornerRadiusTR = buttonCorners, smoothnessAsPercentBL = 60
+                cornerRadiusTL = buttonCorners, smoothnessAsPercentTR = 70,
+                cornerRadiusBR = buttonCorners, smoothnessAsPercentTL = 70,
+                cornerRadiusBL = buttonCorners, smoothnessAsPercentBR = 70,
+                cornerRadiusTR = buttonCorners, smoothnessAsPercentBL = 70
             )
         ) {
-            Icon(painter = painterResource(R.drawable.rounded_shuffle_24), contentDescription = stringResource(R.string.cd_shuffle_play), modifier = Modifier.size(36.dp))
+            Icon(
+                painter = painterResource(R.drawable.rounded_shuffle_24),
+                contentDescription = stringResource(R.string.cd_shuffle_play),
+                modifier = Modifier.size(38.dp)
+            )
         }
     }
 }
@@ -437,9 +495,9 @@ fun SongListItemFavs(
     isCurrentSong: Boolean,
     onClick: () -> Unit
 ) {
-    val colors = MaterialTheme.colorScheme
-    val containerColor = if (isCurrentSong) colors.primaryContainer.copy(alpha = 0.46f) else colors.surfaceContainer
-    val contentColor = if (isCurrentSong) colors.primary else colors.onSurface
+    val scheme = MaterialTheme.colorScheme
+    val containerColor = if (isCurrentSong) scheme.primaryContainer.copy(alpha = 0.55f) else scheme.surfaceContainer
+    val contentColor = if (isCurrentSong) scheme.onPrimaryContainer else scheme.onSurface
 
     Card(
         modifier = modifier.fillMaxWidth().clickable(onClick = onClick),
@@ -447,18 +505,45 @@ fun SongListItemFavs(
         colors = CardDefaults.cardColors(containerColor = containerColor),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
-        Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(
+            modifier = Modifier.padding(12.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Row(modifier = Modifier.weight(0.9f), verticalAlignment = Alignment.CenterVertically) {
-                SmartImage(model = albumArtUrl, contentDescription = stringResource(R.string.cd_album_art_for_title, title), contentScale = ContentScale.Crop, shape = RoundedCornerShape(8.dp), modifier = Modifier.size(48.dp))
+                SmartImage(
+                    model = albumArtUrl,
+                    contentDescription = stringResource(R.string.cd_album_art_for_title, title),
+                    contentScale = ContentScale.Crop,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.size(48.dp)
+                )
                 Spacer(Modifier.width(16.dp))
-                Column(modifier = Modifier) {
-                    Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = if (isCurrentSong) FontWeight.Bold else FontWeight.Normal, color = contentColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(text = artist, style = MaterialTheme.typography.bodyMedium, color = contentColor.copy(alpha = 0.7f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Column {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = if (isCurrentSong) FontWeight.Bold else FontWeight.Normal,
+                        color = contentColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = artist,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = contentColor.copy(alpha = 0.7f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
             Spacer(Modifier.width(16.dp))
             if (isCurrentSong) {
-                PlayingEqIcon(modifier = Modifier.weight(0.1f).padding(start = 8.dp).size(width = 18.dp, height = 16.dp), color = colors.primary, isPlaying = isPlaying)
+                PlayingEqIcon(
+                    modifier = Modifier.weight(0.1f).padding(start = 8.dp).size(width = 18.dp, height = 16.dp),
+                    color = scheme.primary,
+                    isPlaying = isPlaying
+                )
             }
         }
     }
@@ -473,15 +558,12 @@ fun SongListItemFavsWrapper(
     modifier: Modifier = Modifier
 ) {
     val stablePlayerState by playerViewModel.stablePlayerState.collectAsStateWithLifecycle()
-    val isThisSongPlaying = remember(song.id, stablePlayerState.currentSong?.id, stablePlayerState.isPlaying) {
-        song.id == stablePlayerState.currentSong?.id
-    }
     SongListItemFavs(
         modifier = modifier,
         cardCorners = 0.dp,
         title = song.title,
         artist = song.displayArtist,
-        albumArtUrl = song.albumArtUriString,
+        albumArtUriString = song.albumArtUriString,
         isPlaying = stablePlayerState.isPlaying,
         isCurrentSong = song.id == stablePlayerState.currentSong?.id,
         onClick = onClick
@@ -507,8 +589,9 @@ private fun rememberYourMixTitleStyle(): TextStyle {
                 )
             ),
             fontWeight = FontWeight(760),
-            fontSize = 64.sp,
-            lineHeight = 62.sp
+            fontSize = 68.sp,
+            lineHeight = 66.sp,
+            letterSpacing = (-1).sp
         )
     }
 }
