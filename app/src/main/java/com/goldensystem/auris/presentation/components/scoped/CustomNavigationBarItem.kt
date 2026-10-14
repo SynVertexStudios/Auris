@@ -175,8 +175,8 @@ fun RowScope.CustomNavigationBarItem(
                 )
             }
 
-            // Indicador com gradiente aurora (usa AnimatedVisibility não-scoped)
-            AnimatedVisibility(
+            // ✨ Indicador — usando FQN para evitar ambiguidade com ColumnScope.AnimatedVisibility
+            androidx.compose.animation.AnimatedVisibility(
                 visible = selected,
                 enter = fadeIn(animationSpec = tween(180)) +
                         scaleIn(
@@ -248,26 +248,27 @@ fun RowScope.CustomNavigationBarItem(
             }
         }
 
-        // Label com fade/slide refinado
-        AnimatedVisibility(
-            visible = showLabel,
-            enter = fadeIn(animationSpec = tween(220, delayMillis = 60)),
-            exit = fadeOut(animationSpec = tween(120))
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+        // ✨ Label — também usando FQN e envolvido em Column próprio
+        // para garantir receiver explícito correto
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            androidx.compose.animation.AnimatedVisibility(
+                visible = showLabel,
+                enter = fadeIn(animationSpec = tween(220, delayMillis = 60)),
+                exit = fadeOut(animationSpec = tween(120))
             ) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Box(modifier = Modifier.padding(top = 4.dp)) {
-                    ProvideTextStyle(
-                        value = MaterialTheme.typography.labelMedium.copy(
-                            color = textColor,
-                            fontSize = 12.sp,
-                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                            letterSpacing = 0.2.sp
-                        )
-                    ) {
-                        label?.invoke()
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Box(modifier = Modifier.padding(top = 4.dp)) {
+                        ProvideTextStyle(
+                            value = MaterialTheme.typography.labelMedium.copy(
+                                color = textColor,
+                                fontSize = 12.sp,
+                                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                                letterSpacing = 0.2.sp
+                            )
+                        ) {
+                            label?.invoke()
+                        }
                     }
                 }
             }
