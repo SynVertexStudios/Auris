@@ -3,6 +3,12 @@ package com.goldensystem.auris.presentation.components
 import com.goldensystem.auris.presentation.navigation.navigateToTopLevelSafely
 
 import android.os.SystemClock
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -10,11 +16,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,7 +33,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -42,7 +48,6 @@ import com.goldensystem.auris.presentation.navigation.Screen
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
 
 internal val NavBarContentHeight = 90.dp
 internal val NavBarCompactContentHeight = 64.dp
@@ -110,118 +115,201 @@ private fun PlayerInternalNavigationItemsRow(
     val latestOnSearchIconDoubleTap by rememberUpdatedState(onSearchIconDoubleTap)
     val latestNavigationEnabled by rememberUpdatedState(currentRoute != null)
 
-    // ✨ Row principal: cápsula em vidro com sombra ambiente
-    val scope = rememberCoroutineScope()
-    var lastSearchTapTimestamp by remember { mutableStateOf(0L) }
+    val scheme = MaterialTheme.colorScheme
 
-    val rowModifier = if (navBarStyle == NavBarStyle.FULL_WIDTH) {
-        modifier
-            .fillMaxWidth()
-            .padding(top = 0.dp, bottom = innerRowPadding, start = 12.dp, end = 12.dp)
+    // ── Sheen diagonal animado — varre a cápsula como vidro reflexivo
+    val sheen = rememberInfiniteTransition(label = "navSheen")
+    val sheenPhase by sheen.animateFloat(
+        initialValue = -0.6f,
+        targetValue = 1.6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(6500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "sheenPhase"
+    )
+
+    // ── Glow ambiente atrás da cápsula inteira
+    val ambient = rememberInfiniteTransition(label = "navAmbient")
+    val ambientPulse by ambient.animateFloat(
+        initialValue = 0.7f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3200, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "ambientPulse"
+    )
+
+    val rowPadding = if (navBarStyle == NavBarStyle.FULL_WIDTH) {
+        Modifier.padding(top = 0.dp, bottom = innerRowPadding, start = 12.dp, end = 12.dp)
     } else {
-        modifier
-            .padding(start = 10.dp, end = 10.dp, bottom = innerRowPadding)
-            .fillMaxWidth()
+        Modifier.padding(start = 10.dp, end = 10.dp, bottom = innerRowPadding)
     }
 
-    Row(
-        modifier = rowModifier,
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(rowPadding)
     ) {
-        navItems.forEach { item ->
-            val isSelected = currentRoute != null && currentRoute == item.screen.route
-            val selectedColor = MaterialTheme.colorScheme.primary
-            val unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
-            val indicatorColorFromTheme = MaterialTheme.colorScheme.secondaryContainer
+        // ── Camada de vidro flutuante atrás dos itens
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .drawBehind {
+                    // Glow ambiente em radial por trás da cápsula
+                    drawRoundRect(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                scheme.primary.copy(alpha = 0.22f * ambientPulse),
+                                Color.Transparent,
+                                scheme.tertiary.copy(alpha = 0.20f * ambientPulse)
+                            )
+                        ),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(28.dp.toPx())
+                    )
+                }
+        )
 
-            val iconPainterResId = if (isSelected && item.selectedIconResId != null && item.selectedIconResId != 0) {
-                item.selectedIconResId
-            } else {
-                item.iconResId
-            }
-            val iconLambda: @Composable () -> Unit = remember(iconPainterResId, item.label) {
-                {
-                    Icon(
-                        painter = painterResource(id = iconPainterResId),
-                        contentDescription = item.label
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 6.dp, vertical = 4.dp)
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(28.dp))
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            scheme.surfaceContainerHigh.copy(alpha = 0.75f),
+                            scheme.surfaceContainer.copy(alpha = 0.65f)
+                        )
                     )
-                }
-            }
-            val selectedIconLambda: @Composable () -> Unit = remember(iconPainterResId, item.label) {
-                {
-                    Icon(
-                        painter = painterResource(id = iconPainterResId),
-                        contentDescription = item.label
+                )
+                .border(
+                    width = 1.dp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.30f),
+                            Color.Transparent,
+                            scheme.primary.copy(alpha = 0.28f)
+                        )
+                    ),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
+                )
+                .drawBehind {
+                    // ── Sheen diagonal (faixa branca muito sutil que varre)
+                    val w = size.width
+                    val bandWidth = w * 0.35f
+                    val cx = sheenPhase * (w + bandWidth) - bandWidth
+                    drawRect(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.White.copy(alpha = 0.10f),
+                                Color.Transparent
+                            ),
+                            start = Offset(cx, 0f),
+                            end = Offset(cx + bandWidth, size.height)
+                        )
                     )
+                },
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val scope = rememberCoroutineScope()
+            var lastSearchTapTimestamp by remember { mutableStateOf(0L) }
+
+            navItems.forEach { item ->
+                val isSelected = currentRoute != null && currentRoute == item.screen.route
+                val selectedColor = MaterialTheme.colorScheme.primary
+                val unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
+                val indicatorColorFromTheme = MaterialTheme.colorScheme.secondaryContainer
+
+                val iconPainterResId = if (isSelected && item.selectedIconResId != null && item.selectedIconResId != 0) {
+                    item.selectedIconResId
+                } else {
+                    item.iconResId
                 }
-            }
-            val labelLambda: (@Composable () -> Unit)? = if (compactMode) {
-                null
-            } else {
-                remember(item.label) {
-                    { Text(item.label) }
-                }
-            }
-            val onClickLambda: () -> Unit = remember(item.screen.route, navController, scope) {
-                click@{
-                    if (!latestNavigationEnabled) {
-                        lastSearchTapTimestamp = 0L
-                        return@click
+                val iconLambda: @Composable () -> Unit = remember(iconPainterResId, item.label) {
+                    {
+                        Icon(
+                            painter = painterResource(id = iconPainterResId),
+                            contentDescription = item.label
+                        )
                     }
-
-                    val itemRoute = item.screen.route
-                    val isSearchTab = itemRoute == Screen.Search.route
-                    val isAlreadySelected = latestCurrentRoute == itemRoute
-
-                    if (isSearchTab) {
-                        val now = SystemClock.elapsedRealtime()
-                        val isDoubleTap = now - lastSearchTapTimestamp <= 350L
-                        lastSearchTapTimestamp = now
-
-                        if (!isAlreadySelected) {
-                            if (!navController.navigateToTopLevelSafely(itemRoute)) {
-                                lastSearchTapTimestamp = 0L
-                                return@click
-                            }
+                }
+                val selectedIconLambda: @Composable () -> Unit = remember(iconPainterResId, item.label) {
+                    {
+                        Icon(
+                            painter = painterResource(id = iconPainterResId),
+                            contentDescription = item.label
+                        )
+                    }
+                }
+                val labelLambda: (@Composable () -> Unit)? = if (compactMode) {
+                    null
+                } else {
+                    remember(item.label) { { Text(item.label) } }
+                }
+                val onClickLambda: () -> Unit = remember(item.screen.route, navController, scope) {
+                    click@{
+                        if (!latestNavigationEnabled) {
+                            lastSearchTapTimestamp = 0L
+                            return@click
                         }
 
-                        if (isDoubleTap) {
-                            lastSearchTapTimestamp = 0L
-                            if (isAlreadySelected) {
-                                latestOnSearchIconDoubleTap()
-                            } else {
-                                scope.launch {
-                                    delay(160L)
-                                    latestOnSearchIconDoubleTap()
+                        val itemRoute = item.screen.route
+                        val isSearchTab = itemRoute == Screen.Search.route
+                        val isAlreadySelected = latestCurrentRoute == itemRoute
+
+                        if (isSearchTab) {
+                            val now = SystemClock.elapsedRealtime()
+                            val isDoubleTap = now - lastSearchTapTimestamp <= 350L
+                            lastSearchTapTimestamp = now
+
+                            if (!isAlreadySelected) {
+                                if (!navController.navigateToTopLevelSafely(itemRoute)) {
+                                    lastSearchTapTimestamp = 0L
+                                    return@click
                                 }
                             }
+
+                            if (isDoubleTap) {
+                                lastSearchTapTimestamp = 0L
+                                if (isAlreadySelected) {
+                                    latestOnSearchIconDoubleTap()
+                                } else {
+                                    scope.launch {
+                                        delay(160L)
+                                        latestOnSearchIconDoubleTap()
+                                    }
+                                }
+                            }
+                        } else if (!isAlreadySelected) {
+                            lastSearchTapTimestamp = 0L
+                            navController.navigateToTopLevelSafely(itemRoute)
+                        } else {
+                            lastSearchTapTimestamp = 0L
                         }
-                    } else if (!isAlreadySelected) {
-                        lastSearchTapTimestamp = 0L
-                        navController.navigateToTopLevelSafely(itemRoute)
-                    } else {
-                        lastSearchTapTimestamp = 0L
                     }
                 }
+                CustomNavigationBarItem(
+                    modifier = Modifier.weight(1f),
+                    selected = isSelected,
+                    onClick = onClickLambda,
+                    enabled = currentRoute != null,
+                    compactMode = compactMode,
+                    icon = iconLambda,
+                    selectedIcon = selectedIconLambda,
+                    label = labelLambda,
+                    contentDescription = item.label,
+                    alwaysShowLabel = true,
+                    selectedIconColor = selectedColor,
+                    unselectedIconColor = unselectedColor,
+                    selectedTextColor = selectedColor,
+                    unselectedTextColor = unselectedColor,
+                    indicatorColor = indicatorColorFromTheme
+                )
             }
-            CustomNavigationBarItem(
-                modifier = Modifier.weight(1f),
-                selected = isSelected,
-                onClick = onClickLambda,
-                enabled = currentRoute != null,
-                compactMode = compactMode,
-                icon = iconLambda,
-                selectedIcon = selectedIconLambda,
-                label = labelLambda,
-                contentDescription = item.label,
-                alwaysShowLabel = true,
-                selectedIconColor = selectedColor,
-                unselectedIconColor = unselectedColor,
-                selectedTextColor = selectedColor,
-                unselectedTextColor = unselectedColor,
-                indicatorColor = indicatorColorFromTheme
-            )
         }
     }
 }
@@ -237,78 +325,14 @@ fun PlayerInternalNavigationBar(
     bottomBarPadding: Dp = 0.dp,
     onSearchIconDoubleTap: () -> Unit = {}
 ) {
-    // ✨ Wrapper flutuante em vidro — a barra inteira vira uma cápsula premium
-    val navBarInsetPadding = sanitizeNavigationBarBottomInset(
-        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    )
-
-    val scheme = MaterialTheme.colorScheme
-    val glassShape = remember {
-        AbsoluteSmoothCornerShape(
-            cornerRadiusTL = 34.dp,
-            smoothnessAsPercentTL = 70,
-            cornerRadiusTR = 34.dp,
-            smoothnessAsPercentTR = 70,
-            cornerRadiusBL = 34.dp,
-            smoothnessAsPercentBL = 70,
-            cornerRadiusBR = 34.dp,
-            smoothnessAsPercentBR = 70,
-        )
-    }
-
-    val glassGradient = remember(scheme) {
-        Brush.linearGradient(
-            colors = listOf(
-                scheme.surfaceContainerHigh.copy(alpha = 0.85f),
-                scheme.surfaceContainer.copy(alpha = 0.72f),
-                scheme.surfaceContainerLow.copy(alpha = 0.68f),
-            )
-        )
-    }
-
-    Box(
+    PlayerInternalNavigationItemsRow(
+        navController = navController,
+        navItems = navItems,
+        currentRoute = currentRoute,
+        navBarStyle = navBarStyle,
+        compactMode = compactMode,
+        bottomBarPadding = bottomBarPadding,
+        onSearchIconDoubleTap = onSearchIconDoubleTap,
         modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                start = 10.dp,
-                end = 10.dp,
-                bottom = if (navBarStyle == NavBarStyle.FULL_WIDTH) 0.dp else navBarInsetPadding
-            )
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(
-                    elevation = 24.dp,
-                    shape = glassShape,
-                    clip = false,
-                    ambientColor = scheme.primary.copy(alpha = 0.6f),
-                    spotColor = scheme.primary.copy(alpha = 0.5f)
-                )
-                .clip(glassShape)
-                .background(brush = glassGradient, shape = glassShape)
-                .border(
-                    width = 1.dp,
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.30f),
-                            Color.Transparent,
-                            scheme.primary.copy(alpha = 0.22f),
-                        )
-                    ),
-                    shape = glassShape
-                )
-        ) {
-            PlayerInternalNavigationItemsRow(
-                navController = navController,
-                navItems = navItems,
-                currentRoute = currentRoute,
-                navBarStyle = NavBarStyle.DEFAULT, // deixamos o padding do wrapper controlar
-                compactMode = compactMode,
-                bottomBarPadding = if (navBarStyle == NavBarStyle.FULL_WIDTH) bottomBarPadding else 0.dp,
-                onSearchIconDoubleTap = onSearchIconDoubleTap,
-                modifier = Modifier.padding(vertical = 6.dp)
-            )
-        }
-    }
+    )
 }

@@ -3,8 +3,13 @@ package com.goldensystem.auris.presentation.components.scoped
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -25,6 +30,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LocalContentColor
@@ -38,7 +44,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -51,6 +56,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Item de navegação no estilo "Aurora Glass":
+ * - pílula indicadora em gradiente com anel luminoso
+ * - halo radial animado atrás do ícone selecionado
+ * - ícone com spring bouncy + elevação
+ * - label com fade/slide suave e cor animada
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun RowScope.CustomNavigationBarItem(
@@ -85,50 +97,48 @@ fun RowScope.CustomNavigationBarItem(
         label = "textColor"
     )
 
-    // ── Microinterações spring
+    // ── Escala com mola + leve "lift"
     val iconScale by animateFloatAsState(
         targetValue = if (selected) 1.14f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
+            stiffness = Spring.StiffnessMediumLow
         ),
         label = "iconScale"
     )
-    val indicatorScale by animateFloatAsState(
-        targetValue = if (selected) 1f else 0.85f,
+    val iconLift by animateFloatAsState(
+        targetValue = if (selected) -1.5f else 0f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessMediumLow
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMedium
         ),
-        label = "indicatorScale"
+        label = "iconLift"
     )
-    val glowAlpha by animateFloatAsState(
-        targetValue = if (selected) 0.42f else 0f,
-        animationSpec = tween(durationMillis = 320),
-        label = "glowAlpha"
+
+    // ── Halo pulsante quando selecionado (sutil, respira sozinho)
+    val pulse = rememberInfiniteTransition(label = "navPulse")
+    val haloPulse by pulse.animateFloat(
+        initialValue = 0.55f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "haloPulse"
+    )
+    val haloAlpha by animateFloatAsState(
+        targetValue = if (selected) 1f else 0f,
+        animationSpec = tween(280),
+        label = "haloAlpha"
     )
 
     val showLabel = label != null && (alwaysShowLabel || selected)
-
-    // ── Dimensões
-    val indicatorWidth = 68.dp
+    val indicatorWidth = 66.dp
     val indicatorHeight = 34.dp
-    val iconWidth = 48.dp
-    val iconHeight = 26.dp
-    val indicatorPadding = 4.dp
+    val iconBoxWidth = 48.dp
+    val iconBoxHeight = 26.dp
     val indicatorShape = RoundedCornerShape(18.dp)
     val iconShape = RoundedCornerShape(12.dp)
-
-    // ── Gradiente do indicador (aurora)
-    val indicatorGradient = remember(indicatorColor, scheme.primary, scheme.tertiary) {
-        Brush.linearGradient(
-            colors = listOf(
-                indicatorColor,
-                indicatorColor.copy(alpha = 0.85f),
-                scheme.tertiary.copy(alpha = 0.35f)
-            )
-        )
-    }
 
     Column(
         modifier = modifier
@@ -149,73 +159,68 @@ fun RowScope.CustomNavigationBarItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // ── Container do ícone + indicador aurora
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.size(indicatorWidth, indicatorHeight)
         ) {
-            // Glow ambiente atrás do indicador
-            if (glowAlpha > 0.01f) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .drawBehind {
-                            drawCircle(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        scheme.primary.copy(alpha = glowAlpha),
-                                        Color.Transparent
-                                    ),
-                                    center = Offset(size.width / 2f, size.height / 2f),
-                                    radius = size.minDimension * 1.1f
+            // ── Halo ambiente (radial), aparece apenas quando selecionado
+            Box(
+                modifier = Modifier
+                    .size(indicatorWidth + 16.dp, indicatorHeight + 16.dp)
+                    .graphicsLayer { alpha = haloAlpha * 0.85f }
+                    .drawBehind {
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    scheme.primary.copy(alpha = 0.35f * haloPulse),
+                                    Color.Transparent
                                 ),
-                                radius = size.minDimension * 1.1f
-                            )
-                        }
-                )
-            }
+                                center = Offset(size.width / 2f, size.height / 2f),
+                                radius = size.minDimension / 2f
+                            ),
+                            radius = size.minDimension / 2f
+                        )
+                    }
+            )
 
-            // ✨ Indicador — usando FQN para evitar ambiguidade com ColumnScope.AnimatedVisibility
-            androidx.compose.animation.AnimatedVisibility(
+            // ── Pílula indicadora em gradiente + anel luminoso
+            AnimatedVisibility(
                 visible = selected,
-                enter = fadeIn(animationSpec = tween(180)) +
+                enter = fadeIn(animationSpec = tween(140)) +
                         scaleIn(
                             animationSpec = spring(
                                 dampingRatio = Spring.DampingRatioMediumBouncy,
                                 stiffness = Spring.StiffnessLow
                             ),
-                            initialScale = 0.72f
+                            initialScale = 0.7f
                         ),
-                exit = fadeOut(animationSpec = tween(160)) +
+                exit = fadeOut(animationSpec = tween(120)) +
                         scaleOut(
-                            animationSpec = tween(180, easing = EaseInQuart),
+                            animationSpec = tween(140, easing = EaseInQuart),
                             targetScale = 0.85f
                         )
             ) {
                 Box(
                     modifier = Modifier
-                        .size(indicatorWidth, indicatorHeight)
-                        .padding(horizontal = indicatorPadding)
-                        .graphicsLayer {
-                            scaleX = indicatorScale
-                            scaleY = indicatorScale
-                        }
-                        .shadow(
-                            elevation = 12.dp,
-                            shape = indicatorShape,
-                            clip = false,
-                            ambientColor = scheme.primary,
-                            spotColor = scheme.primary
-                        )
+                        .fillMaxSize()
+                        .padding(horizontal = 4.dp)
                         .clip(indicatorShape)
-                        .background(brush = indicatorGradient, shape = indicatorShape)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    scheme.primary.copy(alpha = 0.28f),
+                                    scheme.tertiary.copy(alpha = 0.22f)
+                                )
+                            ),
+                            shape = indicatorShape
+                        )
                         .border(
                             width = 1.dp,
                             brush = Brush.linearGradient(
-                                listOf(
-                                    Color.White.copy(alpha = 0.42f),
+                                colors = listOf(
+                                    Color.White.copy(alpha = 0.40f),
                                     Color.Transparent,
-                                    scheme.tertiary.copy(alpha = 0.30f)
+                                    scheme.primary.copy(alpha = 0.35f)
                                 )
                             ),
                             shape = indicatorShape
@@ -223,53 +228,47 @@ fun RowScope.CustomNavigationBarItem(
                 )
             }
 
-            // Ícone
+            // ── Ícone com spring
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(iconWidth, iconHeight)
+                    .size(iconBoxWidth, iconBoxHeight)
                     .clip(iconShape)
                     .graphicsLayer {
                         scaleX = iconScale
                         scaleY = iconScale
+                        translationY = iconLift
                     }
             ) {
                 CompositionLocalProvider(LocalContentColor provides iconColor) {
-                    Box(
-                        modifier = Modifier.clearAndSetSemantics {
-                            if (showLabel) {
-                                // semântica gerenciada acima
-                            }
-                        }
-                    ) {
+                    Box(modifier = Modifier.clearAndSetSemantics { }) {
                         if (selected) selectedIcon() else icon()
                     }
                 }
             }
         }
 
-        // ✨ Label — também usando FQN e envolvido em Column próprio
-        // para garantir receiver explícito correto
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            androidx.compose.animation.AnimatedVisibility(
-                visible = showLabel,
-                enter = fadeIn(animationSpec = tween(220, delayMillis = 60)),
-                exit = fadeOut(animationSpec = tween(120))
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Box(modifier = Modifier.padding(top = 4.dp)) {
-                        ProvideTextStyle(
-                            value = MaterialTheme.typography.labelMedium.copy(
-                                color = textColor,
-                                fontSize = 12.sp,
-                                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                                letterSpacing = 0.2.sp
-                            )
-                        ) {
-                            label?.invoke()
-                        }
-                    }
+        // ── Label com fade + slide
+        AnimatedVisibility(
+            visible = showLabel,
+            enter = fadeIn(animationSpec = tween(220, delayMillis = 40)) +
+                    scaleIn(
+                        initialScale = 0.92f,
+                        animationSpec = tween(220, delayMillis = 40)
+                    ),
+            exit = fadeOut(animationSpec = tween(110))
+        ) {
+            Spacer(modifier = Modifier.height(2.dp))
+            Box(modifier = Modifier.padding(top = 2.dp)) {
+                ProvideTextStyle(
+                    value = MaterialTheme.typography.labelMedium.copy(
+                        color = textColor,
+                        fontSize = 12.5.sp,
+                        letterSpacing = 0.2.sp,
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
+                    )
+                ) {
+                    label?.invoke()
                 }
             }
         }
