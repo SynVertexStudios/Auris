@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LocalContentColor
@@ -184,7 +183,10 @@ fun RowScope.CustomNavigationBarItem(
             )
 
             // ── Pílula indicadora em gradiente + anel luminoso
-            AnimatedVisibility(
+            // Usamos explicitamente a versão do pacote androidx.compose.animation
+            // para evitar a resolução para ColumnScope.AnimatedVisibility
+            // (que exige receiver implícito e falha aqui dentro de Box).
+            androidx.compose.animation.AnimatedVisibility(
                 visible = selected,
                 enter = fadeIn(animationSpec = tween(140)) +
                         scaleIn(
@@ -248,8 +250,8 @@ fun RowScope.CustomNavigationBarItem(
             }
         }
 
-        // ── Label com fade + slide
-        AnimatedVisibility(
+        // ── Label com fade + slide — também qualificado explicitamente
+        androidx.compose.animation.AnimatedVisibility(
             visible = showLabel,
             enter = fadeIn(animationSpec = tween(220, delayMillis = 40)) +
                     scaleIn(
