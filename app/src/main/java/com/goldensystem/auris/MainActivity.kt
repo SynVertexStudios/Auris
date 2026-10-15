@@ -847,6 +847,7 @@ Trace.endSection()
 
                 Scaffold(
                 modifier = Modifier.fillMaxSize(),
+                containerColor = Color.Transparent,
                bottomBar = {
     if (shouldRenderNavigationBar) {
         val playerContentExpansionFraction = playerViewModel.playerContentExpansionFraction.value

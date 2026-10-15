@@ -251,7 +251,6 @@ fun PlayerInternalNavigationBar(
 ) {
     val scheme = MaterialTheme.colorScheme
 
-    // ✨ Shape parametrizado — o MainActivity anima os raios, a cápsula obedece.
     val capsuleShape: Shape = remember(topCornerRadius, bottomCornerRadius) {
         AbsoluteSmoothCornerShape(
             cornerRadiusTL = topCornerRadius,
@@ -265,7 +264,6 @@ fun PlayerInternalNavigationBar(
         )
     }
 
-    // ── Sheen diagonal
     val sheen = rememberInfiniteTransition(label = "navSheen")
     val sheenPhase by sheen.animateFloat(
         initialValue = -0.6f,
@@ -277,7 +275,6 @@ fun PlayerInternalNavigationBar(
         label = "sheenPhase"
     )
 
-    // ── Glow ambiente pulsante
     val ambient = rememberInfiniteTransition(label = "navAmbient")
     val ambientPulse by ambient.animateFloat(
         initialValue = 0.7f,
@@ -289,76 +286,91 @@ fun PlayerInternalNavigationBar(
         label = "ambientPulse"
     )
 
+    // ── UM ÚNICO Box raiz. Dentro dele, duas coisas:
+    //    1) Sombra "fake": mesmo shape, cor sutil, deslocada 4dp pra baixo.
+    //       Não usa .shadow() → não vaza borda quando o shape anima.
+    //    2) Cápsula real: clip + background + border + sheen + glow.
     Box(
-        modifier = modifier
-            .shadow(
-                elevation = 18.dp,
-                shape = capsuleShape,
-                clip = false,
-                ambientColor = scheme.primary,
-                spotColor = scheme.primary
-            )
-            .clip(capsuleShape)
-            .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        scheme.surfaceContainerHigh.copy(alpha = 0.82f),
-                        scheme.surfaceContainer.copy(alpha = 0.68f)
-                    )
-                ),
-                shape = capsuleShape
-            )
-            .border(
-                width = 1.dp,
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = 0.30f),
-                        Color.Transparent,
-                        scheme.primary.copy(alpha = 0.28f)
-                    )
-                ),
-                shape = capsuleShape
-            )
-            .drawBehind {
-                // Sheen diagonal
-                val w = size.width
-                val bandWidth = w * 0.35f
-                val cx = sheenPhase * (w + bandWidth) - bandWidth
-                drawRect(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color.White.copy(alpha = 0.10f),
-                            Color.Transparent
-                        ),
-                        start = Offset(cx, 0f),
-                        end = Offset(cx + bandWidth, size.height)
-                    )
-                )
-                // Glow ambiente nas laterais — usa o raio médio como aproximação
-                val avgRadiusPx = ((topCornerRadius + bottomCornerRadius) / 2).toPx()
-                drawRoundRect(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            scheme.primary.copy(alpha = 0.18f * ambientPulse),
-                            Color.Transparent,
-                            scheme.tertiary.copy(alpha = 0.16f * ambientPulse)
-                        )
-                    ),
-                    cornerRadius = CornerRadius(avgRadiusPx)
-                )
-            },
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        PlayerInternalNavigationItemsRow(
-            navController = navController,
-            navItems = navItems,
-            currentRoute = currentRoute,
-            navBarStyle = navBarStyle,
-            compactMode = compactMode,
-            bottomBarPadding = bottomBarPadding,
-            onSearchIconDoubleTap = onSearchIconDoubleTap,
-            modifier = Modifier.fillMaxSize()
+        // ── 1) Sombra fake — deslocada pra baixo, mesma forma
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .graphicsLayer { translationY = 4.dp.toPx() }
+                .background(
+                    color = Color.Black.copy(alpha = 0.22f),
+                    shape = capsuleShape
+                )
         )
+
+        // ── 2) Cápsula real
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clip(capsuleShape)
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            scheme.surfaceContainerHigh.copy(alpha = 0.82f),
+                            scheme.surfaceContainer.copy(alpha = 0.68f)
+                        )
+                    ),
+                    shape = capsuleShape
+                )
+                .border(
+                    width = 1.dp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.30f),
+                            Color.Transparent,
+                            scheme.primary.copy(alpha = 0.28f)
+                        )
+                    ),
+                    shape = capsuleShape
+                )
+                .drawBehind {
+                    // Sheen diagonal
+                    val w = size.width
+                    val bandWidth = w * 0.35f
+                    val cx = sheenPhase * (w + bandWidth) - bandWidth
+                    drawRect(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.White.copy(alpha = 0.10f),
+                                Color.Transparent
+                            ),
+                            start = Offset(cx, 0f),
+                            end = Offset(cx + bandWidth, size.height)
+                        )
+                    )
+                    // Glow ambiente
+                    val avgRadiusPx = ((topCornerRadius + bottomCornerRadius) / 2).toPx()
+                    drawRoundRect(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                scheme.primary.copy(alpha = 0.18f * ambientPulse),
+                                Color.Transparent,
+                                scheme.tertiary.copy(alpha = 0.16f * ambientPulse)
+                            )
+                        ),
+                        cornerRadius = CornerRadius(avgRadiusPx)
+                    )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            PlayerInternalNavigationItemsRow(
+                navController = navController,
+                navItems = navItems,
+                currentRoute = currentRoute,
+                navBarStyle = navBarStyle,
+                compactMode = compactMode,
+                bottomBarPadding = bottomBarPadding,
+                onSearchIconDoubleTap = onSearchIconDoubleTap,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }
