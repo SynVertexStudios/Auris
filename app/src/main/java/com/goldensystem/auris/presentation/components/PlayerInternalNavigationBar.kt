@@ -34,9 +34,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -48,6 +51,7 @@ import com.goldensystem.auris.presentation.navigation.Screen
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
 
 internal val NavBarContentHeight = 90.dp
 internal val NavBarCompactContentHeight = 64.dp
@@ -115,9 +119,153 @@ private fun PlayerInternalNavigationItemsRow(
     val latestOnSearchIconDoubleTap by rememberUpdatedState(onSearchIconDoubleTap)
     val latestNavigationEnabled by rememberUpdatedState(currentRoute != null)
 
+    val scope = rememberCoroutineScope()
+    var lastSearchTapTimestamp by remember { mutableStateOf(0L) }
+
+    Row(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 6.dp)
+            .padding(bottom = innerRowPadding),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        navItems.forEach { item ->
+            val isSelected = currentRoute != null && currentRoute == item.screen.route
+            val selectedColor = MaterialTheme.colorScheme.primary
+            val unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
+            val indicatorColorFromTheme = MaterialTheme.colorScheme.secondaryContainer
+
+            val iconPainterResId = if (isSelected && item.selectedIconResId != null && item.selectedIconResId != 0) {
+                item.selectedIconResId
+            } else {
+                item.iconResId
+            }
+            val iconLambda: @Composable () -> Unit = remember(iconPainterResId, item.label) {
+                {
+                    Icon(
+                        painter = painterResource(id = iconPainterResId),
+                        contentDescription = item.label
+                    )
+                }
+            }
+            val selectedIconLambda: @Composable () -> Unit = remember(iconPainterResId, item.label) {
+                {
+                    Icon(
+                        painter = painterResource(id = iconPainterResId),
+                        contentDescription = item.label
+                    )
+                }
+            }
+            val labelLambda: (@Composable () -> Unit)? = if (compactMode) {
+                null
+            } else {
+                remember(item.label) { { Text(item.label) } }
+            }
+            val onClickLambda: () -> Unit = remember(item.screen.route, navController, scope) {
+                click@{
+                    if (!latestNavigationEnabled) {
+                        lastSearchTapTimestamp = 0L
+                        return@click
+                    }
+
+                    val itemRoute = item.screen.route
+                    val isSearchTab = itemRoute == Screen.Search.route
+                    val isAlreadySelected = latestCurrentRoute == itemRoute
+
+                    if (isSearchTab) {
+                        val now = SystemClock.elapsedRealtime()
+                        val isDoubleTap = now - lastSearchTapTimestamp <= 350L
+                        lastSearchTapTimestamp = now
+
+                        if (!isAlreadySelected) {
+                            if (!navController.navigateToTopLevelSafely(itemRoute)) {
+                                lastSearchTapTimestamp = 0L
+                                return@click
+                            }
+                        }
+
+                        if (isDoubleTap) {
+                            lastSearchTapTimestamp = 0L
+                            if (isAlreadySelected) {
+                                latestOnSearchIconDoubleTap()
+                            } else {
+                                scope.launch {
+                                    delay(160L)
+                                    latestOnSearchIconDoubleTap()
+                                }
+                            }
+                        }
+                    } else if (!isAlreadySelected) {
+                        lastSearchTapTimestamp = 0L
+                        navController.navigateToTopLevelSafely(itemRoute)
+                    } else {
+                        lastSearchTapTimestamp = 0L
+                    }
+                }
+            }
+            CustomNavigationBarItem(
+                modifier = Modifier.weight(1f),
+                selected = isSelected,
+                onClick = onClickLambda,
+                enabled = currentRoute != null,
+                compactMode = compactMode,
+                icon = iconLambda,
+                selectedIcon = selectedIconLambda,
+                label = labelLambda,
+                contentDescription = item.label,
+                alwaysShowLabel = true,
+                selectedIconColor = selectedColor,
+                unselectedIconColor = unselectedColor,
+                selectedTextColor = selectedColor,
+                unselectedTextColor = unselectedColor,
+                indicatorColor = indicatorColorFromTheme
+            )
+        }
+    }
+}
+
+/**
+ * A ÚNICA camada que desenha a barra de navegação.
+ *
+ * Ela é dona de tudo: shape (com os raios que vêm por parâmetro),
+ * sombra, vidro, borda luminosa, sheen, glow ambiente e conteúdo.
+ *
+ * Os raios mudam de fora pra dentro — quando o mini player sobe, o
+ * MainActivity anima `topCornerRadius` e a cápsula se redesenha em
+ * tempo real, encaixando organicamente com o player. Sem camadas
+ * brigando, sem surface por baixo, sem shape "colado".
+ */
+@Composable
+fun PlayerInternalNavigationBar(
+    navController: NavHostController,
+    navItems: ImmutableList<BottomNavItem>,
+    currentRoute: String?,
+    modifier: Modifier = Modifier,
+    navBarStyle: String,
+    compactMode: Boolean,
+    bottomBarPadding: Dp = 0.dp,
+    topCornerRadius: Dp = 28.dp,
+    bottomCornerRadius: Dp = 28.dp,
+    onSearchIconDoubleTap: () -> Unit = {}
+) {
     val scheme = MaterialTheme.colorScheme
 
-    // ── Sheen diagonal animado — varre a cápsula como vidro reflexivo
+    // ✨ Shape parametrizado — o MainActivity anima os raios, a cápsula obedece.
+    val capsuleShape: Shape = remember(topCornerRadius, bottomCornerRadius) {
+        AbsoluteSmoothCornerShape(
+            cornerRadiusTL = topCornerRadius,
+            smoothnessAsPercentTL = 60,
+            cornerRadiusTR = topCornerRadius,
+            smoothnessAsPercentTR = 60,
+            cornerRadiusBL = bottomCornerRadius,
+            smoothnessAsPercentBL = 60,
+            cornerRadiusBR = bottomCornerRadius,
+            smoothnessAsPercentBR = 60,
+        )
+    }
+
+    // ── Sheen diagonal
     val sheen = rememberInfiniteTransition(label = "navSheen")
     val sheenPhase by sheen.animateFloat(
         initialValue = -0.6f,
@@ -129,7 +277,7 @@ private fun PlayerInternalNavigationItemsRow(
         label = "sheenPhase"
     )
 
-    // ── Glow ambiente atrás da cápsula inteira
+    // ── Glow ambiente pulsante
     val ambient = rememberInfiniteTransition(label = "navAmbient")
     val ambientPulse by ambient.animateFloat(
         initialValue = 0.7f,
@@ -141,198 +289,76 @@ private fun PlayerInternalNavigationItemsRow(
         label = "ambientPulse"
     )
 
-    val rowPadding = if (navBarStyle == NavBarStyle.FULL_WIDTH) {
-        Modifier.padding(top = 0.dp, bottom = innerRowPadding, start = 12.dp, end = 12.dp)
-    } else {
-        Modifier.padding(start = 10.dp, end = 10.dp, bottom = innerRowPadding)
-    }
-
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .then(rowPadding)
-    ) {
-        // ── Camada de vidro flutuante atrás dos itens
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .drawBehind {
-                    // Glow ambiente em radial por trás da cápsula
-                    drawRoundRect(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                scheme.primary.copy(alpha = 0.22f * ambientPulse),
-                                Color.Transparent,
-                                scheme.tertiary.copy(alpha = 0.20f * ambientPulse)
-                            )
-                        ),
-                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(28.dp.toPx())
+            .shadow(
+                elevation = 18.dp,
+                shape = capsuleShape,
+                clip = false,
+                ambientColor = scheme.primary,
+                spotColor = scheme.primary
+            )
+            .clip(capsuleShape)
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        scheme.surfaceContainerHigh.copy(alpha = 0.82f),
+                        scheme.surfaceContainer.copy(alpha = 0.68f)
                     )
-                }
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 6.dp, vertical = 4.dp)
-                .clip(androidx.compose.foundation.shape.RoundedCornerShape(28.dp))
-                .background(
+                ),
+                shape = capsuleShape
+            )
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.30f),
+                        Color.Transparent,
+                        scheme.primary.copy(alpha = 0.28f)
+                    )
+                ),
+                shape = capsuleShape
+            )
+            .drawBehind {
+                // Sheen diagonal
+                val w = size.width
+                val bandWidth = w * 0.35f
+                val cx = sheenPhase * (w + bandWidth) - bandWidth
+                drawRect(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            scheme.surfaceContainerHigh.copy(alpha = 0.75f),
-                            scheme.surfaceContainer.copy(alpha = 0.65f)
-                        )
+                            Color.Transparent,
+                            Color.White.copy(alpha = 0.10f),
+                            Color.Transparent
+                        ),
+                        start = Offset(cx, 0f),
+                        end = Offset(cx + bandWidth, size.height)
                     )
                 )
-                .border(
-                    width = 1.dp,
-                    brush = Brush.linearGradient(
+                // Glow ambiente nas laterais — usa o raio médio como aproximação
+                val avgRadiusPx = ((topCornerRadius + bottomCornerRadius) / 2).toPx()
+                drawRoundRect(
+                    brush = Brush.horizontalGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.30f),
+                            scheme.primary.copy(alpha = 0.18f * ambientPulse),
                             Color.Transparent,
-                            scheme.primary.copy(alpha = 0.28f)
+                            scheme.tertiary.copy(alpha = 0.16f * ambientPulse)
                         )
                     ),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
+                    cornerRadius = CornerRadius(avgRadiusPx)
                 )
-                .drawBehind {
-                    // ── Sheen diagonal (faixa branca muito sutil que varre)
-                    val w = size.width
-                    val bandWidth = w * 0.35f
-                    val cx = sheenPhase * (w + bandWidth) - bandWidth
-                    drawRect(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.White.copy(alpha = 0.10f),
-                                Color.Transparent
-                            ),
-                            start = Offset(cx, 0f),
-                            end = Offset(cx + bandWidth, size.height)
-                        )
-                    )
-                },
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val scope = rememberCoroutineScope()
-            var lastSearchTapTimestamp by remember { mutableStateOf(0L) }
-
-            navItems.forEach { item ->
-                val isSelected = currentRoute != null && currentRoute == item.screen.route
-                val selectedColor = MaterialTheme.colorScheme.primary
-                val unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
-                val indicatorColorFromTheme = MaterialTheme.colorScheme.secondaryContainer
-
-                val iconPainterResId = if (isSelected && item.selectedIconResId != null && item.selectedIconResId != 0) {
-                    item.selectedIconResId
-                } else {
-                    item.iconResId
-                }
-                val iconLambda: @Composable () -> Unit = remember(iconPainterResId, item.label) {
-                    {
-                        Icon(
-                            painter = painterResource(id = iconPainterResId),
-                            contentDescription = item.label
-                        )
-                    }
-                }
-                val selectedIconLambda: @Composable () -> Unit = remember(iconPainterResId, item.label) {
-                    {
-                        Icon(
-                            painter = painterResource(id = iconPainterResId),
-                            contentDescription = item.label
-                        )
-                    }
-                }
-                val labelLambda: (@Composable () -> Unit)? = if (compactMode) {
-                    null
-                } else {
-                    remember(item.label) { { Text(item.label) } }
-                }
-                val onClickLambda: () -> Unit = remember(item.screen.route, navController, scope) {
-                    click@{
-                        if (!latestNavigationEnabled) {
-                            lastSearchTapTimestamp = 0L
-                            return@click
-                        }
-
-                        val itemRoute = item.screen.route
-                        val isSearchTab = itemRoute == Screen.Search.route
-                        val isAlreadySelected = latestCurrentRoute == itemRoute
-
-                        if (isSearchTab) {
-                            val now = SystemClock.elapsedRealtime()
-                            val isDoubleTap = now - lastSearchTapTimestamp <= 350L
-                            lastSearchTapTimestamp = now
-
-                            if (!isAlreadySelected) {
-                                if (!navController.navigateToTopLevelSafely(itemRoute)) {
-                                    lastSearchTapTimestamp = 0L
-                                    return@click
-                                }
-                            }
-
-                            if (isDoubleTap) {
-                                lastSearchTapTimestamp = 0L
-                                if (isAlreadySelected) {
-                                    latestOnSearchIconDoubleTap()
-                                } else {
-                                    scope.launch {
-                                        delay(160L)
-                                        latestOnSearchIconDoubleTap()
-                                    }
-                                }
-                            }
-                        } else if (!isAlreadySelected) {
-                            lastSearchTapTimestamp = 0L
-                            navController.navigateToTopLevelSafely(itemRoute)
-                        } else {
-                            lastSearchTapTimestamp = 0L
-                        }
-                    }
-                }
-                CustomNavigationBarItem(
-                    modifier = Modifier.weight(1f),
-                    selected = isSelected,
-                    onClick = onClickLambda,
-                    enabled = currentRoute != null,
-                    compactMode = compactMode,
-                    icon = iconLambda,
-                    selectedIcon = selectedIconLambda,
-                    label = labelLambda,
-                    contentDescription = item.label,
-                    alwaysShowLabel = true,
-                    selectedIconColor = selectedColor,
-                    unselectedIconColor = unselectedColor,
-                    selectedTextColor = selectedColor,
-                    unselectedTextColor = unselectedColor,
-                    indicatorColor = indicatorColorFromTheme
-                )
-            }
-        }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        PlayerInternalNavigationItemsRow(
+            navController = navController,
+            navItems = navItems,
+            currentRoute = currentRoute,
+            navBarStyle = navBarStyle,
+            compactMode = compactMode,
+            bottomBarPadding = bottomBarPadding,
+            onSearchIconDoubleTap = onSearchIconDoubleTap,
+            modifier = Modifier.fillMaxSize()
+        )
     }
-}
-
-@Composable
-fun PlayerInternalNavigationBar(
-    navController: NavHostController,
-    navItems: ImmutableList<BottomNavItem>,
-    currentRoute: String?,
-    modifier: Modifier = Modifier,
-    navBarStyle: String,
-    compactMode: Boolean,
-    bottomBarPadding: Dp = 0.dp,
-    onSearchIconDoubleTap: () -> Unit = {}
-) {
-    PlayerInternalNavigationItemsRow(
-        navController = navController,
-        navItems = navItems,
-        currentRoute = currentRoute,
-        navBarStyle = navBarStyle,
-        compactMode = compactMode,
-        bottomBarPadding = bottomBarPadding,
-        onSearchIconDoubleTap = onSearchIconDoubleTap,
-        modifier = modifier
-    )
 }
