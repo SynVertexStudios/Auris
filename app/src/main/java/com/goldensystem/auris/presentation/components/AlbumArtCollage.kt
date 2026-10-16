@@ -16,7 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,7 +69,6 @@ fun AlbumArtCollage(
         (songs.take(6) + List((6 - songs.size).coerceAtLeast(0)) { null }).toImmutableList()
     }
 
-    // context nas keys para não segurar Activity recriada
     val requests = remember(songsToShow, context) {
         songsToShow.map { song ->
             song?.albumArtUriString?.let {
@@ -84,7 +83,11 @@ fun AlbumArtCollage(
     }
 
     val aurora = rememberInfiniteTransition(label = "collageAurora")
-    val auroraAngle by aurora.animateFloat(
+
+    // ⚠️ NÃO usar `by` aqui. `by` lê o valor em composição sempre que o state muda,
+    // e é exatamente isso que causa a tempestade de recomposições.
+    // Guardamos State<Float> e lemos só dentro de escopos de draw/layer.
+    val auroraAngleState: State<Float> = aurora.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
@@ -93,7 +96,7 @@ fun AlbumArtCollage(
         ),
         label = "auroraAngle"
     )
-    val floatPhase by aurora.animateFloat(
+    val floatPhaseState: State<Float> = aurora.animateFloat(
         initialValue = 0f,
         targetValue = (2.0 * Math.PI).toFloat(),
         animationSpec = infiniteRepeatable(
@@ -118,7 +121,8 @@ fun AlbumArtCollage(
             modifier = Modifier
                 .matchParentSize()
                 .drawBehind {
-                    val a = Math.toRadians(auroraAngle.toDouble())
+                    // auroraAngleState.value lido em escopo de draw — não recompõe
+                    val a = Math.toRadians(auroraAngleState.value.toDouble())
                     val cx = size.width / 2f
                     val cy = size.height / 2f
                     val r = size.minDimension * 1.05f
@@ -148,10 +152,7 @@ fun AlbumArtCollage(
                 }
         )
 
-        // Cálculo puro e síncrono — buildCollageConfigs é O(1), não precisa de coroutine.
-        // Antes isso era um produceState rodando em Dispatchers.Default, o que causava
-        // coroutines empilhadas a cada troca de pattern + ida/volta de tela, saturando
-        // o pool compartilhado e travando a UI.
+        // Cálculo puro e memoizado. buildCollageConfigs é O(1), não precisa de coroutine.
         val shapeConfigs = remember(pattern, boxMaxHeight, height) {
             val min = minOf(300.dp, height)
             buildCollageConfigs(pattern, min, boxMaxHeight)
@@ -173,7 +174,8 @@ fun AlbumArtCollage(
                                 modifier = Modifier.align(cfg.align),
                                 request = requests.getOrNull(idx),
                                 cfg = cfg,
-                                floatPhase = floatPhase + idx * 0.55f,
+                                floatPhase = floatPhaseState,      // passa o STATE, não o valor
+                                phaseOffset = idx * 0.55f,
                                 index = idx,
                                 song = song,
                                 onSongClick = onSongClick
@@ -192,7 +194,8 @@ fun AlbumArtCollage(
                                 modifier = Modifier.align(cfg.align),
                                 request = requests.getOrNull(j + 3),
                                 cfg = cfg,
-                                floatPhase = floatPhase + (j + 3) * 0.55f,
+                                floatPhase = floatPhaseState,
+                                phaseOffset = (j + 3) * 0.55f,
                                 index = j + 3,
                                 song = song,
                                 onSongClick = onSongClick
@@ -236,22 +239,37 @@ private fun CollageCard(
     modifier: Modifier,
     request: Any?,
     cfg: Config,
-    floatPhase: Float,
+    floatPhase: State<Float>,
+    phaseOffset: Float,
     index: Int,
     song: Song,
     onSongClick: (Song) -> Unit,
 ) {
-    val bob = sin(floatPhase) * 8f
-    val sway = cos(floatPhase * 0.7f) * 3f
-
     val surface = MaterialTheme.colorScheme.surface
     val primary = MaterialTheme.colorScheme.primary
     val interactionSource = remember { MutableInteractionSource() }
+
+    // Memoizado: não depende da animação, não precisa ser recriado
+    // a cada (agora inexistente) recomposição por frame.
+    val borderBrush = remember {
+        Brush.linearGradient(
+            colors = listOf(
+                Color.White.copy(alpha = 0.35f),
+                Color.White.copy(alpha = 0.05f),
+                Color.Transparent
+            )
+        )
+    }
 
     Box(
         modifier = modifier
             .offset(cfg.offsetX, cfg.offsetY)
             .graphicsLayer {
+                // ✅ Leitura do state AQUI dentro do graphicsLayer.
+                // Só a camada é invalidada por frame — a composição NÃO acontece.
+                val phase = floatPhase.value + phaseOffset
+                val bob = sin(phase) * 8f
+                val sway = cos(phase * 0.7f) * 3f
                 translationY = bob
                 translationX = sway
                 rotationZ = cfg.rot + sway * 0.08f
@@ -285,13 +303,7 @@ private fun CollageCard(
             )
             .border(
                 width = 1.dp,
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = 0.35f),
-                        Color.White.copy(alpha = 0.05f),
-                        Color.Transparent
-                    )
-                ),
+                brush = borderBrush,
                 shape = cfg.shape
             )
     ) {
