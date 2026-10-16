@@ -17,13 +17,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -41,7 +39,6 @@ import com.goldensystem.auris.data.preferences.CollagePattern
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -67,11 +64,13 @@ fun AlbumArtCollage(
     onSongClick: (Song) -> Unit,
 ) {
     val context = LocalContext.current
+
     val songsToShow = remember(songs) {
-        (songs.take(6) + List(6 - songs.size.coerceAtMost(6)) { null }).toImmutableList()
+        (songs.take(6) + List((6 - songs.size).coerceAtLeast(0)) { null }).toImmutableList()
     }
 
-    val requests = remember(songsToShow) {
+    // context nas keys para não segurar Activity recriada
+    val requests = remember(songsToShow, context) {
         songsToShow.map { song ->
             song?.albumArtUriString?.let {
                 ImageRequest.Builder(context)
@@ -149,28 +148,30 @@ fun AlbumArtCollage(
                 }
         )
 
-        val shapeConfigs by produceState<List<Config>>(
-            initialValue = emptyList(),
-            songsToShow,
-            boxMaxHeight,
-            pattern
-        ) {
-            value = withContext(Dispatchers.Default) {
-                val min = minOf(300.dp, height)
-                buildCollageConfigs(pattern, min, boxMaxHeight)
-            }
+        // Cálculo puro e síncrono — buildCollageConfigs é O(1), não precisa de coroutine.
+        // Antes isso era um produceState rodando em Dispatchers.Default, o que causava
+        // coroutines empilhadas a cada troca de pattern + ida/volta de tela, saturando
+        // o pool compartilhado e travando a UI.
+        val shapeConfigs = remember(pattern, boxMaxHeight, height) {
+            val min = minOf(300.dp, height)
+            buildCollageConfigs(pattern, min, boxMaxHeight)
         }
 
         if (shapeConfigs.isNotEmpty()) {
-            val (topConfigs, bottomConfigs) = shapeConfigs.take(3) to shapeConfigs.drop(3)
+            val topConfigs = remember(shapeConfigs) { shapeConfigs.take(3) }
+            val bottomConfigs = remember(shapeConfigs) { shapeConfigs.drop(3) }
 
             Column(Modifier.fillMaxSize()) {
-                Box(Modifier.fillMaxWidth().height(boxMaxHeight * 0.6f)) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(boxMaxHeight * 0.6f)
+                ) {
                     topConfigs.forEachIndexed { idx, cfg ->
                         songsToShow.getOrNull(idx)?.let { song ->
                             CollageCard(
                                 modifier = Modifier.align(cfg.align),
-                                request = requests[idx],
+                                request = requests.getOrNull(idx),
                                 cfg = cfg,
                                 floatPhase = floatPhase + idx * 0.55f,
                                 index = idx,
@@ -180,12 +181,16 @@ fun AlbumArtCollage(
                         }
                     }
                 }
-                Box(Modifier.fillMaxWidth().height(boxMaxHeight * 0.4f)) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(boxMaxHeight * 0.4f)
+                ) {
                     bottomConfigs.forEachIndexed { j, cfg ->
                         songsToShow.getOrNull(j + 3)?.let { song ->
                             CollageCard(
                                 modifier = Modifier.align(cfg.align),
-                                request = requests[j + 3],
+                                request = requests.getOrNull(j + 3),
                                 cfg = cfg,
                                 floatPhase = floatPhase + (j + 3) * 0.55f,
                                 index = j + 3,
@@ -241,6 +246,7 @@ private fun CollageCard(
 
     val surface = MaterialTheme.colorScheme.surface
     val primary = MaterialTheme.colorScheme.primary
+    val interactionSource = remember { MutableInteractionSource() }
 
     Box(
         modifier = modifier
@@ -258,7 +264,7 @@ private fun CollageCard(
             }
             .size(cfg.width, cfg.height)
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null
             ) { onSongClick(song) }
             .drawBehind {
@@ -273,7 +279,10 @@ private fun CollageCard(
                 )
             }
             .clip(cfg.shape)
-            .background(shape = cfg.shape, color = MaterialTheme.colorScheme.surfaceContainerHigh)
+            .background(
+                shape = cfg.shape,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh
+            )
             .border(
                 width = 1.dp,
                 brush = Brush.linearGradient(
