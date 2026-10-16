@@ -84,9 +84,8 @@ fun AlbumArtCollage(
 
     val aurora = rememberInfiniteTransition(label = "collageAurora")
 
-    // ⚠️ NÃO usar `by` aqui. `by` lê o valor em composição sempre que o state muda,
-    // e é exatamente isso que causa a tempestade de recomposições.
-    // Guardamos State<Float> e lemos só dentro de escopos de draw/layer.
+    // NÃO usar `by` aqui. Guardamos State<Float> e lemos apenas dentro de
+    // escopos de draw/layer, para não invalidar composição a cada frame.
     val auroraAngleState: State<Float> = aurora.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
@@ -121,7 +120,7 @@ fun AlbumArtCollage(
             modifier = Modifier
                 .matchParentSize()
                 .drawBehind {
-                    // auroraAngleState.value lido em escopo de draw — não recompõe
+                    // Lido em escopo de draw: não invalida composição.
                     val a = Math.toRadians(auroraAngleState.value.toDouble())
                     val cx = size.width / 2f
                     val cy = size.height / 2f
@@ -152,7 +151,7 @@ fun AlbumArtCollage(
                 }
         )
 
-        // Cálculo puro e memoizado. buildCollageConfigs é O(1), não precisa de coroutine.
+        // Cálculo puro e síncrono. buildCollageConfigs é O(1), não precisa de coroutine.
         val shapeConfigs = remember(pattern, boxMaxHeight, height) {
             val min = minOf(300.dp, height)
             buildCollageConfigs(pattern, min, boxMaxHeight)
@@ -174,7 +173,7 @@ fun AlbumArtCollage(
                                 modifier = Modifier.align(cfg.align),
                                 request = requests.getOrNull(idx),
                                 cfg = cfg,
-                                floatPhase = floatPhaseState,      // passa o STATE, não o valor
+                                floatPhase = floatPhaseState,
                                 phaseOffset = idx * 0.55f,
                                 index = idx,
                                 song = song,
@@ -249,8 +248,6 @@ private fun CollageCard(
     val primary = MaterialTheme.colorScheme.primary
     val interactionSource = remember { MutableInteractionSource() }
 
-    // Memoizado: não depende da animação, não precisa ser recriado
-    // a cada (agora inexistente) recomposição por frame.
     val borderBrush = remember {
         Brush.linearGradient(
             colors = listOf(
@@ -264,23 +261,31 @@ private fun CollageCard(
     Box(
         modifier = modifier
             .offset(cfg.offsetX, cfg.offsetY)
+            .size(cfg.width, cfg.height)
+
+            // CAMADA EXTERNA: apenas transformações animadas (translation/rotation/scale).
+            // Não seta shape nem shadowElevation -> invalidar essa camada é barato.
             .graphicsLayer {
-                // ✅ Leitura do state AQUI dentro do graphicsLayer.
-                // Só a camada é invalidada por frame — a composição NÃO acontece.
                 val phase = floatPhase.value + phaseOffset
                 val bob = sin(phase) * 8f
                 val sway = cos(phase * 0.7f) * 3f
                 translationY = bob
                 translationX = sway
                 rotationZ = cfg.rot + sway * 0.08f
-                shadowElevation = 24f
-                shape = cfg.shape
-                clip = false
                 val base = if (index == 0) 1.03f else 1f
                 scaleX = base
                 scaleY = base
             }
-            .size(cfg.width, cfg.height)
+
+            // CAMADA INTERNA: estática. Shape + sombra ficam AQUI,
+            // sem ler animação, então a sombra é rasterizada UMA vez
+            // e o outline do RoundedStarShape é calculado uma vez (cache).
+            .graphicsLayer {
+                shape = cfg.shape
+                clip = true
+                shadowElevation = 6f
+            }
+
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
@@ -296,7 +301,6 @@ private fun CollageCard(
                     radius = r
                 )
             }
-            .clip(cfg.shape)
             .background(
                 shape = cfg.shape,
                 color = MaterialTheme.colorScheme.surfaceContainerHigh

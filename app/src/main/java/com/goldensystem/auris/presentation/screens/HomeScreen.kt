@@ -286,32 +286,38 @@ fun HomeScreen(
                     }
 
                     if (yourMixSongs.isNotEmpty()) {
-                        item(key = "album_art_collage", contentType = "album_art_collage") {
-                            val basePattern = settingsUiState.collagePattern
-                            val isAutoRotate = settingsUiState.collageAutoRotate
-                            val patterns = remember { CollagePattern.entries }
-                            val activePattern = if (isAutoRotate) {
-                                var rotationIndex by rememberSaveable { mutableIntStateOf(-1) }
-                                LaunchedEffect(Unit) { rotationIndex++ }
-                                remember(rotationIndex) { patterns[rotationIndex.coerceAtLeast(0) % patterns.size] }
-                            } else basePattern
+    item(key = "album_art_collage", contentType = "album_art_collage") {
+        val basePattern = settingsUiState.collagePattern
+        val isAutoRotate = settingsUiState.collageAutoRotate
 
-                            AlbumArtCollage(
-                                modifier = Modifier.fillMaxWidth(),
-                                songs = yourMixSongs,
-                                padding = 14.dp,
-                                height = 420.dp,
-                                pattern = activePattern,
-                                onSongClick = { song ->
-                                    if (usesFallbackHomeMix) {
-                                        playerViewModel.showAndPlaySongFromLibrary(song, queueName = "Your Mix")
-                                    } else {
-                                        playerViewModel.showAndPlaySong(song, yourMixSongs, "Your Mix")
-                                    }
-                                }
-                            )
-                        }
-                    }
+        // Estável entre recomposições: NÃO incrementa a cada entrada em composição.
+        // Sorteia uma vez por sessão e mantém.
+        val activePattern = if (isAutoRotate) {
+            val patterns = remember { CollagePattern.entries }
+            val stableIndex = rememberSaveable {
+                (0 until patterns.size).random()
+            }
+            patterns[stableIndex % patterns.size]
+        } else {
+            basePattern
+        }
+
+        AlbumArtCollage(
+            modifier = Modifier.fillMaxWidth(),
+            songs = yourMixSongs,
+            padding = 14.dp,
+            height = 420.dp,
+            pattern = activePattern,
+            onSongClick = { song ->
+                if (usesFallbackHomeMix) {
+                    playerViewModel.showAndPlaySongFromLibrary(song, queueName = "Your Mix")
+                } else {
+                    playerViewModel.showAndPlaySong(song, yourMixSongs, "Your Mix")
+                }
+            }
+        )
+    }
+}
 
                     if (dailyMixSongs.isNotEmpty()) {
                         item(key = "daily_mix_section", contentType = "daily_mix_section") {

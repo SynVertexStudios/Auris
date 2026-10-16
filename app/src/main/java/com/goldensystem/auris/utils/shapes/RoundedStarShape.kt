@@ -12,7 +12,7 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * Shape describing star with rounded corners
+ * Shape describing star with rounded corners.
  *
  * Note: The shape draws within the minimum of provided width and height so can't be used to create stretched shape.
  *
@@ -25,48 +25,72 @@ class RoundedStarShape(
     private val sides: Int,
     private val curve: Double = 0.09,
     private val rotation: Float = 0f,
-    iterations: Int = 360,
-
-    ) : Shape {
+    iterations: Int = 180,
+) : Shape {
 
     private companion object {
         const val TWO_PI = 2 * PI
     }
 
-    private val steps = (TWO_PI) / min(iterations, 360)
+    private val steps = TWO_PI / min(iterations, 360)
     private val rotationDegree = (PI / 180) * rotation
+
+    // Cache do outline por (size, density, layoutDirection).
+    // Sem isso, cada re-render da camada de sombra recria um Path com
+    // centenas de lineTo + trig calls. Isso saturava a GPU/CPU.
+    private var cachedSize: Size = Size.Zero
+    private var cachedDensity: Float = 0f
+    private var cachedLayoutDirection: LayoutDirection? = null
+    private var cachedOutline: Outline? = null
 
     override fun createOutline(
         size: Size,
         layoutDirection: LayoutDirection,
         density: Density
-    ): Outline = Outline.Generic(Path().apply {
-        val r = min(size.height, size.width) * 0.4 * mapRange(1.0, 0.0, 0.5, 1.0, curve)
-
-        val xCenter = size.width * .5f
-        val yCenter = size.height * .5f
-
-        fun pointAt(t: Double): Pair<Float, Float> {
-            val x = r * (cos(t - rotationDegree) * (1 + curve * cos(sides * t)))
-            val y = r * (sin(t - rotationDegree) * (1 + curve * cos(sides * t)))
-            return (x + xCenter).toFloat() to (y + yCenter).toFloat()
+    ): Outline {
+        val d = density.density
+        cachedOutline?.let { cached ->
+            if (cachedSize == size &&
+                cachedDensity == d &&
+                cachedLayoutDirection == layoutDirection
+            ) {
+                return cached
+            }
         }
 
-        val (startX, startY) = pointAt(0.0)
-        moveTo(startX, startY)
+        val outline = Outline.Generic(Path().apply {
+            val r = min(size.height, size.width) * 0.4 *
+                mapRange(1.0, 0.0, 0.5, 1.0, curve)
 
-        var t = steps
-        while (t < TWO_PI) {
-            val (x, y) = pointAt(t)
-            lineTo(x, y)
-            t += steps
-        }
+            val xCenter = size.width * .5f
+            val yCenter = size.height * .5f
 
-        close()
-    })
+            fun pointAt(t: Double): Pair<Float, Float> {
+                val x = r * (cos(t - rotationDegree) * (1 + curve * cos(sides * t)))
+                val y = r * (sin(t - rotationDegree) * (1 + curve * cos(sides * t)))
+                return (x + xCenter).toFloat() to (y + yCenter).toFloat()
+            }
 
+            val (startX, startY) = pointAt(0.0)
+            moveTo(startX, startY)
 
-    private fun mapRange(a: Double, b: Double, c: Double, d: Double, x: Double): Double {
-        return (x - a) / (b - a) * (d - c) + c
+            var t = steps
+            while (t < TWO_PI) {
+                val (x, y) = pointAt(t)
+                lineTo(x, y)
+                t += steps
+            }
+
+            close()
+        })
+
+        cachedSize = size
+        cachedDensity = d
+        cachedLayoutDirection = layoutDirection
+        cachedOutline = outline
+        return outline
     }
+
+    private fun mapRange(a: Double, b: Double, c: Double, d: Double, x: Double): Double =
+        (x - a) / (b - a) * (d - c) + c
 }
