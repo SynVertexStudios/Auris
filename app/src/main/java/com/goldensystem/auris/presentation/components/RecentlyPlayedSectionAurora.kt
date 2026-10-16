@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -57,9 +56,6 @@ private const val HomeRecentlyPlayedPillsLimit = 10
 private const val HomeRecentlyPlayedPillsPerColumn = 3
 private val HomeRecentlyPlayedPillArtSize = 40.dp
 private val HomeRecentlyPlayedWidthSteps = listOf(152.dp, 170.dp, 188.dp, 208.dp, 226.dp)
-
-private data class RecentlyPlayedPillCell(val item: RecentlyPlayedSongUiModel, val width: Dp)
-private data class RecentlyPlayedPillRow(val pills: List<RecentlyPlayedPillCell>, val contentWidth: Dp)
 
 @Composable
 fun RecentlyPlayedSectionAurora(
@@ -282,7 +278,7 @@ private fun RecentlyPlayedPillAurora(
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     targetSize = SmartImageCompactListTargetSize,
-                    modifier = Modifier.fillMaxSize().clip(CircleShape)
+                    modifier = Modifier.fillMaxWidth().clip(CircleShape)
                 )
             }
             Column(

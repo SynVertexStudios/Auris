@@ -54,9 +54,6 @@ private const val HomeRecentlyPlayedPillsPerColumn = 3
 private val HomeRecentlyPlayedPillArtSize = 38.dp
 private val HomeRecentlyPlayedWidthSteps = listOf(148.dp, 166.dp, 184.dp, 202.dp, 220.dp)
 
-private data class RecentlyPlayedPillCell(val item: RecentlyPlayedSongUiModel, val width: Dp)
-private data class RecentlyPlayedPillRow(val pills: List<RecentlyPlayedPillCell>, val contentWidth: Dp)
-
 @Composable
 fun RecentlyPlayedSectionLegacy(
     songs: List<RecentlyPlayedSongUiModel>,
