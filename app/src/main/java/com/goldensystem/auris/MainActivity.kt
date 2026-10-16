@@ -2,6 +2,8 @@ package com.goldensystem.auris
 
 import com.goldensystem.auris.presentation.navigation.navigateSafely
 import com.goldensystem.auris.presentation.screens.PiracyDialog
+import com.goldensystem.auris.presentation.components.LocalUseAuroraGlassUi
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import com.goldensystem.auris.presentation.screens.SplashScreen
 import com.goldensystem.auris.data.gdrive.GDriveRepository
@@ -821,10 +823,14 @@ Trace.endSection()
             userPreferencesRepository.clearDeprecatedPlayerSheetPreference()
         }
 
-        CompositionLocalProvider(
-            LocalAppHapticsConfig provides appHapticsConfig,
-            LocalHapticFeedback provides scopedHapticFeedback
-        ) {
+
+val useAuroraGlassUi = remember { mutableStateOf(false) }
+
+CompositionLocalProvider(
+    LocalUseAuroraGlassUi provides useAuroraGlassUi.value,
+    LocalAppHapticsConfig provides appHapticsConfig,
+    LocalHapticFeedback provides scopedHapticFeedback,
+) {
             AppSidebarDrawer(
                 drawerState = drawerState,
                 selectedRoute = currentRoute ?: Screen.Home.route,

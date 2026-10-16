@@ -1,0 +1,434 @@
+package com.goldensystem.auris.presentation.screens
+
+import com.goldensystem.auris.presentation.navigation.navigateSafely
+import android.content.Intent
+import androidx.activity.compose.ReportDrawnWhen
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LargeExtendedFloatingActionButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.media3.common.util.UnstableApi
+import androidx.navigation.NavController
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.goldensystem.auris.R
+import com.goldensystem.auris.data.model.Song
+import com.goldensystem.auris.data.preferences.CollagePattern
+import com.goldensystem.auris.presentation.components.AlbumArtCollage
+import com.goldensystem.auris.presentation.components.BetaInfoBottomSheet
+import com.goldensystem.auris.presentation.components.Beta05CleanInstallDisclaimerDialog
+import com.goldensystem.auris.presentation.jellyfin.dashboard.JellyfinDashboardViewModel
+import com.goldensystem.auris.presentation.navidrome.dashboard.NavidromeDashboardViewModel
+import com.goldensystem.auris.presentation.components.DailyMixSection
+import com.goldensystem.auris.presentation.components.HomeGradientTopBar
+import com.goldensystem.auris.presentation.components.HomeOptionsBottomSheet
+import com.goldensystem.auris.presentation.components.MiniPlayerHeight
+import com.goldensystem.auris.presentation.components.RecentlyPlayedSection
+import com.goldensystem.auris.presentation.components.RecentlyPlayedSectionMinSongsToShow
+import com.goldensystem.auris.presentation.components.StatsOverviewCard
+import com.goldensystem.auris.presentation.model.collectRecentlyPlayedSongIds
+import com.goldensystem.auris.presentation.model.mapRecentlyPlayedSongs
+import com.goldensystem.auris.presentation.navigation.Screen
+import com.goldensystem.auris.presentation.components.StreamingProviderSheet
+import com.goldensystem.auris.presentation.viewmodel.PlayerViewModel
+import com.goldensystem.auris.presentation.viewmodel.SettingsViewModel
+import com.goldensystem.auris.presentation.viewmodel.StatsViewModel
+import kotlinx.collections.immutable.persistentListOf
+import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
+import androidx.compose.ui.res.stringResource
+import com.goldensystem.auris.ui.theme.WallpaperBackground
+
+@androidx.annotation.OptIn(UnstableApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeScreenLegacy(
+    navController: NavController,
+    paddingValuesParent: PaddingValues,
+    playerViewModel: PlayerViewModel = hiltViewModel(),
+    settingsViewModel: SettingsViewModel = hiltViewModel(),
+    navidromeViewModel: NavidromeDashboardViewModel = hiltViewModel(),
+    jellyfinViewModel: JellyfinDashboardViewModel = hiltViewModel(),
+    onOpenSidebar: () -> Unit
+) {
+    val customThemeViewModel: CustomThemeViewModel = hiltViewModel()
+    val config by customThemeViewModel.customThemeConfig.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val isBenchmarkMode = remember {
+        (context as? android.app.Activity)?.intent?.getBooleanExtra("is_benchmark", false) ?: false
+    }
+    val statsViewModel: StatsViewModel = hiltViewModel()
+    val settingsUiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
+    val dailyMixSongs by playerViewModel.dailyMixSongs.collectAsStateWithLifecycle()
+    val curatedYourMixSongs by playerViewModel.yourMixSongs.collectAsStateWithLifecycle()
+    val homeMixPreviewSongs by playerViewModel.homeMixPreviewSongs.collectAsStateWithLifecycle()
+    val playbackHistory by playerViewModel.playbackHistory.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    val usesFallbackHomeMix = remember(curatedYourMixSongs, dailyMixSongs) {
+        curatedYourMixSongs.isEmpty() && dailyMixSongs.isEmpty()
+    }
+    val yourMixSongs = remember(curatedYourMixSongs, dailyMixSongs, homeMixPreviewSongs) {
+        when {
+            curatedYourMixSongs.isNotEmpty() -> curatedYourMixSongs
+            dailyMixSongs.isNotEmpty() -> dailyMixSongs
+            else -> homeMixPreviewSongs
+        }
+    }
+    val recentSongIds = remember(playbackHistory) {
+        collectRecentlyPlayedSongIds(playbackHistory = playbackHistory, maxItems = 64)
+    }
+    val recentlyPlayedSourceSongsInitialValue = remember(recentSongIds) {
+        if (recentSongIds.isEmpty()) persistentListOf<Song>() else null
+    }
+    val recentlyPlayedSourceSongs by remember(recentSongIds, playerViewModel) {
+        playerViewModel.observeSongs(recentSongIds).map<List<Song>, List<Song>?> { it }
+    }.collectAsStateWithLifecycle(initialValue = recentlyPlayedSourceSongsInitialValue)
+    val latestRecentlyPlayedSongs = remember(playbackHistory, recentlyPlayedSourceSongs) {
+        val sourceSongs = recentlyPlayedSourceSongs ?: return@remember emptyList()
+        mapRecentlyPlayedSongs(playbackHistory = playbackHistory, songs = sourceSongs, maxItems = 64)
+    }
+    var recentlyPlayedSongs by remember { mutableStateOf(latestRecentlyPlayedSongs) }
+    val latestRecentlyPlayedSongsState = rememberUpdatedState(latestRecentlyPlayedSongs)
+
+    LaunchedEffect(latestRecentlyPlayedSongs, lifecycleOwner) {
+        val isHomeVisible = lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
+        if (recentlyPlayedSongs.isEmpty() || !isHomeVisible) {
+            recentlyPlayedSongs = latestRecentlyPlayedSongs
+        }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) {
+                recentlyPlayedSongs = latestRecentlyPlayedSongsState.value
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    val recentlyPlayedQueue = remember(recentlyPlayedSongs) {
+        recentlyPlayedSongs.map { it.song }.toImmutableList()
+    }
+
+    ReportDrawnWhen { yourMixSongs.isNotEmpty() || isBenchmarkMode }
+
+    val yourMixSong = context.getString(R.string.your_mix_song)
+
+    val currentSong by remember(playerViewModel.stablePlayerState) {
+        playerViewModel.stablePlayerState.map { it.currentSong }
+    }.collectAsStateWithLifecycle(initialValue = null)
+
+    val isShuffleEnabled by remember(playerViewModel.stablePlayerState) {
+        playerViewModel.stablePlayerState.map { it.isShuffleEnabled }.distinctUntilChanged()
+    }.collectAsStateWithLifecycle(initialValue = false)
+
+    val bottomPadding = if (currentSong != null) MiniPlayerHeight else 0.dp
+
+    var showOptionsBottomSheet by remember { mutableStateOf(false) }
+    var showBetaInfoBottomSheet by remember { mutableStateOf(false) }
+    var showStreamingProviderSheet by remember { mutableStateOf(false) }
+    var cleanInstallDisclaimerDismissedThisSession by rememberSaveable { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
+    val betaSheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+
+    val weeklyStats by statsViewModel.weeklyOverview.collectAsStateWithLifecycle()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val shouldShowCleanInstallDisclaimer =
+        settingsUiState.beta05CleanInstallDisclaimerDismissed == false &&
+            !cleanInstallDisclaimerDismissedThisSession
+
+    WallpaperBackground(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = if (config.isEnabled) Color.Transparent else MaterialTheme.colorScheme.background,
+            topBar = {
+                HomeGradientTopBar(
+                    onNavigationIconClick = { navController.navigateSafely(Screen.Settings.route) },
+                    onBetaClick = { showBetaInfoBottomSheet = true },
+                    onTelegramClick = { showStreamingProviderSheet = true },
+                    onMenuClick = { },
+                    onVideoGalleryClick = { navController.navigate(Screen.VideoGallery.route) },
+                    onCustomThemeClick = { navController.navigate(Screen.CustomThemeSettings.route) }
+                )
+            }
+        ) { innerPadding ->
+            LazyColumn(
+                state = rememberLazyListState(),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    top = innerPadding.calculateTopPadding(),
+                    bottom = paddingValuesParent.calculateBottomPadding() + 38.dp + bottomPadding
+                ),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                item(key = "your_mix_header", contentType = "your_mix_header") {
+                    YourMixHeaderLegacy(
+                        song = yourMixSong,
+                        isShuffleEnabled = isShuffleEnabled,
+                        onPlayShuffled = {
+                            if (yourMixSongs.isNotEmpty()) {
+                                if (usesFallbackHomeMix) {
+                                    playerViewModel.shuffleAllSongs(queueName = "Your Mix")
+                                } else {
+                                    playerViewModel.playSongsShuffled(
+                                        songsToPlay = yourMixSongs,
+                                        queueName = "Your Mix",
+                                        startAtZero = true
+                                    )
+                                }
+                            }
+                        }
+                    )
+                }
+
+                if (yourMixSongs.isNotEmpty()) {
+                    item(key = "album_art_collage", contentType = "album_art_collage") {
+                        val basePattern = settingsUiState.collagePattern
+                        val isAutoRotate = settingsUiState.collageAutoRotate
+                        val patterns = remember { CollagePattern.entries }
+                        val activePattern = if (isAutoRotate) {
+                            var rotationIndex by rememberSaveable { mutableIntStateOf(-1) }
+                            LaunchedEffect(Unit) { rotationIndex++ }
+                            remember(rotationIndex) { patterns[rotationIndex.coerceAtLeast(0) % patterns.size] }
+                        } else {
+                            basePattern
+                        }
+                        AlbumArtCollage(
+                            modifier = Modifier.fillMaxWidth(),
+                            songs = yourMixSongs,
+                            padding = 14.dp,
+                            height = 400.dp,
+                            pattern = activePattern,
+                            onSongClick = { song ->
+                                if (usesFallbackHomeMix) {
+                                    playerViewModel.showAndPlaySongFromLibrary(song, queueName = "Your Mix")
+                                } else {
+                                    playerViewModel.showAndPlaySong(song, yourMixSongs, "Your Mix")
+                                }
+                            }
+                        )
+                    }
+                }
+
+                if (dailyMixSongs.isNotEmpty()) {
+                    item(key = "daily_mix_section", contentType = "daily_mix_section") {
+                        DailyMixSection(
+                            songs = dailyMixSongs,
+                            onClickOpen = { navController.navigateSafely(Screen.DailyMixScreen.route) },
+                            onNavigateToAlbum = { song -> navController.navigateSafely(Screen.AlbumDetail.createRoute(song.albumId)) },
+                            onNavigateToArtist = { song -> navController.navigateSafely(Screen.ArtistDetail.createRoute(song.artistId)) },
+                            onNavigateToGenre = { song -> song.genre?.let { navController.navigateSafely(Screen.GenreDetail.createRoute(java.net.URLEncoder.encode(it, "UTF-8"))) } },
+                            playerViewModel = playerViewModel
+                        )
+                    }
+                }
+
+                if (recentlyPlayedSongs.size >= RecentlyPlayedSectionMinSongsToShow) {
+                    item(key = "recently_played_section", contentType = "recently_played_section") {
+                        RecentlyPlayedSection(
+                            songs = recentlyPlayedSongs,
+                            onSongClick = { song ->
+                                if (recentlyPlayedQueue.isNotEmpty()) {
+                                    playerViewModel.playSongs(songsToPlay = recentlyPlayedQueue, startSong = song, queueName = "Recently Played")
+                                }
+                            },
+                            onOpenAllClick = { navController.navigateSafely(Screen.RecentlyPlayed.route) },
+                            currentSongId = currentSong?.id,
+                            contentPadding = PaddingValues(start = 8.dp, end = 24.dp)
+                        )
+                    }
+                }
+
+                item(key = "listening_stats_preview", contentType = "listening_stats_preview") {
+                    StatsOverviewCard(summary = weeklyStats, onClick = { navController.navigateSafely(Screen.Stats.route) })
+                }
+            }
+        }
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .height(170.dp)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colorStops = arrayOf(
+                                0.0f to Color.Transparent,
+                                0.2f to Color.Transparent,
+                                0.8f to MaterialTheme.colorScheme.surfaceContainer,
+                                1.0f to MaterialTheme.colorScheme.surfaceContainer
+                            )
+                        )
+                    )
+            )
+        }
+    }
+
+    if (showOptionsBottomSheet) {
+        ModalBottomSheet(onDismissRequest = { showOptionsBottomSheet = false }, sheetState = sheetState) {
+            HomeOptionsBottomSheet(
+                onNavigateToMashup = {
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        if (!sheetState.isVisible) {
+                            showOptionsBottomSheet = false
+                            navController.navigateSafely(Screen.DJSpace.route)
+                        }
+                    }
+                }
+            )
+        }
+    }
+
+    if (showBetaInfoBottomSheet) {
+        ModalBottomSheet(onDismissRequest = { showBetaInfoBottomSheet = false }, sheetState = betaSheetState) {
+            BetaInfoBottomSheet(
+                navController = navController
+            )
+        }
+    }
+
+    if (showStreamingProviderSheet) {
+        val isNavidromeLoggedIn by navidromeViewModel.isLoggedIn.collectAsStateWithLifecycle()
+        val isJellyfinLoggedIn by jellyfinViewModel.isLoggedIn.collectAsStateWithLifecycle()
+        StreamingProviderSheet(
+            onDismissRequest = { showStreamingProviderSheet = false },
+            isNavidromeLoggedIn = isNavidromeLoggedIn,
+            onNavigateToNavidromeDashboard = { navController.navigateSafely(Screen.NavidromeDashboard.route) },
+            isJellyfinLoggedIn = isJellyfinLoggedIn,
+            onNavigateToJellyfinDashboard = { navController.navigateSafely(Screen.JellyfinDashboard.route) }
+        )
+    }
+
+    if (shouldShowCleanInstallDisclaimer) {
+        Beta05CleanInstallDisclaimerDialog(
+            onDismiss = { dontShowAgain ->
+                cleanInstallDisclaimerDismissedThisSession = true
+                if (dontShowAgain) {
+                    settingsViewModel.setBeta05CleanInstallDisclaimerDismissed(true)
+                }
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun YourMixHeaderLegacy(
+    song: String,
+    isShuffleEnabled: Boolean = false,
+    onPlayShuffled: () -> Unit
+) {
+    val buttonCorners = 68.dp
+    val colors = MaterialTheme.colorScheme
+    val titleStyle = rememberYourMixTitleStyleLegacy()
+
+    Box(modifier = Modifier.fillMaxWidth().height(256.dp).padding(16.dp)) {
+        Column(modifier = Modifier.align(Alignment.TopStart).padding(top = 48.dp, start = 12.dp)) {
+            Text(text = stringResource(R.string.home_your_mix_title), style = titleStyle, color = MaterialTheme.colorScheme.onSurface)
+            Text(text = song, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), modifier = Modifier.padding(start = 8.dp))
+        }
+        LargeExtendedFloatingActionButton(
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 12.dp),
+            onClick = onPlayShuffled,
+            containerColor = if (isShuffleEnabled) colors.primary else colors.surfaceContainer,
+            contentColor = if (isShuffleEnabled) colors.onPrimary else colors.onSurface,
+            shape = AbsoluteSmoothCornerShape(
+                cornerRadiusTL = buttonCorners, smoothnessAsPercentTR = 60,
+                cornerRadiusBR = buttonCorners, smoothnessAsPercentTL = 60,
+                cornerRadiusBL = buttonCorners, smoothnessAsPercentBR = 60,
+                cornerRadiusTR = buttonCorners, smoothnessAsPercentBL = 60
+            )
+        ) {
+            Icon(painter = painterResource(R.drawable.rounded_shuffle_24), contentDescription = stringResource(R.string.cd_shuffle_play), modifier = Modifier.size(36.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalTextApi::class)
+@Composable
+private fun rememberYourMixTitleStyleLegacy(): TextStyle {
+    return remember {
+        TextStyle(
+            fontFamily = FontFamily(
+                Font(
+                    resId = R.font.gflex_variable,
+                    variationSettings = FontVariation.Settings(
+                        FontVariation.weight(636),
+                        FontVariation.width(152f),
+                        FontVariation.Setting("ROND", 50f),
+                        FontVariation.Setting("XTRA", 520f),
+                        FontVariation.Setting("YOPQ", 90f),
+                        FontVariation.Setting("YTLC", 505f)
+                    )
+                )
+            ),
+            fontWeight = FontWeight(760),
+            fontSize = 64.sp,
+            lineHeight = 62.sp
+        )
+    }
+}

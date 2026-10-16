@@ -69,19 +69,7 @@ private fun lerpFloat(start: Float, stop: Float, fraction: Float): Float {
 
 /**
  * Enhanced song list item with multi-selection support.
- * 
- * @param song The song to display
- * @param isPlaying Whether this song is currently playing
- * @param isCurrentSong Whether this is the current song in the queue (may be paused)
- * @param isLoading Whether to show loading shimmer state
- * @param showAlbumArt Whether to show the album art
- * @param albumArtSize Size of the album art thumbnail when shown
- * @param customShape Optional custom shape for the surface
- * @param isSelected Whether this item is selected in multi-selection mode
- * @param isSelectionMode Whether multi-selection mode is active
- * @param onLongPress Callback for long press gesture (activates selection)
- * @param onMoreOptionsClick Callback for more options button
- * @param onClick Callback for tap gesture
+ * (Nome mantido como `EnhancedSongListItem` para compatibilidade com o resto do app.)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -113,8 +101,6 @@ fun EnhancedSongListItem(
         label = "EnhancedSongListItemTransition"
     )
 
-    // Share one transition across the item and derive the visual properties from a
-    // couple of progress values instead of animating each color/radius independently.
     val highlightProgress by transition.animateFloat(
         transitionSpec = { tween(durationMillis = 400) },
         label = "highlightProgress"
@@ -195,7 +181,7 @@ fun EnhancedSongListItem(
                     .padding(horizontal = 13.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if(showAlbumArt) {
+                if (showAlbumArt) {
                     ShimmerBox(
                         modifier = Modifier
                             .size(albumArtSize)
@@ -203,11 +189,11 @@ fun EnhancedSongListItem(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                 }
-                
+
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(start = if(showAlbumArt) 0.dp else 4.dp)
+                        .padding(start = if (showAlbumArt) 0.dp else 4.dp)
                 ) {
                     ShimmerBox(
                         modifier = Modifier
@@ -260,16 +246,14 @@ fun EnhancedSongListItem(
                 )
                 .pointerInput(isSelectionMode) {
                     detectTapGestures(
-                        onTap = { 
+                        onTap = {
                             if (isSelectionMode) {
-                                // In selection mode, tap toggles selection
                                 onLongPress()
                             } else {
-                                onClick() 
+                                onClick()
                             }
                         },
-                        onLongPress = { 
-                            // Long press always activates/toggles selection
+                        onLongPress = {
                             onLongPress()
                         },
                         onPress = {
@@ -305,8 +289,7 @@ fun EnhancedSongListItem(
                             targetSize = Size(albumArtTargetSizePx, albumArtTargetSizePx),
                             modifier = Modifier.fillMaxSize()
                         )
-                        
-                        // Selection check overlay on album art
+
                         if (showSelectionDecoration) {
                             Box(
                                 modifier = Modifier
@@ -348,10 +331,9 @@ fun EnhancedSongListItem(
                         AutoScrollingTextOnDemand(
                             text = song.title,
                             style = MaterialTheme.typography.bodyLarge,
-                            gradientEdgeColor = MaterialTheme.colorScheme.onPrimary, 
+                            gradientEdgeColor = MaterialTheme.colorScheme.onPrimary,
                             expansionFractionProvider = { 1f },
                         )
-
                     } else {
                         Text(
                             text = song.title,
@@ -371,18 +353,18 @@ fun EnhancedSongListItem(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                
+
                 val showPlayingIndicator = isCurrentSong && !isSelectionMode
                 val showTrailingAction = showMoreOptionsButton && !isSelectionMode
 
                 if (showPlayingIndicator) {
-                     PlayingEqIcon(
-                         modifier = Modifier
-                             .padding(start = 8.dp)
-                             .size(width = 18.dp, height = 16.dp),
-                         color = contentColor,
-                         isPlaying = isPlaying
-                     )
+                    PlayingEqIcon(
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .size(width = 18.dp, height = 16.dp),
+                        color = contentColor,
+                        isPlaying = isPlaying
+                    )
                 }
 
                 if (showPlayingIndicator || showTrailingAction) {
