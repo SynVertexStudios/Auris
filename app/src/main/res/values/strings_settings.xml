@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-
+<!-- Recursos Experimentais -->
+<string name="custom_theme_experimental_section">Recursos experimentais</string>
+<string name="custom_theme_experimental_aurora_glass_title">Nova tela inicial Aurora Glass</string>
+<string name="custom_theme_experimental_aurora_glass_subtitle">Ativa o novo visual da tela inicial com efeitos de vidro e aurora animada</string>
+  
 <string name="presentation_batch_f_add_music_button">Adicionar Música</string>
 <string name="presentation_batch_f_chat_input_hint">Nome da música, artista, link...</string>
 <string name="presentation_batch_f_chat_empty_title">Nenhuma mensagem ainda</string>

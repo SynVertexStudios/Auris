@@ -824,10 +824,11 @@ Trace.endSection()
         }
 
 
-val useAuroraGlassUi = remember { mutableStateOf(false) }
+val useAuroraGlassUi by userPreferencesRepository.useAuroraGlassUiFlow
+    .collectAsStateWithLifecycle(initialValue = false)
 
 CompositionLocalProvider(
-    LocalUseAuroraGlassUi provides useAuroraGlassUi.value,
+    LocalUseAuroraGlassUi provides useAuroraGlassUi,
     LocalAppHapticsConfig provides appHapticsConfig,
     LocalHapticFeedback provides scopedHapticFeedback,
 ) {

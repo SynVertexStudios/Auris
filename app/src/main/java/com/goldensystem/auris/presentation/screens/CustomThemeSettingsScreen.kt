@@ -28,6 +28,7 @@ import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.RestartAlt
+import androidx.compose.material.icons.rounded.Science
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -35,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -58,6 +60,7 @@ import com.goldensystem.auris.R
 import com.goldensystem.auris.data.preferences.WallpaperType
 import com.goldensystem.auris.presentation.navigation.Screen
 import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
+import com.goldensystem.auris.presentation.viewmodel.ExperimentalFeaturesViewModel
 import com.goldensystem.auris.ui.theme.customColorScheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -66,10 +69,13 @@ import kotlinx.coroutines.launch
 @Composable
 fun CustomThemeSettingsScreen(
     navController: NavController,
-    viewModel: CustomThemeViewModel = hiltViewModel()
+    viewModel: CustomThemeViewModel = hiltViewModel(),
+    experimentalViewModel: ExperimentalFeaturesViewModel = hiltViewModel()
 ) {
     val config by viewModel.customThemeConfig.collectAsStateWithLifecycle()
     val colorScheme = remember(config) { customColorScheme(config, true) }
+    val useAuroraGlassUi by experimentalViewModel.useAuroraGlassUi.collectAsStateWithLifecycle()
+
     var showPresetsSheet by remember { mutableStateOf(false) }
     var isWarningExpanded by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -154,13 +160,6 @@ fun CustomThemeSettingsScreen(
                 )
             }
 
-            /* Seção: Wallpaper
-            item {
-                SettingsGroupHeader(
-                    title = stringResource(R.string.custom_theme_wallpaper_section)
-                )
-            }*/
-
             item {
                 SettingsCardItem(
                     icon = Icons.Rounded.Wallpaper,
@@ -175,13 +174,14 @@ fun CustomThemeSettingsScreen(
                     }
                 )
             }
-            
+
+            // Seção: Avançado
             item {
                 SettingsGroupHeader(
                     title = stringResource(R.string.custom_theme_advance_section)
                 )
             }
-            
+
             item {
                 SettingsCardItem(
                     icon = Icons.Rounded.ColorLens,
@@ -190,6 +190,23 @@ fun CustomThemeSettingsScreen(
                     onClick = {
                         navController.navigate(Screen.CustomTheme.route)
                     }
+                )
+            }
+
+            // ✨ Seção: Recursos experimentais
+            item {
+                SettingsGroupHeader(
+                    title = stringResource(R.string.custom_theme_experimental_section)
+                )
+            }
+
+            item {
+                SettingsToggleItem(
+                    icon = Icons.Rounded.Science,
+                    title = stringResource(R.string.custom_theme_experimental_aurora_glass_title),
+                    subtitle = stringResource(R.string.custom_theme_experimental_aurora_glass_subtitle),
+                    checked = useAuroraGlassUi,
+                    onCheckedChange = { experimentalViewModel.setUseAuroraGlassUi(it) }
                 )
             }
 
@@ -357,6 +374,71 @@ private fun SettingsCardItem(
                 Icons.Rounded.ChevronRight,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/**
+ * Item de configuração com um Switch à direita (para toggles).
+ */
+@Composable
+private fun SettingsToggleItem(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(16.dp)),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        tonalElevation = 1.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Surface(
+                modifier = Modifier.size(42.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange
             )
         }
     }

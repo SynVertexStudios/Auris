@@ -99,6 +99,10 @@ constructor(
         val PLAYLISTS_SORT_OPTION = stringPreferencesKey("playlists_sort_option")
         val FOLDERS_SORT_OPTION = stringPreferencesKey("folders_sort_option")
         val LIKED_SONGS_SORT_OPTION = stringPreferencesKey("liked_songs_sort_option")
+        
+        //nova interface Aurora glass 
+        //SYN Vertex (c)2026
+        val USE_AURORA_GLASS_UI = booleanPreferencesKey("use_aurora_glass_ui")
 
         // UI State Keys
         val LAST_LIBRARY_TAB_INDEX =
@@ -1763,6 +1767,24 @@ constructor(
             preferences[PreferencesKeys.COLLAGE_AUTO_ROTATE] = enabled
         }
     }
+    
+    // --- Experimental Features ---
+
+/**
+ * Ativa a nova interface "Aurora Glass" (visual de vidro + aurora animada).
+ * Quando `false`, usa a UI padrão do app.
+ *SYN Vertex (c)2026 ->SELO DE COPYRIGHT NAO PODE SER REMOVIDO
+ */
+val useAuroraGlassUiFlow: Flow<Boolean> =
+    dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.USE_AURORA_GLASS_UI] ?: false
+    }
+
+suspend fun setUseAuroraGlassUi(enabled: Boolean) {
+    dataStore.edit { preferences ->
+        preferences[PreferencesKeys.USE_AURORA_GLASS_UI] = enabled
+    }
+}
 
     // --- Quick Settings: Last Playlist ---
 
