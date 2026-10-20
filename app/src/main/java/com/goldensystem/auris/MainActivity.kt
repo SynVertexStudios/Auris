@@ -77,7 +77,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -182,10 +181,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var gDriveRepository: GDriveRepository
     @Inject
-    lateinit var userPreferencesRepository: UserPreferencesRepository // Inject here
+    lateinit var userPreferencesRepository: UserPreferencesRepository
     @Inject
     lateinit var themePreferencesRepository: ThemePreferencesRepository
-    // For handling shortcut navigation - using StateFlow so composables can observe changes
     private val _pendingPlaylistNavigation = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
     private val _pendingShuffleAll = kotlinx.coroutines.flow.MutableStateFlow(false)
 
@@ -218,162 +216,156 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         gDriveRepository.restoreSessionFromStorage()
 
-        // MD3 Optimization: Release Splash Screen immediately to render UI skeleton.
-        // Data loading is handled via optimistic UI and smooth transitions.
         splashScreen.setKeepOnScreenCondition { false }
 
-        // LEER SEÑAL DE BENCHMARK
         val isBenchmarkMode = intent.getBooleanExtra("is_benchmark", false)
 
         setContent {
-    var showSplash by remember { mutableStateOf(true) }
-    
-    if (showSplash) {
-        SplashScreen(
-            onAnimationComplete = {
-                showSplash = false
-            }
-        )
-    } else {
-        val systemDarkTheme = isSystemInDarkTheme()
-        val appThemeMode by themePreferencesRepository.appThemeModeFlow.collectAsStateWithLifecycle(initialValue = AppThemeMode.FOLLOW_SYSTEM)
-        val useDarkTheme = when (appThemeMode) {
-            AppThemeMode.DARK -> true
-            AppThemeMode.LIGHT -> false
-            else -> systemDarkTheme
-        }
-        val isSetupComplete by mainViewModel.isSetupComplete.collectAsStateWithLifecycle()
-        
-        var showCrashReportDialog by remember { mutableStateOf(false) }
-        var crashLogData by remember { mutableStateOf<CrashLogData?>(null) }
-        
-        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            listOf(Manifest.permission.READ_MEDIA_AUDIO, Manifest.permission.POST_NOTIFICATIONS)
-        } else {
-            listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-        }
-        @OptIn(ExperimentalPermissionsApi::class)
-        val permissionState = rememberMultiplePermissionsState(permissions = permissions)
-        val permissionsValid = permissionState.allPermissionsGranted
-        val showSetupScreen = remember(isSetupComplete, permissionsValid, isBenchmarkMode) {
-            when {
-                isBenchmarkMode -> false
-                isSetupComplete == null -> null
-                else -> !isSetupComplete!! || !permissionsValid
-            }
-        }
+            var showSplash by remember { mutableStateOf(true) }
 
-        LaunchedEffect(showSetupScreen) {
-            if (showSetupScreen == false) {
-                LogUtils.i(this, "Setup complete/skipped and permissions valid. Starting sync.")
-                mainViewModel.startSync()
-            }
-        }
+            if (showSplash) {
+                SplashScreen(
+                    onAnimationComplete = {
+                        showSplash = false
+                    }
+                )
+            } else {
+                val systemDarkTheme = isSystemInDarkTheme()
+                val appThemeMode by themePreferencesRepository.appThemeModeFlow.collectAsStateWithLifecycle(initialValue = AppThemeMode.FOLLOW_SYSTEM)
+                val useDarkTheme = when (appThemeMode) {
+                    AppThemeMode.DARK -> true
+                    AppThemeMode.LIGHT -> false
+                    else -> systemDarkTheme
+                }
+                val isSetupComplete by mainViewModel.isSetupComplete.collectAsStateWithLifecycle()
 
-        LaunchedEffect(Unit) {
-            if (!isBenchmarkMode && CrashHandler.hasCrashLog()) {
-                crashLogData = CrashHandler.getCrashLog()
-                showCrashReportDialog = true
+                var showCrashReportDialog by remember { mutableStateOf(false) }
+                var crashLogData by remember { mutableStateOf<CrashLogData?>(null) }
+
+                val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    listOf(Manifest.permission.READ_MEDIA_AUDIO, Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+                }
+                @OptIn(ExperimentalPermissionsApi::class)
+                val permissionState = rememberMultiplePermissionsState(permissions = permissions)
+                val permissionsValid = permissionState.allPermissionsGranted
+                val showSetupScreen = remember(isSetupComplete, permissionsValid, isBenchmarkMode) {
+                    when {
+                        isBenchmarkMode -> false
+                        isSetupComplete == null -> null
+                        else -> !isSetupComplete!! || !permissionsValid
+                    }
+                }
+
+                LaunchedEffect(showSetupScreen) {
+                    if (showSetupScreen == false) {
+                        LogUtils.i(this, "Setup complete/skipped and permissions valid. Starting sync.")
+                        mainViewModel.startSync()
+                    }
+                }
+
+                LaunchedEffect(Unit) {
+                    if (!isBenchmarkMode && CrashHandler.hasCrashLog()) {
+                        crashLogData = CrashHandler.getCrashLog()
+                        showCrashReportDialog = true
+                    }
+                }
+                AurisTheme(darkTheme = useDarkTheme) {
+                    AppContent(
+                        showSetupScreen = showSetupScreen,
+                        playerViewModel = playerViewModel,
+                        mainViewModel = mainViewModel,
+                        showCrashReportDialog = showCrashReportDialog,
+                        crashLogData = crashLogData,
+                        onCrashDismiss = {
+                            CrashHandler.clearCrashLog()
+                            crashLogData = null
+                            showCrashReportDialog = false
+                        }
+                    )
+                }
             }
         }
-AurisTheme(darkTheme = useDarkTheme) {
-    AppContent(
-        showSetupScreen = showSetupScreen,
-        playerViewModel = playerViewModel,
-        mainViewModel = mainViewModel,
-        showCrashReportDialog = showCrashReportDialog,
-        crashLogData = crashLogData,
-        onCrashDismiss = {
-            CrashHandler.clearCrashLog()
-            crashLogData = null
-            showCrashReportDialog = false
-        }
-    )
-}
-    }
-}
         handleIntent(intent)
     }
-    
-      @Composable
-fun AppContent(
-    showSetupScreen: Boolean?,
-    playerViewModel: PlayerViewModel,
-    mainViewModel: MainViewModel,
-    showCrashReportDialog: Boolean,
-    crashLogData: CrashLogData?,
-    onCrashDismiss: () -> Unit
-) {
-    // --- Verificação de integridade (anti-pirataria) ---
-    val piracyViewModel: PiracyViewModel = hiltViewModel()
-    val piracyUiState by piracyViewModel.uiState.collectAsState()
 
-    LaunchedEffect(Unit) {
-        piracyViewModel.checkPackageIntegrity("https://script.google.com/macros/s/AKfycbzTsGXzvoq0vM8jVwJYsQxScgyuB0gKhaCzaXipNvI1W8G9hva8jmFixivYuky71flZ/exec")
-    }
+    @Composable
+    fun AppContent(
+        showSetupScreen: Boolean?,
+        playerViewModel: PlayerViewModel,
+        mainViewModel: MainViewModel,
+        showCrashReportDialog: Boolean,
+        crashLogData: CrashLogData?,
+        onCrashDismiss: () -> Unit
+    ) {
+        val piracyViewModel: PiracyViewModel = hiltViewModel()
+        val piracyUiState by piracyViewModel.uiState.collectAsState()
 
-    when (piracyUiState) {
-        is PiracyUiState.Mismatch -> {
-            val mismatch = piracyUiState as PiracyUiState.Mismatch
-            PiracyDialog(
-                downloadUrl = mismatch.downloadUrl,
-                officialPackage = mismatch.officialPackage,
-                onExit = {
-                    (playerViewModel as? ComponentActivity)?.finishAffinity()
-                    android.os.Process.killProcess(android.os.Process.myPid())
-                }
-            )
+        LaunchedEffect(Unit) {
+            piracyViewModel.checkPackageIntegrity("https://script.google.com/macros/s/AKfycbzTsGXzvoq0vM8jVwJYsQxScgyuB0gKhaCzaXipNvI1W8G9hva8jmFixivYuky71flZ/exec")
         }
-        is PiracyUiState.Valid -> {
-            var contentVisible by remember { mutableStateOf(false) }
-            val contentAlpha by animateFloatAsState(
-                targetValue = if (contentVisible) 1f else 0f,
-                animationSpec = tween(600, easing = LinearOutSlowInEasing),
-                label = "AppContentAlpha"
-            )
-            LaunchedEffect(Unit) {
-                delay(100)
-                contentVisible = true
+
+        when (piracyUiState) {
+            is PiracyUiState.Mismatch -> {
+                val mismatch = piracyUiState as PiracyUiState.Mismatch
+                PiracyDialog(
+                    downloadUrl = mismatch.downloadUrl,
+                    officialPackage = mismatch.officialPackage,
+                    onExit = {
+                        (playerViewModel as? ComponentActivity)?.finishAffinity()
+                        android.os.Process.killProcess(android.os.Process.myPid())
+                    }
+                )
             }
-            Surface(
-                modifier = Modifier.fillMaxSize().graphicsLayer { alpha = contentAlpha },
-                color = Color.Transparent
-            ) {
-                if (showSetupScreen == null) {
-                    SetupGateLoadingScreen()
-                } else {
-                    AnimatedContent(
-                        targetState = showSetupScreen,
-                        transitionSpec = {
-                            if (targetState) {
-                                fadeIn(animationSpec = tween(400)) togetherWith fadeOut(animationSpec = tween(400))
+            is PiracyUiState.Valid -> {
+                var contentVisible by remember { mutableStateOf(false) }
+                val contentAlpha by animateFloatAsState(
+                    targetValue = if (contentVisible) 1f else 0f,
+                    animationSpec = tween(600, easing = LinearOutSlowInEasing),
+                    label = "AppContentAlpha"
+                )
+                LaunchedEffect(Unit) {
+                    delay(100)
+                    contentVisible = true
+                }
+                Surface(
+                    modifier = Modifier.fillMaxSize().graphicsLayer { alpha = contentAlpha },
+                    color = Color.Transparent
+                ) {
+                    if (showSetupScreen == null) {
+                        SetupGateLoadingScreen()
+                    } else {
+                        AnimatedContent(
+                            targetState = showSetupScreen,
+                            transitionSpec = {
+                                if (targetState) {
+                                    fadeIn(animationSpec = tween(400)) togetherWith fadeOut(animationSpec = tween(400))
+                                } else {
+                                    scaleIn(initialScale = 0.95f, animationSpec = tween(450)) + fadeIn(animationSpec = tween(450)) togetherWith
+                                            slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(450)) + fadeOut(animationSpec = tween(450))
+                                }
+                            },
+                            label = "SetupTransition"
+                        ) { shouldShowSetup ->
+                            if (shouldShowSetup) {
+                                SetupScreen(onSetupComplete = {})
                             } else {
-                                scaleIn(initialScale = 0.95f, animationSpec = tween(450)) + fadeIn(animationSpec = tween(450)) togetherWith
-                                        slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(450)) + fadeOut(animationSpec = tween(450))
+                                MainAppContent(playerViewModel, mainViewModel)
                             }
-                        },
-                        label = "SetupTransition"
-                    ) { shouldShowSetup ->
-                        if (shouldShowSetup) {
-                            SetupScreen(onSetupComplete = {})
-                        } else {
-                            MainAppContent(playerViewModel, mainViewModel)
                         }
                     }
                 }
             }
         }
-    }
 
-    // Show crash report dialog if needed
-    if (showCrashReportDialog && crashLogData != null) {
-        CrashReportDialog(
-            crashLog = crashLogData!!,
-            onDismiss = onCrashDismiss
-        )
+        if (showCrashReportDialog && crashLogData != null) {
+            CrashReportDialog(
+                crashLog = crashLogData!!,
+                onDismiss = onCrashDismiss
+            )
+        }
     }
-}
-
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -384,14 +376,12 @@ fun AppContent(
         if (intent == null) return
 
         when {
-            // Handle shuffle all shortcut / tile
             intent.action == MainActivityIntentContract.ACTION_SHUFFLE_ALL -> {
                 android.util.Log.d("TileDebug", "handleIntent: ACTION_SHUFFLE_ALL received")
                 playerViewModel.triggerShuffleAllFromTile()
-                intent.action = null // Clear action to prevent re-triggering
+                intent.action = null
             }
-            
-            // Handle playlist shortcut
+
             intent.action == MainActivityIntentContract.ACTION_OPEN_PLAYLIST -> {
                 intent.getStringExtra(MainActivityIntentContract.EXTRA_PLAYLIST_ID)?.let { playlistId ->
                     _pendingPlaylistNavigation.value = playlistId
@@ -418,23 +408,23 @@ fun AppContent(
                 }
                 clearExternalIntentPayload(intent)
             }
-            
+
             intent.action == "com.goldensystem.auris.ACTION_PLAY_SONG" -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                     intent.getParcelableExtra("song", com.goldensystem.auris.data.model.Song::class.java)?.let { song ->
-                         playerViewModel.playSong(song)
-                     }
+                    intent.getParcelableExtra("song", com.goldensystem.auris.data.model.Song::class.java)?.let { song ->
+                        playerViewModel.playSong(song)
+                    }
                 } else {
-                     @Suppress("DEPRECATION")
-                     intent.getParcelableExtra<com.goldensystem.auris.data.model.Song>("song")?.let { song ->
-                         playerViewModel.playSong(song)
-                     }
+                    @Suppress("DEPRECATION")
+                    intent.getParcelableExtra<com.goldensystem.auris.data.model.Song>("song")?.let { song ->
+                        playerViewModel.playSong(song)
+                    }
                 }
                 intent.action = null
             }
         }
     }
-    
+
     private fun resolveStreamUri(intent: Intent): android.net.Uri? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent.getParcelableExtra(android.content.Intent.EXTRA_STREAM, android.net.Uri::class.java)?.let { return it }
@@ -531,23 +521,19 @@ fun AppContent(
         val isLibraryEmpty by mainViewModel.isLibraryEmpty.collectAsStateWithLifecycle()
         val hasCompletedInitialSync by mainViewModel.hasCompletedInitialSync.collectAsStateWithLifecycle()
         val syncProgress by mainViewModel.syncProgress.collectAsStateWithLifecycle()
-        
-        // isMediaControllerReady used below for playlist navigation gate
+
         val isMediaControllerReady by playerViewModel.isMediaControllerReady.collectAsStateWithLifecycle()
-        
-        // Observe pending playlist navigation
+
         val pendingPlaylistNav by _pendingPlaylistNavigation.collectAsStateWithLifecycle()
         var processedPlaylistId by remember { mutableStateOf<String?>(null) }
-        
+
         LaunchedEffect(pendingPlaylistNav, isMediaControllerReady) {
             val playlistId = pendingPlaylistNav
-            // Only process if we have a new playlist ID that hasn't been processed yet
             if (playlistId != null && playlistId != processedPlaylistId && isMediaControllerReady) {
                 processedPlaylistId = playlistId
-                // Wait for navigation graph to be ready (retry with delay)
                 var success = false
                 var attempts = 0
-                while (!success && attempts < 50) { // 5 seconds max
+                while (!success && attempts < 50) {
                     try {
                         success = navController.navigateSafely(Screen.PlaylistDetail.createRoute(playlistId))
                         if (success) {
@@ -562,46 +548,36 @@ fun AppContent(
                     }
                 }
             } else if (playlistId == null) {
-                // Reset so the same playlist can be opened again
                 processedPlaylistId = null
             }
         }
 
-        // ===== SISTEMA DE ATUALIZAÇÃO (JSON via Apps Script) =====
         val updateViewModel: UpdateViewModel = hiltViewModel()
         val showUpdateOverlay by updateViewModel.showOverlay.collectAsStateWithLifecycle()
         val updateInfo by updateViewModel.updateInfo.collectAsStateWithLifecycle()
 
         LaunchedEffect(Unit) {
-            delay(1000) // pequeno delay para não travar a inicialização
+            delay(1000)
             updateViewModel.checkForUpdate(
-                scriptUrl = "https://script.google.com/macros/s/AKfycbzTsGXzvoq0vM8jVwJYsQxScgyuB0gKhaCzaXipNvI1W8G9hva8jmFixivYuky71flZ/exec", 
+                scriptUrl = "https://script.google.com/macros/s/AKfycbzTsGXzvoq0vM8jVwJYsQxScgyuB0gKhaCzaXipNvI1W8G9hva8jmFixivYuky71flZ/exec",
                 currentVersion = BuildConfig.VERSION_NAME
             )
         }
-        // =================================
 
-        // Estado para controlar si el indicador de carga puede mostrarse después de un delay
         var canShowLoadingIndicator by remember { mutableStateOf(false) }
-        // Track when the loading indicator was first shown for minimum display time
         var loadingShownTimestamp by remember { mutableStateOf(0L) }
-        val minimumDisplayDuration = 1500L // Show loading for at least 1.5 seconds
+        val minimumDisplayDuration = 1500L
 
         val shouldPotentiallyShowLoading = isSyncing && isLibraryEmpty && !hasCompletedInitialSync
 
         LaunchedEffect(shouldPotentiallyShowLoading) {
             if (shouldPotentiallyShowLoading) {
-                // Espera un breve período antes de permitir que se muestre el indicador de carga
-                // Ajusta este valor según sea necesario (por ejemplo, 300-500 ms)
                 delay(300L)
-                // Vuelve a verificar la condición después del delay,
-                // ya que el estado podría haber cambiado.
                 if (mainViewModel.isSyncing.value && mainViewModel.isLibraryEmpty.value) {
                     canShowLoadingIndicator = true
                     loadingShownTimestamp = System.currentTimeMillis()
                 }
             } else {
-                // Ensure minimum display time before hiding
                 if (canShowLoadingIndicator && loadingShownTimestamp > 0) {
                     val elapsed = System.currentTimeMillis() - loadingShownTimestamp
                     val remaining = minimumDisplayDuration - elapsed
@@ -615,56 +591,52 @@ fun AppContent(
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
+            MainUI(playerViewModel, navController)
 
-    MainUI(playerViewModel, navController)
+            if (canShowLoadingIndicator) {
+                LoadingOverlay(syncProgress)
+            }
 
-    // Loading
-    if (canShowLoadingIndicator) {
-        LoadingOverlay(syncProgress)
+            if (showUpdateOverlay && updateInfo != null) {
+                UpdateScreen(
+                    updateInfo = updateInfo!!,
+                    onCancelClick = {
+                        updateViewModel.dismissUpdate()
+                    },
+                    onRemindLaterClick = {
+                        updateViewModel.remindLater()
+                    }
+                )
+            }
+        }
+
+        Trace.endSection()
     }
-
-    // TESTE DO UPDATE SCREEN
-    if (showUpdateOverlay && updateInfo != null) {
-    UpdateScreen(
-        updateInfo = updateInfo!!,
-        onCancelClick = {
-            updateViewModel.dismissUpdate()
-        },
-        onRemindLaterClick = {
-            updateViewModel.remindLater()
-          }
-      )
-  }
-}
-
-Trace.endSection()
-}
 
     @androidx.annotation.OptIn(UnstableApi::class)
     @Composable
     private fun MainUI(playerViewModel: PlayerViewModel, navController: NavHostController) {
         Trace.beginSection("MainActivity.MainUI")
-       //Aqui e onde define os botoes da tela inicial(inicio, pesquisar, musicas)
         val commonNavItems = persistentListOf(
-   BottomNavItem(
-        stringResource(R.string.inicio),
-        R.drawable.rounded_home_24,
-        R.drawable.home_24_rounded_filled,
-        Screen.Home
-       ),
-    BottomNavItem(
-        stringResource(R.string.pesquisar),
-        R.drawable.rounded_search_24,
-        R.drawable.rounded_search_24,
-        Screen.Search
-       ),
-    BottomNavItem(
-        stringResource(R.string.musicas),
-        R.drawable.rounded_library_music_24,
-        R.drawable.round_library_music_24,
-        Screen.Library
-      )
-  )
+            BottomNavItem(
+                stringResource(R.string.inicio),
+                R.drawable.rounded_home_24,
+                R.drawable.home_24_rounded_filled,
+                Screen.Home
+            ),
+            BottomNavItem(
+                stringResource(R.string.pesquisar),
+                R.drawable.rounded_search_24,
+                R.drawable.rounded_search_24,
+                Screen.Search
+            ),
+            BottomNavItem(
+                stringResource(R.string.musicas),
+                R.drawable.rounded_library_music_24,
+                R.drawable.round_library_music_24,
+                Screen.Library
+            )
+        )
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
         var isSearchBarActive by remember { mutableStateOf(false) }
@@ -823,15 +795,14 @@ Trace.endSection()
             userPreferencesRepository.clearDeprecatedPlayerSheetPreference()
         }
 
+        val useAuroraGlassUi by userPreferencesRepository.useAuroraGlassUiFlow
+            .collectAsStateWithLifecycle(initialValue = false)
 
-val useAuroraGlassUi by userPreferencesRepository.useAuroraGlassUiFlow
-    .collectAsStateWithLifecycle(initialValue = false)
-
-CompositionLocalProvider(
-    LocalUseAuroraGlassUi provides useAuroraGlassUi,
-    LocalAppHapticsConfig provides appHapticsConfig,
-    LocalHapticFeedback provides scopedHapticFeedback,
-) {
+        CompositionLocalProvider(
+            LocalUseAuroraGlassUi provides useAuroraGlassUi,
+            LocalAppHapticsConfig provides appHapticsConfig,
+            LocalHapticFeedback provides scopedHapticFeedback,
+        ) {
             AppSidebarDrawer(
                 drawerState = drawerState,
                 selectedRoute = currentRoute ?: Screen.Home.route,
@@ -850,111 +821,213 @@ CompositionLocalProvider(
                         else -> {}
                     }
                 }
-        ) {
+            ) {
 
                 Scaffold(
-                modifier = Modifier.fillMaxSize(),
-                containerColor = Color.Transparent,
-               bottomBar = {
-    if (shouldRenderNavigationBar) {
-        val playerContentExpansionFraction = playerViewModel.playerContentExpansionFraction.value
-        val currentSongId by remember {
-            playerViewModel.stablePlayerState
-                .map { it.currentSong?.id }
-                .distinctUntilChanged()
-        }.collectAsStateWithLifecycle(initialValue = null)
-        val showPlayerContentArea = currentSongId != null
+                    modifier = Modifier.fillMaxSize(),
+                    containerColor = Color.Transparent,
+                    bottomBar = {
+                        if (shouldRenderNavigationBar) {
+                            // ✨ Lê a flag para decidir qual bloco de bottom bar desenhar
+                            val useAurora = LocalUseAuroraGlassUi.current
 
-        // ── Quanto a barra desliza pra baixo quando o player sobe
-        val navBarHideFraction = (if (showPlayerContentArea) playerContentExpansionFraction else 0f)
-            .coerceIn(0f, 1f)
+                            val playerContentExpansionFraction = playerViewModel.playerContentExpansionFraction.value
+                            val currentSongId by remember {
+                                playerViewModel.stablePlayerState
+                                    .map { it.currentSong?.id }
+                                    .distinctUntilChanged()
+                            }.collectAsStateWithLifecycle(initialValue = null)
+                            val showPlayerContentArea = currentSongId != null
 
-        // ── Raio dos cantos SUPERIORES da barra:
-        //    - sem player por cima: normal (navBarCornerRadius)
-        //    - com player por cima: precisa casar com o raio do mini player
-        //    Isso é o que faz "encaixar" com o player.
-        val topCornerRadiusTarget by remember(
-            navBarStyle,
-            showPlayerContentArea,
-            playerContentExpansionFraction,
-            navBarCornerRadius,
-        ) {
-            derivedStateOf {
-                when {
-                    navBarStyle == NavBarStyle.FULL_WIDTH ->
-                        lerp(navBarCornerRadius.dp, 26.dp, playerContentExpansionFraction)
-                    showPlayerContentArea && playerContentExpansionFraction < 0.2f ->
-                        lerp(12.dp, 26.dp, (playerContentExpansionFraction / 0.2f).coerceIn(0f, 1f))
-                    showPlayerContentArea -> 26.dp
-                    else -> navBarCornerRadius.dp
-                }
-            }
-        }
-        val animatedTopCornerRadius by animateDpAsState(
-            targetValue = topCornerRadiusTarget,
-            animationSpec = androidx.compose.animation.core.spring(
-                dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy,
-                stiffness = androidx.compose.animation.core.Spring.StiffnessMedium
-            ),
-            label = "NavBarTopCornerRadius"
-        )
+                            val navBarHideFraction = (if (showPlayerContentArea) playerContentExpansionFraction else 0f)
+                                .coerceIn(0f, 1f)
 
-        // ── Raio dos cantos INFERIORES: fica constante (o estilo que o usuário escolheu)
-        val bottomCornerRadius = if (navBarStyle == NavBarStyle.FULL_WIDTH) 0.dp else navBarCornerRadius.dp
+                            // ── Raio dos cantos SUPERIORES (compartilhado entre os 2 blocos)
+                            val topCornerRadiusTarget by remember(
+                                navBarStyle,
+                                showPlayerContentArea,
+                                playerContentExpansionFraction,
+                                navBarCornerRadius,
+                            ) {
+                                derivedStateOf {
+                                    when {
+                                        navBarStyle == NavBarStyle.FULL_WIDTH ->
+                                            lerp(navBarCornerRadius.dp, 26.dp, playerContentExpansionFraction)
+                                        showPlayerContentArea && playerContentExpansionFraction < 0.2f ->
+                                            lerp(12.dp, 26.dp, (playerContentExpansionFraction / 0.2f).coerceIn(0f, 1f))
+                                        showPlayerContentArea -> 26.dp
+                                        else -> navBarCornerRadius.dp
+                                    }
+                                }
+                            }
+                            val animatedTopCornerRadius by animateDpAsState(
+                                targetValue = topCornerRadiusTarget,
+                                animationSpec = androidx.compose.animation.core.spring(
+                                    dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy,
+                                    stiffness = androidx.compose.animation.core.Spring.StiffnessMedium
+                                ),
+                                label = "NavBarTopCornerRadius"
+                            )
+                            val bottomCornerRadius = if (navBarStyle == NavBarStyle.FULL_WIDTH) 0.dp else navBarCornerRadius.dp
 
-        // ── Medida pra deslizar a barra toda pra baixo
-        var componentHeightPx by remember { mutableStateOf(0) }
-        val density = LocalDensity.current
-        val bottomBarPaddingPx = remember(bottomBarPadding, density) {
-            with(density) { bottomBarPadding.toPx() }
-        }
-        val animatedTranslationY by remember(
-            navBarHideFraction,
-            componentHeightPx,
-            bottomBarPaddingPx,
-        ) {
-            derivedStateOf {
-                (componentHeightPx + bottomBarPaddingPx) * navBarHideFraction
-            }
-        }
+                            var componentHeightPx by remember { mutableStateOf(0) }
+                            val density = LocalDensity.current
+                            val bottomBarPaddingPx = remember(bottomBarPadding, density) {
+                                with(density) { bottomBarPadding.toPx() }
+                            }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(visibleNavBarOccupiedHeight)
-                .clipToBounds()
-        ) {
-            val onSearchIconDoubleTap = remember(playerViewModel) {
-                { playerViewModel.onSearchNavIconDoubleTapped() }
-            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(visibleNavBarOccupiedHeight)
+                                    .clipToBounds()
+                            ) {
+                                val onSearchIconDoubleTap = remember(playerViewModel) {
+                                    { playerViewModel.onSearchNavIconDoubleTapped() }
+                                }
 
-            PlayerInternalNavigationBar(
-                navController = navController,
-                navItems = commonNavItems,
-                currentRoute = currentRoute,
-                navBarStyle = navBarStyle,
-                compactMode = navBarCompactMode,
-                bottomBarPadding = bottomBarPadding,
-                onSearchIconDoubleTap = onSearchIconDoubleTap,
-                // ✨ A MÁGICA: a barra recebe os raios de cima como parâmetro
-                // e se redesenha organicamente. Uma peça só, mudando de forma.
-                topCornerRadius = animatedTopCornerRadius,
-                bottomCornerRadius = bottomCornerRadius,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(bottom = bottomBarPadding)
-                    .padding(horizontal = horizontalPadding)
-                    .onSizeChanged { componentHeightPx = it.height }
-                    .graphicsLayer {
-                        translationY = animatedTranslationY
-                        alpha = 1f
-                    }
-                    .height(navBarHeight)
-            )
-        }
-    }
-},
+                                if (useAurora) {
+                                    // ═══════════════════════════════════════════════
+                                    // ✨ BLOCO AURORA — vidro flutuante, sem Surface
+                                    // ═══════════════════════════════════════════════
+                                    val animatedTranslationY by remember(
+                                        navBarHideFraction,
+                                        componentHeightPx,
+                                        bottomBarPaddingPx,
+                                    ) {
+                                        derivedStateOf {
+                                            (componentHeightPx + bottomBarPaddingPx) * navBarHideFraction
+                                        }
+                                    }
+
+                                    PlayerInternalNavigationBar(
+                                        navController = navController,
+                                        navItems = commonNavItems,
+                                        currentRoute = currentRoute,
+                                        navBarStyle = navBarStyle,
+                                        compactMode = navBarCompactMode,
+                                        bottomBarPadding = bottomBarPadding,
+                                        onSearchIconDoubleTap = onSearchIconDoubleTap,
+                                        topCornerRadius = animatedTopCornerRadius,
+                                        bottomCornerRadius = bottomCornerRadius,
+                                        modifier = Modifier
+                                            .align(Alignment.BottomCenter)
+                                            .fillMaxWidth()
+                                            .padding(bottom = bottomBarPadding)
+                                            .padding(horizontal = horizontalPadding)
+                                            .onSizeChanged { componentHeightPx = it.height }
+                                            .graphicsLayer {
+                                                translationY = animatedTranslationY
+                                                alpha = 1f
+                                            }
+                                            .height(navBarHeight)
+                                    )
+                                } else {
+                                    // ═══════════════════════════════════════════════
+                                    // 🕰️ BLOCO LEGACY — Surface com cor/sombra/shape
+                                    // ═══════════════════════════════════════════════
+                                    val navBarElevation = 3.dp
+
+                                    val playerContentActualBottomRadiusTargetValue by remember(
+                                        navBarStyle,
+                                        showPlayerContentArea,
+                                        playerContentExpansionFraction,
+                                    ) {
+                                        derivedStateOf {
+                                            if (navBarStyle == NavBarStyle.FULL_WIDTH) {
+                                                return@derivedStateOf lerp(navBarCornerRadius.dp, 26.dp, playerContentExpansionFraction)
+                                            }
+                                            if (showPlayerContentArea) {
+                                                if (playerContentExpansionFraction < 0.2f) {
+                                                    lerp(12.dp, 26.dp, (playerContentExpansionFraction / 0.2f).coerceIn(0f, 1f))
+                                                } else {
+                                                    26.dp
+                                                }
+                                            } else {
+                                                navBarCornerRadius.dp
+                                            }
+                                        }
+                                    }
+
+                                    val playerContentActualBottomRadius by animateDpAsState(
+                                        targetValue = playerContentActualBottomRadiusTargetValue,
+                                        animationSpec = androidx.compose.animation.core.spring(
+                                            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy,
+                                            stiffness = androidx.compose.animation.core.Spring.StiffnessMedium
+                                        ),
+                                        label = "PlayerContentBottomRadius"
+                                    )
+
+                                    val animatedNavBarCornerRadius by animateDpAsState(
+                                        targetValue = navBarCornerRadius.dp,
+                                        animationSpec = tween(400),
+                                        label = "NavBarCornerRadius"
+                                    )
+
+                                    val actualShape = remember(
+                                        playerContentActualBottomRadius,
+                                        showPlayerContentArea,
+                                        navBarStyle,
+                                        animatedNavBarCornerRadius
+                                    ) {
+                                        val bottomRadius = if (navBarStyle == NavBarStyle.FULL_WIDTH) 0.dp else animatedNavBarCornerRadius
+                                        AbsoluteSmoothCornerShape(
+                                            cornerRadiusTL = playerContentActualBottomRadius,
+                                            smoothnessAsPercentBR = 60,
+                                            cornerRadiusTR = playerContentActualBottomRadius,
+                                            smoothnessAsPercentTL = 60,
+                                            cornerRadiusBL = bottomRadius,
+                                            smoothnessAsPercentTR = 60,
+                                            cornerRadiusBR = bottomRadius,
+                                            smoothnessAsPercentBL = 60
+                                        )
+                                    }
+
+                                    val shadowOverflowPx = remember(navBarElevation, density) {
+                                        with(density) { (navBarElevation * 8).toPx() }
+                                    }
+                                    val legacyTranslationY by remember(
+                                        navBarHideFraction,
+                                        componentHeightPx,
+                                        shadowOverflowPx,
+                                        bottomBarPaddingPx,
+                                    ) {
+                                        derivedStateOf {
+                                            (componentHeightPx + shadowOverflowPx + bottomBarPaddingPx) * navBarHideFraction
+                                        }
+                                    }
+
+                                    Surface(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomCenter)
+                                            .fillMaxWidth()
+                                            .padding(bottom = bottomBarPadding)
+                                            .onSizeChanged { componentHeightPx = it.height }
+                                            .graphicsLayer {
+                                                translationY = legacyTranslationY
+                                                alpha = 1f
+                                            }
+                                            .height(navBarHeight)
+                                            .padding(horizontal = horizontalPadding),
+                                        color = NavigationBarDefaults.containerColor,
+                                        shape = actualShape,
+                                        shadowElevation = navBarElevation
+                                    ) {
+                                        PlayerInternalNavigationBar(
+                                            navController = navController,
+                                            navItems = commonNavItems,
+                                            currentRoute = currentRoute,
+                                            navBarStyle = navBarStyle,
+                                            compactMode = navBarCompactMode,
+                                            bottomBarPadding = bottomBarPadding,
+                                            onSearchIconDoubleTap = onSearchIconDoubleTap,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    },
                 ) { innerPadding ->
                     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                         val density = LocalDensity.current
@@ -968,15 +1041,17 @@ CompositionLocalProvider(
                                 .map { it.currentSong?.id != null }
                                 .distinctUntilChanged()
                         }.collectAsStateWithLifecycle(initialValue = false)
-                        val routesWithHiddenMiniPlayer = remember { setOf(
-                            Screen.NavBarCrRad.route,
-                            "video_gallery",            // <-- ADICIONADO
-                            "video_player"              // <-- ADICIONADO
-                        ) }
+                        val routesWithHiddenMiniPlayer = remember {
+                            setOf(
+                                Screen.NavBarCrRad.route,
+                                "video_gallery",
+                                "video_player"
+                            )
+                        }
                         val shouldHideMiniPlayer by remember(currentRoute) {
-                            derivedStateOf { 
-                                currentRoute in routesWithHiddenMiniPlayer || 
-                                currentRoute?.startsWith("video_player") == true 
+                            derivedStateOf {
+                                currentRoute in routesWithHiddenMiniPlayer ||
+                                        currentRoute?.startsWith("video_player") == true
                             }
                         }
 
@@ -1071,7 +1146,6 @@ CompositionLocalProvider(
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     @Composable
     private fun LoadingOverlay(syncProgress: SyncProgress) {
-        // Animate progress smoothly instead of jumping in steps
         val animatedProgress by androidx.compose.animation.core.animateFloatAsState(
             targetValue = syncProgress.progress,
             animationSpec = androidx.compose.animation.core.spring(
@@ -1080,7 +1154,7 @@ CompositionLocalProvider(
             ),
             label = "SyncProgressAnimation"
         )
-        
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -1099,7 +1173,7 @@ CompositionLocalProvider(
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                
+
                 if (syncProgress.hasProgress) {
                     Spacer(modifier = Modifier.height(16.dp))
                     androidx.compose.material3.LinearWavyProgressIndicator(
@@ -1116,7 +1190,6 @@ CompositionLocalProvider(
             }
         }
     }
-
 
     @androidx.annotation.OptIn(UnstableApi::class)
     override fun onStart() {
@@ -1144,5 +1217,5 @@ CompositionLocalProvider(
 
     override fun onResume() {
         super.onResume()
-      }
-  }
+    }
+}
