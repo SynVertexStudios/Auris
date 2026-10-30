@@ -2,6 +2,7 @@ package com.goldensystem.auris.presentation.screens
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.core.Animatable
+import java.util.Locale
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.Spring
@@ -363,6 +364,13 @@ fun EqualizerScreen(
                     onDismissLoudness = { equalizerViewModel.setLoudnessDismissed(true) }
                 )
             }
+            // Speed Control
+            item(key = "speed_control") {
+             SpeedControlCard(
+                 speed = uiState.playbackSpeed,
+                  onSpeedChange = { equalizerViewModel.setPlaybackSpeed(it) }
+            )
+        }
             
             // Volume Control
             item(key = "volume_control") {
@@ -1836,4 +1844,79 @@ private fun HybridFrequencyResponseGraph(
             }
         }
      }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SpeedControlCard(
+    speed: Float,
+    onSpeedChange: (Float) -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+    var lastHaptic by remember { mutableFloatStateOf(speed) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ),
+        shape = RoundedCornerShape(24.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = stringResource(R.string.presentation_batch_d_eq_speed),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Speed,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Slider(
+                    value = speed,
+                    onValueChange = { newValue ->
+                        val currentTenths = (newValue * 10).roundToInt()
+                        val lastTenths = (lastHaptic * 10).roundToInt()
+                        if (currentTenths != lastTenths) {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            lastHaptic = newValue
+                        }
+                        onSpeedChange(newValue)
+                    },
+                    valueRange = 0.5f..2.0f,
+                    steps = 14,
+                    modifier = Modifier.weight(1f),
+                    track = { sliderState ->
+                        SliderDefaults.Track(
+                            sliderState = sliderState,
+                            modifier = Modifier.height(36.dp)
+                        )
+                    }
+                )
+
+                Text(
+                    modifier = Modifier.width(52.dp),
+                    text = String.format(Locale.US, "%.1fx", speed),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = if (speed != 1.0f) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
 }

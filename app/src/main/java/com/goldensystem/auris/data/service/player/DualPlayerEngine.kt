@@ -81,6 +81,7 @@ class DualPlayerEngine @Inject constructor(
     private var audioOffloadEnabled = !shouldDisableAudioOffloadByDefault()
     private var transitionJob: Job? = null
     private var bufferingFallbackJob: Job? = null
+    private var currentPlaybackSpeed: Float = 1.0f
     private var transitionRunning = false
 
     private lateinit var playerA: ExoPlayer
@@ -267,6 +268,25 @@ class DualPlayerEngine @Inject constructor(
      * Use this to attach audio effects like Equalizer.
      */
     fun getAudioSessionId(): Int = playerA.audioSessionId
+    
+    /**
+ * Aplica a velocidade de reprodução em ambos os players (A e B),
+ * mantendo-os sincronizados mesmo durante o crossfade.
+ * O pitch é preservado pelo ExoPlayer (não altera o tom da voz).
+ *
+ * @param speed Velocidade em 0.5x..2.0x. Valores fora do range são clampeados.
+ */
+fun setPlaybackSpeed(speed: Float) {
+    val clamped = speed.coerceIn(0.5f, 2.0f)
+    currentPlaybackSpeed = clamped
+    try {
+        if (::playerA.isInitialized) playerA.setPlaybackSpeed(clamped)
+        if (::playerB.isInitialized) playerB.setPlaybackSpeed(clamped)
+        Timber.tag("DualPlayerEngine").d("Playback speed set to %.2fx", clamped)
+    } catch (e: Exception) {
+        Timber.tag("DualPlayerEngine").e(e, "Failed to apply playback speed: $clamped")
+    }
+}
 
     private var isReleased = false
 
@@ -434,6 +454,9 @@ class DualPlayerEngine @Inject constructor(
         val volume = playerA.volume
         val pauseAtEnd = playerA.pauseAtEndOfMediaItems
         val playbackParameters: PlaybackParameters = playerA.playbackParameters
+        
+        // Mantém o campo interno em sincronia caso alguém tenha setado params direto
+        currentPlaybackSpeed = playbackParameters.speed.coerceIn(0.5f, 2.0f)
 
         playerA.removeListener(masterPlayerListener)
         playerA.release()
@@ -591,7 +614,9 @@ class DualPlayerEngine @Inject constructor(
             setWakeMode(C.WAKE_MODE_LOCAL)
             // Explicitly keep both players live so they can overlap without affecting each other
             playWhenReady = false
-            Timber.tag("DualPlayerEngine").d("Built player with audio offload %s", if (audioOffloadEnabled) "enabled" else "disabled")
+            Timber.tag("DualPlayerEngine").d("Built player with audio offload %s", if (audioOffloadEnabled) "enabled" else "disabled"
+            // Garante que um player recém-criado já nasce na velocidade atual
+            setPlaybackSpeed(currentPlaybackSpeed)
         }
     }
 
@@ -809,6 +834,8 @@ class DualPlayerEngine @Inject constructor(
             playerB.clearMediaItems()
             playerB.playWhenReady = false
             playerB.setMediaItem(resolvedItem)
+            // Garante que o player auxiliar já esteja na velocidade correta antes do crossfade
+            playerB.setPlaybackSpeed(currentPlaybackSpeed)
             
             // Wake mode is configured in buildPlayer(), so we don't reapply it per item here.
             playerB.prepare()
