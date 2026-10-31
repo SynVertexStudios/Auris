@@ -638,8 +638,6 @@ fun setPlaybackPitch(pitch: Float) {
             // Garante que um player recém-criado já nasce na velocidade atual
             setPlaybackSpeed(currentPlaybackSpeed)
             setPlaybackPitch(currentPlaybackPitch)   // ← novo
-    }
-}
         }
     }
 
