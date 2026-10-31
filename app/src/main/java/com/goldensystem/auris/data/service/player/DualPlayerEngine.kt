@@ -294,14 +294,16 @@ fun setPlaybackSpeed(speed: Float) {
  * a velocidade de reprodução intacta. Pitch 1.0 = tom original,
  * 0.5 = uma oitava abaixo, 2.0 = uma oitava acima.
  *
- * @param pitch Tom em 0.5x..2.0x. Valores fora do range são clampeados.
+ * ExoPlayer não expõe setPlaybackPitch() — usa setPlaybackParameters()
+ * combinando speed + pitch juntos.
  */
 fun setPlaybackPitch(pitch: Float) {
     val clamped = pitch.coerceIn(0.5f, 2.0f)
     currentPlaybackPitch = clamped
     try {
-        if (::playerA.isInitialized) playerA.setPlaybackPitch(clamped)
-        if (::playerB.isInitialized) playerB.setPlaybackPitch(clamped)
+        val params = PlaybackParameters(currentPlaybackSpeed, clamped)
+        if (::playerA.isInitialized) playerA.playbackParameters = params
+        if (::playerB.isInitialized) playerB.playbackParameters = params
         Timber.tag("DualPlayerEngine").d("Playback pitch set to %.2fx", clamped)
     } catch (e: Exception) {
         Timber.tag("DualPlayerEngine").e(e, "Failed to apply playback pitch: $clamped")
@@ -635,9 +637,8 @@ fun setPlaybackPitch(pitch: Float) {
             // Explicitly keep both players live so they can overlap without affecting each other
             playWhenReady = false
             Timber.tag("DualPlayerEngine").d("Built player with audio offload %s", if (audioOffloadEnabled) "enabled" else "disabled")
-            // Garante que um player recém-criado já nasce na velocidade atual
-            setPlaybackSpeed(currentPlaybackSpeed)
-            setPlaybackPitch(currentPlaybackPitch)   // ← novo
+// Aplica speed + pitch juntos (ExoPlayer não tem setPlaybackPitch separado)
+playbackParameters = PlaybackParameters(currentPlaybackSpeed, currentPlaybackPitch)
         }
     }
 
@@ -855,9 +856,8 @@ fun setPlaybackPitch(pitch: Float) {
             playerB.clearMediaItems()
             playerB.playWhenReady = false
             playerB.setMediaItem(resolvedItem)
-            // Garante que o player auxiliar já esteja na velocidade correta antes do crossfade
-            playerB.setPlaybackSpeed(currentPlaybackSpeed)
-            playerB.setPlaybackPitch(currentPlaybackPitch)  
+            // Aplica speed + pitch juntos no player auxiliar
+playerB.playbackParameters = PlaybackParameters(currentPlaybackSpeed, currentPlaybackPitch)
             
             // Wake mode is configured in buildPlayer(), so we don't reapply it per item here.
             playerB.prepare()
