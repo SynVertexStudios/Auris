@@ -12,8 +12,7 @@
 <string name="presentation_batch_f_chat_empty_title">Nenhuma mensagem ainda</string>
 <string name="presentation_batch_f_chat_empty_body">Envie o nome de uma música, artista ou link\npara começar.</string>
 <string name="presentation_batch_f_chat_synced">Sincronizado com Telegram</string>
-<string name="presentation_batch_d_eq_speed">Velocidade de reprodução</string>
-
+<string name="presentation_batch_d_eq_speed">Velocidade de reprodução</stri<string name="presentation_batch_d_eq_pitch">Tom (Pitch)</string>
 
 
   
