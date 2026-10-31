@@ -46,6 +46,7 @@ data class EqualizerUiState(
     val customPresets: List<EqualizerPreset> = emptyList(),
     val pinnedPresetsNames: List<String> = emptyList(),
     val playbackSpeed: Float = 1.0f,
+    val playbackPitch: Float = 1.0f,
 ) {
     val accessiblePresets: List<EqualizerPreset>
         get() {
@@ -86,6 +87,7 @@ class EqualizerViewModel @Inject constructor(
     private var persistVirtualizerJob: Job? = null
     private var persistLoudnessJob: Job? = null
     private var persistSpeedJob: Job? = null
+    private var persistPitchJob: Job? = null
 
     init {
         initializeEqualizer()
@@ -151,6 +153,11 @@ class EqualizerViewModel @Inject constructor(
             dualPlayerEngine.setPlaybackSpeed(savedSpeed)
             _uiState.update { it.copy(playbackSpeed = savedSpeed) }
 
+            // Apply persisted playback pitch on startup
+            val savedPitch = equalizerPreferencesRepository.playbackPitchFlow.first()
+            dualPlayerEngine.setPlaybackPitch(savedPitch)
+            _uiState.update { it.copy(playbackPitch = savedPitch) }
+
             _uiState.value = _uiState.value.copy(
                 isBassBoostSupported = equalizerManager.isBassBoostSupported(),
                 isVirtualizerSupported = equalizerManager.isVirtualizerSupported(),
@@ -167,6 +174,8 @@ class EqualizerViewModel @Inject constructor(
                     )
                     // Re-apply speed to (possibly) new player
                     dualPlayerEngine.setPlaybackSpeed(_uiState.value.playbackSpeed)
+                    // Re-apply pitch to (possibly) new player
+                    dualPlayerEngine.setPlaybackPitch(_uiState.value.playbackPitch)
                 }
             }
         }
@@ -190,7 +199,8 @@ class EqualizerViewModel @Inject constructor(
                 equalizerPreferencesRepository.equalizerViewModeFlow,
                 equalizerPreferencesRepository.customPresetsFlow,
                 equalizerPreferencesRepository.pinnedPresetsFlow,
-                equalizerPreferencesRepository.playbackSpeedFlow
+                equalizerPreferencesRepository.playbackSpeedFlow,
+                equalizerPreferencesRepository.playbackPitchFlow
             ) { values ->
                 val enabled = values[0] as Boolean
                 val presetName = values[1] as String
@@ -210,6 +220,7 @@ class EqualizerViewModel @Inject constructor(
                 val customPresets = (values[13] as? List<*>)?.filterIsInstance<EqualizerPreset>() ?: emptyList()
                 val pinnedPresets = (values[14] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
                 val playbackSpeed = values[15] as Float
+                val playbackPitch = values[16] as Float
 
                 val currentPreset = if (presetName == "custom") {
                     EqualizerPreset.custom(customBands)
@@ -238,7 +249,8 @@ class EqualizerViewModel @Inject constructor(
                     isBassBoostSupported = _uiState.value.isBassBoostSupported,
                     isVirtualizerSupported = _uiState.value.isVirtualizerSupported,
                     isLoudnessEnhancerSupported = _uiState.value.isLoudnessEnhancerSupported,
-                    playbackSpeed = playbackSpeed
+                    playbackSpeed = playbackSpeed,
+                    playbackPitch = playbackPitch
                 )
             }.collect { newState ->
                 _uiState.value = newState
@@ -438,6 +450,20 @@ class EqualizerViewModel @Inject constructor(
         }
     }
 
+    fun setPlaybackPitch(pitch: Float) {
+        val clamped = pitch.coerceIn(0.5f, 2.0f)
+        dualPlayerEngine.setPlaybackPitch(clamped)
+        _uiState.update { current ->
+            current.copy(playbackPitch = clamped)
+        }
+
+        persistPitchJob?.cancel()
+        persistPitchJob = viewModelScope.launch {
+            delay(SLIDER_PERSIST_DEBOUNCE_MS)
+            equalizerPreferencesRepository.setPlaybackPitch(clamped)
+        }
+    }
+
     fun setBassBoostDismissed(dismissed: Boolean) {
         viewModelScope.launch {
             equalizerPreferencesRepository.setBassBoostDismissed(dismissed)
@@ -487,6 +513,7 @@ class EqualizerViewModel @Inject constructor(
             Timber.tag(TAG).d("Reattaching equalizer to new audio session: $audioSessionId")
             equalizerManager.attachToAudioSessionIfNeeded(audioSessionId)
             dualPlayerEngine.setPlaybackSpeed(_uiState.value.playbackSpeed)
+            dualPlayerEngine.setPlaybackPitch(_uiState.value.playbackPitch)
         }
     }
 
@@ -504,6 +531,7 @@ class EqualizerViewModel @Inject constructor(
                 equalizerPreferencesRepository.setLoudnessEnhancerEnabled(latest.loudnessEnhancerEnabled)
                 equalizerPreferencesRepository.setLoudnessEnhancerStrength(latest.loudnessEnhancerStrength.toInt().coerceIn(0, 1000))
                 equalizerPreferencesRepository.setPlaybackSpeed(latest.playbackSpeed)
+                equalizerPreferencesRepository.setPlaybackPitch(latest.playbackPitch)
             }.onFailure { error ->
                 Timber.tag(TAG).w(error, "Failed to flush equalizer state during onCleared")
             }
@@ -516,6 +544,7 @@ class EqualizerViewModel @Inject constructor(
         persistVirtualizerJob?.cancel()
         persistLoudnessJob?.cancel()
         persistSpeedJob?.cancel()
+        persistPitchJob?.cancel()
         persistLatestStateAsync()
         super.onCleared()
         Timber.tag(TAG).d("ViewModel cleared")

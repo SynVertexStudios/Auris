@@ -39,6 +39,7 @@ class EqualizerPreferencesRepository @Inject constructor(
         val CUSTOM_PRESETS = stringPreferencesKey("custom_presets_json")
         val PINNED_PRESETS = stringPreferencesKey("pinned_presets_json")
         val PLAYBACK_SPEED = floatPreferencesKey("playback_speed")
+        val PLAYBACK_PITCH = floatPreferencesKey("playback_pitch")
     }
 
     val equalizerViewModeFlow: Flow<UserPreferencesRepository.EqualizerViewMode> = dataStore.data.map { preferences ->
@@ -119,6 +120,10 @@ class EqualizerPreferencesRepository @Inject constructor(
 
     val playbackSpeedFlow: Flow<Float> = dataStore.data.map { preferences ->
         (preferences[Keys.PLAYBACK_SPEED] ?: 1.0f).coerceIn(0.5f, 2.0f)
+    }
+
+    val playbackPitchFlow: Flow<Float> = dataStore.data.map { preferences ->
+        (preferences[Keys.PLAYBACK_PITCH] ?: 1.0f).coerceIn(0.5f, 2.0f)
     }
 
     val customPresetsFlow: Flow<List<EqualizerPreset>> = dataStore.data.map { preferences ->
@@ -220,6 +225,11 @@ class EqualizerPreferencesRepository @Inject constructor(
     suspend fun setPlaybackSpeed(speed: Float) =
         dataStore.edit { preferences ->
             preferences[Keys.PLAYBACK_SPEED] = speed.coerceIn(0.5f, 2.0f)
+        }
+
+    suspend fun setPlaybackPitch(pitch: Float) =
+        dataStore.edit { preferences ->
+            preferences[Keys.PLAYBACK_PITCH] = pitch.coerceIn(0.5f, 2.0f)
         }
 
     suspend fun setPinnedPresets(presetNames: List<String>) =

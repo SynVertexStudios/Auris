@@ -82,6 +82,7 @@ class DualPlayerEngine @Inject constructor(
     private var transitionJob: Job? = null
     private var bufferingFallbackJob: Job? = null
     private var currentPlaybackSpeed: Float = 1.0f
+    private var currentPlaybackPitch: Float = 1.0f
     private var transitionRunning = false
 
     private lateinit var playerA: ExoPlayer
@@ -269,7 +270,7 @@ class DualPlayerEngine @Inject constructor(
      */
     fun getAudioSessionId(): Int = playerA.audioSessionId
     
-    /**
+/**
  * Aplica a velocidade de reprodução em ambos os players (A e B),
  * mantendo-os sincronizados mesmo durante o crossfade.
  * O pitch é preservado pelo ExoPlayer (não altera o tom da voz).
@@ -285,6 +286,25 @@ fun setPlaybackSpeed(speed: Float) {
         Timber.tag("DualPlayerEngine").d("Playback speed set to %.2fx", clamped)
     } catch (e: Exception) {
         Timber.tag("DualPlayerEngine").e(e, "Failed to apply playback speed: $clamped")
+    }
+}
+
+/**
+ * Aplica a alteração de tom (pitch) em ambos os players, mantendo
+ * a velocidade de reprodução intacta. Pitch 1.0 = tom original,
+ * 0.5 = uma oitava abaixo, 2.0 = uma oitava acima.
+ *
+ * @param pitch Tom em 0.5x..2.0x. Valores fora do range são clampeados.
+ */
+fun setPlaybackPitch(pitch: Float) {
+    val clamped = pitch.coerceIn(0.5f, 2.0f)
+    currentPlaybackPitch = clamped
+    try {
+        if (::playerA.isInitialized) playerA.setPlaybackPitch(clamped)
+        if (::playerB.isInitialized) playerB.setPlaybackPitch(clamped)
+        Timber.tag("DualPlayerEngine").d("Playback pitch set to %.2fx", clamped)
+    } catch (e: Exception) {
+        Timber.tag("DualPlayerEngine").e(e, "Failed to apply playback pitch: $clamped")
     }
 }
 
@@ -454,9 +474,9 @@ fun setPlaybackSpeed(speed: Float) {
         val volume = playerA.volume
         val pauseAtEnd = playerA.pauseAtEndOfMediaItems
         val playbackParameters: PlaybackParameters = playerA.playbackParameters
-        
         // Mantém o campo interno em sincronia caso alguém tenha setado params direto
-        currentPlaybackSpeed = playbackParameters.speed.coerceIn(0.5f, 2.0f)
+           currentPlaybackSpeed = playbackParameters.speed.coerceIn(0.5f, 2.0f)
+           currentPlaybackPitch = playbackParameters.pitch.coerceIn(0.5f, 2.0f)   // ← novo
 
         playerA.removeListener(masterPlayerListener)
         playerA.release()
@@ -617,6 +637,9 @@ fun setPlaybackSpeed(speed: Float) {
             Timber.tag("DualPlayerEngine").d("Built player with audio offload %s", if (audioOffloadEnabled) "enabled" else "disabled")
             // Garante que um player recém-criado já nasce na velocidade atual
             setPlaybackSpeed(currentPlaybackSpeed)
+            setPlaybackPitch(currentPlaybackPitch)   // ← novo
+    }
+}
         }
     }
 
@@ -836,6 +859,7 @@ fun setPlaybackSpeed(speed: Float) {
             playerB.setMediaItem(resolvedItem)
             // Garante que o player auxiliar já esteja na velocidade correta antes do crossfade
             playerB.setPlaybackSpeed(currentPlaybackSpeed)
+            playerB.setPlaybackPitch(currentPlaybackPitch)  
             
             // Wake mode is configured in buildPlayer(), so we don't reapply it per item here.
             playerB.prepare()
