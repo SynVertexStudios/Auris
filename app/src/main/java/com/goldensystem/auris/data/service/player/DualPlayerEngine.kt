@@ -614,7 +614,7 @@ fun setPlaybackSpeed(speed: Float) {
             setWakeMode(C.WAKE_MODE_LOCAL)
             // Explicitly keep both players live so they can overlap without affecting each other
             playWhenReady = false
-            Timber.tag("DualPlayerEngine").d("Built player with audio offload %s", if (audioOffloadEnabled) "enabled" else "disabled"
+            Timber.tag("DualPlayerEngine").d("Built player with audio offload %s", if (audioOffloadEnabled) "enabled" else "disabled")
             // Garante que um player recém-criado já nasce na velocidade atual
             setPlaybackSpeed(currentPlaybackSpeed)
         }
