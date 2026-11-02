@@ -182,15 +182,13 @@ fun DeviceCapabilitiesScreen(
             }
         } else {
     DeviceCapabilitiesContent(
-        state = state,
-        performanceTier = perfState.tier,                        // ← novo
-        performanceReport = perfState.report,                    // ← novo
-        isAnalyzingPerformance = perfState.isAnalyzing,          // ← novo
-        onReanalyzePerformance = { devicePerfViewModel.reanalyze() },  // ← novo
-        lazyListState = lazyListState,
-        topPadding = currentTopBarHeightDp,
-        modifier = Modifier.fillMaxSize()
-    )
+    state = state,
+    performanceTier = perfState.tier,
+    performanceReport = perfState.report,
+    lazyListState = lazyListState,
+    topPadding = currentTopBarHeightDp,
+    modifier = Modifier.fillMaxSize()
+)
 }
 
         CollapsibleCommonTopBar(
@@ -210,8 +208,6 @@ private fun DeviceCapabilitiesContent(
     state: DeviceCapabilitiesState,
     performanceTier: DevicePerformanceTier,
     performanceReport: DevicePerformanceReport?,
-    isAnalyzingPerformance: Boolean,
-    onReanalyzePerformance: () -> Unit,
     lazyListState: LazyListState,
     topPadding: Dp,
     modifier: Modifier = Modifier
@@ -236,16 +232,15 @@ private fun DeviceCapabilitiesContent(
             )
         }
 
-        // ⬇⬇⬇ NOVO CARD ⬇⬇⬇
-        item(key = "device_performance") {
-            DevicePerformanceCard(
-                tier = performanceTier,
-                report = performanceReport,
-                isAnalyzing = isAnalyzingPerformance,
-                onReanalyze = onReanalyzePerformance
-            )
-        }
-        // ⬆⬆⬆ NOVO CARD ⬆⬆⬆
+// ⬇⬇⬇ NOVO CARD ⬇⬇⬇
+item(key = "device_performance") {
+    DevicePerformanceCard(
+        tier = performanceTier,
+        report = performanceReport,
+        deviceInfo = state.deviceInfo
+    )
+}
+// ⬆⬆⬆ NOVO CARD ⬆⬆⬆
 
         state.storageSummary?.let { storage ->
             item {
@@ -1306,8 +1301,7 @@ private fun orderedDeviceInfoEntries(deviceInfo: Map<String, String>): List<Pair
 private fun DevicePerformanceCard(
     tier: DevicePerformanceTier,
     report: DevicePerformanceReport?,
-    isAnalyzing: Boolean,
-    onReanalyze: () -> Unit,
+    deviceInfo: Map<String, String>,
     modifier: Modifier = Modifier
 ) {
     val containerColor = when (tier) {
@@ -1336,6 +1330,9 @@ private fun DevicePerformanceCard(
         DevicePerformanceTier.BOM -> stringResource(R.string.device_tier_bom_desc)
     }
 
+    // Reaproveita o que já vem no deviceInfo da tela
+    val androidVersion = deviceInfo["Android Version"] ?: "—"
+
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = AbsoluteSmoothCornerShape(32.dp, 60),
@@ -1345,7 +1342,6 @@ private fun DevicePerformanceCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Header: ícone + título + score
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -1385,14 +1381,12 @@ private fun DevicePerformanceCard(
                 }
             }
 
-            // Descrição
             Text(
                 text = tierDescription,
                 style = MaterialTheme.typography.bodyMedium,
                 color = contentColor.copy(alpha = 0.86f)
             )
 
-            // Métricas principais
             report?.let { r ->
                 Row(
                     modifier = Modifier.height(IntrinsicSize.Min),
@@ -1414,14 +1408,13 @@ private fun DevicePerformanceCard(
                     )
                     HeroMetricTile(
                         label = stringResource(R.string.device_tier_metric_android),
-                        value = r.androidSdk.toString(),
+                        value = androidVersion,
                         modifier = Modifier.weight(1f),
                         containerColor = contentColor.copy(alpha = 0.10f),
                         contentColor = contentColor
                     )
                 }
 
-                // Detalhes da pontuação
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
                         text = stringResource(R.string.device_tier_breakdown_title),
@@ -1458,38 +1451,9 @@ private fun DevicePerformanceCard(
                     }
                 }
             }
-
-            // Botão de reanalisar / loading
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (isAnalyzing) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        color = contentColor,
-                        strokeWidth = 2.dp
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.device_tier_analyzing),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = contentColor
-                    )
-                } else {
-                    Text(
-                        text = stringResource(R.string.device_tier_reanalyze),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = contentColor,
-                        modifier = Modifier.clickable { onReanalyze() }
-                    )
-                }
-            }
         }
     }
-}
+} // <--- Aqui estava o erro de sintaxe (tinha dois "}}" sobrando no seu código original, corrigido para apenas um)
 
 @Composable
 private fun BreakdownChip(

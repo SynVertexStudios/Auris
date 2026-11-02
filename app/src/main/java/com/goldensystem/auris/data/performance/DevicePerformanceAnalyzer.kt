@@ -37,11 +37,11 @@ class DevicePerformanceAnalyzer @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     companion object {
-        private const val TAG = "DevicePerfAnalyzer"
-        private const val MAX_SCORE = 12
-        private const val BAIXO_THRESHOLD = 5
-        private const val BOM_THRESHOLD = 9
-    }
+    private const val TAG = "DevicePerfAnalyzer"
+    private const val MAX_SCORE = 11
+    private const val BAIXO_THRESHOLD = 5
+    private const val BOM_THRESHOLD = 8
+}
 
     fun analyze(): DevicePerformanceReport {
         val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -73,32 +73,44 @@ class DevicePerformanceAnalyzer @Inject constructor(
             else -> 0
         }
 
-        val sdkScore = when {
-            sdk >= 34 -> 3   // Android 14+
-            sdk >= 30 -> 2   // Android 11+
-            sdk >= 28 -> 1   // Android 9+
-            else -> 0
-        }
+        // Android: peso reduzido — um celular antigo atualizado pode ser potente,
+// e um celular novo pode ser fraco. Versão do SO não determina hardware.
+val sdkScore = when {
+    sdk >= 34 -> 2   // Android 14+
+    sdk >= 30 -> 1   // Android 11+
+    else -> 0
+}
 
-        val abiScore = when {
-            abi == "arm64-v8a" -> 2
-            abi == "armeabi-v7a" -> 1
-            else -> 0
-        }
+val abiScore = when {
+    abi == "arm64-v8a" -> 2
+    abi == "armeabi-v7a" -> 1
+    else -> 0
+}
 
-        val freqScore = if (maxFreqGhz >= 2.0) 1 else 0
+val freqScore = if (maxFreqGhz >= 2.0) 1 else 0
 
-        val lowRamPenalty = if (isLowRam) -4 else 0
-        val emulatorPenalty = if (isEmulator) -3 else 0
+val lowRamPenalty = if (isLowRam) -4 else 0
+// Emulador é apenas informativo — não penaliza a nota, pois emuladores
+// podem ter hardware virtual generoso. Fica visível no breakdown pra diagnóstico.
+val emulatorPenalty = 0
 
         val total = ramScore + coresScore + sdkScore + abiScore +
                     freqScore + lowRamPenalty + emulatorPenalty
 
-        val tier = when {
-            total >= BOM_THRESHOLD -> DevicePerformanceTier.BOM
-            total >= BAIXO_THRESHOLD -> DevicePerformanceTier.MEDIO
-            else -> DevicePerformanceTier.BAIXO
-        }
+       // Android < 12 (API < 31) não suporta RenderEffect/Modifier.blur nativo.
+// Força tier BAIXO independente do hardware, pois recursos visuais
+// essenciais do app não funcionam nessas versões.
+val isUnsupportedAndroid = sdk < 31
+
+val tier = if (isUnsupportedAndroid) {
+    DevicePerformanceTier.BAIXO
+} else {
+    when {
+        total >= BOM_THRESHOLD -> DevicePerformanceTier.BOM
+        total >= BAIXO_THRESHOLD -> DevicePerformanceTier.MEDIO
+        else -> DevicePerformanceTier.BAIXO
+    }
+}
 
         val breakdown = mapOf(
             "ram" to ramScore,

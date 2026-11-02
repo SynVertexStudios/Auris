@@ -29,26 +29,7 @@ class DevicePerformanceViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            // ensureAnalyzed() só analisa na primeira abertura; depois lê do cache
-            val tier = repository.ensureAnalyzed()
-            _uiState.update { it.copy(tier = tier) }
-
-            // Ouve updates (ex: reanalyze manual em outra tela)
-            repository.tier.collect { newTier ->
-                if (newTier != null) {
-                    _uiState.update { it.copy(tier = newTier) }
-                }
-            }
-        }
-
-        // Se já houver um report em memória, usa
-        repository.lastReport.value?.let { report ->
-            _uiState.update { it.copy(report = report) }
-        }
-    }
-
-    fun reanalyze() {
-        viewModelScope.launch {
+            // Força nova análise toda vez que a tela é aberta
             _uiState.update { it.copy(isAnalyzing = true) }
             val report = repository.reanalyze()
             _uiState.update {
@@ -60,4 +41,4 @@ class DevicePerformanceViewModel @Inject constructor(
             }
         }
     }
-}
+}}
