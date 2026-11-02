@@ -14,7 +14,22 @@
 <string name="presentation_batch_f_chat_synced">Sincronizado com Telegram</string>
 <string name="presentation_batch_d_eq_speed">Velocidade de reprodução</string>
 <string name="presentation_batch_d_eq_pitch">Tom (Pitch)</string>
+<string name="device_tier_card_title">Diagnóstico de desempenho</string>
+<string name="device_tier_baixo">Baixo</string>
+<string name="device_tier_baixo_desc">Pouco desempenho. Funções pesadas estão bloqueadas e animações foram reduzidas para manter o app estável.</string>
+<string name="device_tier_medio">Médio</string>
+<string name="device_tier_medio_desc">Algumas coisas podem falhar, travar, ou fechar inesperadamente.</string>
+<string name="device_tier_bom">Bom</string>
+<string name="device_tier_bom_desc">Uso completo do app com todas as funções disponíveis.</string>
 
+<string name="device_tier_metric_ram">RAM</string>
+<string name="device_tier_metric_cores">Cores</string>
+<string name="device_tier_metric_android">Android</string>
+<string name="device_tier_breakdown_title">Detalhes da pontuação</string>
+<string name="device_tier_chip_low_ram">Low RAM</string>
+<string name="device_tier_chip_emulator">Emulador</string>
+<string name="device_tier_reanalyze">Reanalisar</string>
+<string name="device_tier_analyzing">Analisando…</string>
 
   
   <!-- ============================================ -->

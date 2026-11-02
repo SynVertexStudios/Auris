@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.content.ComponentCallbacks2
 import android.content.Context
 import android.os.Build
+import com.goldensystem.auris.data.performance.DevicePerformanceRepository
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -41,6 +42,9 @@ class AurisApplication : Application(), ImageLoaderFactory, Configuration.Provid
 
     @Inject
     lateinit var imageLoader: dagger.Lazy<ImageLoader>
+  
+    @Inject
+    lateinit var devicePerformanceRepository: dagger.Lazy<com.goldensystem.auris.data.performance.DevicePerformanceRepository>
 
     @Inject
     lateinit var telegramCoilFetcherFactory: dagger.Lazy<com.goldensystem.auris.data.image.TelegramCoilFetcher.Factory>
@@ -121,14 +125,17 @@ class AurisApplication : Application(), ImageLoaderFactory, Configuration.Provid
         ProcessLifecycleOwner.get().lifecycle.addObserver(appLifecycleObserver)
 
         startupScope.launch {
-            AlbumArtUtils.migrateLegacyCacheLocation(this@AurisApplication)
-            val savedLimit = runCatching {
-                userPreferencesRepository.get().albumArtCacheLimitMbFlow.first()
-            }.getOrNull()
-            if (savedLimit != null) {
-                AlbumArtCacheManager.configuredCacheLimitMb = savedLimit.toLong()
-            }
-        }
+    AlbumArtUtils.migrateLegacyCacheLocation(this@AurisApplication)
+    val savedLimit = runCatching {
+        userPreferencesRepository.get().albumArtCacheLimitMbFlow.first()
+    }.getOrNull()
+    if (savedLimit != null) {
+        AlbumArtCacheManager.configuredCacheLimitMb = savedLimit.toLong()
+    }
+    // Analisa hardware uma vez (primeira abertura) e salva a categoria (1/2/3).
+    // Próximas aberturas: só lê do DataStore, sem reanalisar.
+    devicePerformanceRepository.get().ensureAnalyzed()
+}
     }
 
     override fun newImageLoader(): ImageLoader {

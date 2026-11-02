@@ -3,6 +3,11 @@ package com.goldensystem.auris.presentation.screens
 import android.text.format.Formatter
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.clickable
+import com.goldensystem.auris.data.performance.DevicePerformanceReport
+import com.goldensystem.auris.data.performance.DevicePerformanceTier
+import com.goldensystem.auris.presentation.viewmodel.DevicePerformanceViewModel
+import java.util.Locale
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Arrangement
@@ -99,8 +104,11 @@ import kotlin.math.roundToInt
 fun DeviceCapabilitiesScreen(
     navController: NavController,
     viewModel: DeviceCapabilitiesViewModel = hiltViewModel(),
-    playerViewModel: PlayerViewModel
+    playerViewModel: PlayerViewModel,
+    devicePerfViewModel: DevicePerformanceViewModel = hiltViewModel()
 ) {
+    val perfState by devicePerfViewModel.uiState.collectAsStateWithLifecycle()
+    
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     val density = LocalDensity.current
@@ -173,13 +181,17 @@ fun DeviceCapabilitiesScreen(
                 CircularProgressIndicator()
             }
         } else {
-            DeviceCapabilitiesContent(
-                state = state,
-                lazyListState = lazyListState,
-                topPadding = currentTopBarHeightDp,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
+    DeviceCapabilitiesContent(
+        state = state,
+        performanceTier = perfState.tier,                        // ← novo
+        performanceReport = perfState.report,                    // ← novo
+        isAnalyzingPerformance = perfState.isAnalyzing,          // ← novo
+        onReanalyzePerformance = { devicePerfViewModel.reanalyze() },  // ← novo
+        lazyListState = lazyListState,
+        topPadding = currentTopBarHeightDp,
+        modifier = Modifier.fillMaxSize()
+    )
+}
 
         CollapsibleCommonTopBar(
             title = stringResource(R.string.settings_category_device_capabilities_title),
@@ -196,6 +208,10 @@ fun DeviceCapabilitiesScreen(
 @Composable
 private fun DeviceCapabilitiesContent(
     state: DeviceCapabilitiesState,
+    performanceTier: DevicePerformanceTier,
+    performanceReport: DevicePerformanceReport?,
+    isAnalyzingPerformance: Boolean,
+    onReanalyzePerformance: () -> Unit,
     lazyListState: LazyListState,
     topPadding: Dp,
     modifier: Modifier = Modifier
@@ -219,6 +235,17 @@ private fun DeviceCapabilitiesContent(
                 playbackCompatibility = state.playbackCompatibility
             )
         }
+
+        // ⬇⬇⬇ NOVO CARD ⬇⬇⬇
+        item(key = "device_performance") {
+            DevicePerformanceCard(
+                tier = performanceTier,
+                report = performanceReport,
+                isAnalyzing = isAnalyzingPerformance,
+                onReanalyze = onReanalyzePerformance
+            )
+        }
+        // ⬆⬆⬆ NOVO CARD ⬆⬆⬆
 
         state.storageSummary?.let { storage ->
             item {
@@ -1273,4 +1300,219 @@ private fun orderedDeviceInfoEntries(deviceInfo: Map<String, String>): List<Pair
         }
     }
     return orderedEntries
+}
+
+@Composable
+private fun DevicePerformanceCard(
+    tier: DevicePerformanceTier,
+    report: DevicePerformanceReport?,
+    isAnalyzing: Boolean,
+    onReanalyze: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val containerColor = when (tier) {
+        DevicePerformanceTier.BAIXO -> MaterialTheme.colorScheme.errorContainer
+        DevicePerformanceTier.MEDIO -> MaterialTheme.colorScheme.tertiaryContainer
+        DevicePerformanceTier.BOM -> MaterialTheme.colorScheme.primaryContainer
+    }
+    val contentColor = when (tier) {
+        DevicePerformanceTier.BAIXO -> MaterialTheme.colorScheme.onErrorContainer
+        DevicePerformanceTier.MEDIO -> MaterialTheme.colorScheme.onTertiaryContainer
+        DevicePerformanceTier.BOM -> MaterialTheme.colorScheme.onPrimaryContainer
+    }
+    val icon = when (tier) {
+        DevicePerformanceTier.BAIXO -> Icons.Rounded.Warning
+        DevicePerformanceTier.MEDIO -> Icons.Rounded.Info
+        DevicePerformanceTier.BOM -> Icons.Rounded.CheckCircle
+    }
+    val tierLabel = when (tier) {
+        DevicePerformanceTier.BAIXO -> stringResource(R.string.device_tier_baixo)
+        DevicePerformanceTier.MEDIO -> stringResource(R.string.device_tier_medio)
+        DevicePerformanceTier.BOM -> stringResource(R.string.device_tier_bom)
+    }
+    val tierDescription = when (tier) {
+        DevicePerformanceTier.BAIXO -> stringResource(R.string.device_tier_baixo_desc)
+        DevicePerformanceTier.MEDIO -> stringResource(R.string.device_tier_medio_desc)
+        DevicePerformanceTier.BOM -> stringResource(R.string.device_tier_bom_desc)
+    }
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = AbsoluteSmoothCornerShape(32.dp, 60),
+        color = containerColor
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Header: ícone + título + score
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                StatusIcon(
+                    icon = icon,
+                    containerColor = contentColor.copy(alpha = 0.12f),
+                    contentColor = contentColor
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.device_tier_card_title),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor.copy(alpha = 0.76f)
+                    )
+                    Text(
+                        text = tierLabel,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = contentColor,
+                        modifier = Modifier.semantics { heading() }
+                    )
+                }
+                report?.let { r ->
+                    Surface(
+                        shape = CircleShape,
+                        color = contentColor.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            text = "${r.totalScore}/${r.maxScore}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = contentColor,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                    }
+                }
+            }
+
+            // Descrição
+            Text(
+                text = tierDescription,
+                style = MaterialTheme.typography.bodyMedium,
+                color = contentColor.copy(alpha = 0.86f)
+            )
+
+            // Métricas principais
+            report?.let { r ->
+                Row(
+                    modifier = Modifier.height(IntrinsicSize.Min),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    HeroMetricTile(
+                        label = stringResource(R.string.device_tier_metric_ram),
+                        value = String.format(Locale.US, "%.1f GB", r.ramGb),
+                        modifier = Modifier.weight(1f),
+                        containerColor = contentColor.copy(alpha = 0.10f),
+                        contentColor = contentColor
+                    )
+                    HeroMetricTile(
+                        label = stringResource(R.string.device_tier_metric_cores),
+                        value = r.cpuCores.toString(),
+                        modifier = Modifier.weight(1f),
+                        containerColor = contentColor.copy(alpha = 0.10f),
+                        contentColor = contentColor
+                    )
+                    HeroMetricTile(
+                        label = stringResource(R.string.device_tier_metric_android),
+                        value = r.androidSdk.toString(),
+                        modifier = Modifier.weight(1f),
+                        containerColor = contentColor.copy(alpha = 0.10f),
+                        contentColor = contentColor
+                    )
+                }
+
+                // Detalhes da pontuação
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = stringResource(R.string.device_tier_breakdown_title),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = contentColor.copy(alpha = 0.76f)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        BreakdownChip("RAM", r.breakdown["ram"] ?: 0, contentColor)
+                        BreakdownChip("CPU", r.breakdown["cores"] ?: 0, contentColor)
+                        BreakdownChip("SDK", r.breakdown["sdk"] ?: 0, contentColor)
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        BreakdownChip("ABI", r.breakdown["abi"] ?: 0, contentColor)
+                        BreakdownChip("Freq", r.breakdown["freq"] ?: 0, contentColor)
+                        BreakdownChip(
+                            stringResource(R.string.device_tier_chip_low_ram),
+                            r.breakdown["lowRam"] ?: 0,
+                            contentColor
+                        )
+                        if (r.isProbablyEmulator) {
+                            BreakdownChip(
+                                stringResource(R.string.device_tier_chip_emulator),
+                                r.breakdown["emulator"] ?: 0,
+                                contentColor
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Botão de reanalisar / loading
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (isAnalyzing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = contentColor,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.device_tier_analyzing),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = contentColor
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.device_tier_reanalyze),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = contentColor,
+                        modifier = Modifier.clickable { onReanalyze() }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BreakdownChip(
+    label: String,
+    score: Int,
+    contentColor: Color
+) {
+    val chipAlpha = when {
+        score > 0 -> 0.18f
+        score < 0 -> 0.28f
+        else -> 0.08f
+    }
+    val prefix = if (score > 0) "+" else ""
+    Surface(
+        shape = CircleShape,
+        color = contentColor.copy(alpha = chipAlpha)
+    ) {
+        Text(
+            text = "$label $prefix$score",
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium,
+            color = contentColor,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        )
+    }
 }
