@@ -41,4 +41,4 @@ class DevicePerformanceViewModel @Inject constructor(
             }
         }
     }
-}}
+}

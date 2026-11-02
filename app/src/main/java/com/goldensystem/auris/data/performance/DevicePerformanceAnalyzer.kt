@@ -40,7 +40,7 @@ class DevicePerformanceAnalyzer @Inject constructor(
     private const val TAG = "DevicePerfAnalyzer"
     private const val MAX_SCORE = 11
     private const val BAIXO_THRESHOLD = 5
-    private const val BOM_THRESHOLD = 8
+    private const val BOM_THRESHOLD = 9
 }
 
     fun analyze(): DevicePerformanceReport {
