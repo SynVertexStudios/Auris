@@ -24,6 +24,10 @@ endif()
 # auris/llama/src/main/cpp/  ->  auris/llama.cpp
 set(LLAMA_SRC ${CMAKE_CURRENT_LIST_DIR}/../../../../llama.cpp)
 
+# Força a construção do target llama-common (usado pelo ai_chat.cpp)
+set(LLAMA_BUILD_COMMON ON CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+
 add_subdirectory(${LLAMA_SRC} build-llama)
 
 add_library(${CMAKE_PROJECT_NAME} SHARED ai_chat.cpp)
