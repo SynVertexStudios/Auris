@@ -1,10 +1,6 @@
-// presentation/screens/CustomThemeSettingsScreen.kt
-
 package com.goldensystem.auris.presentation.screens
 
 import androidx.compose.foundation.background
-import com.goldensystem.auris.data.preferences.CustomThemeConfig
-import androidx.compose.material3.ColorScheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,13 +19,13 @@ import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ColorLens
 import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material.icons.rounded.Wallpaper
-import androidx.compose.material.icons.rounded.Warning
-import androidx.compose.material.icons.rounded.ExpandMore
-import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material.icons.rounded.Science
+import androidx.compose.material.icons.rounded.Wallpaper
+import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,8 +34,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,9 +55,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.goldensystem.auris.R
+import com.goldensystem.auris.data.performance.DevicePerformanceTier
+import com.goldensystem.auris.data.preferences.CustomThemeConfig
 import com.goldensystem.auris.data.preferences.WallpaperType
 import com.goldensystem.auris.presentation.navigation.Screen
 import com.goldensystem.auris.presentation.viewmodel.CustomThemeViewModel
+import com.goldensystem.auris.presentation.viewmodel.DevicePerformanceViewModel
 import com.goldensystem.auris.presentation.viewmodel.ExperimentalFeaturesViewModel
 import com.goldensystem.auris.ui.theme.customColorScheme
 import kotlinx.coroutines.delay
@@ -70,16 +71,27 @@ import kotlinx.coroutines.launch
 fun CustomThemeSettingsScreen(
     navController: NavController,
     viewModel: CustomThemeViewModel = hiltViewModel(),
-    experimentalViewModel: ExperimentalFeaturesViewModel = hiltViewModel()
+    experimentalViewModel: ExperimentalFeaturesViewModel = hiltViewModel(),
+    devicePerfViewModel: DevicePerformanceViewModel = hiltViewModel()
 ) {
     val config by viewModel.customThemeConfig.collectAsStateWithLifecycle()
     val colorScheme = remember(config) { customColorScheme(config, true) }
     val useAuroraGlassUi by experimentalViewModel.useAuroraGlassUi.collectAsStateWithLifecycle()
 
+    val perfState by devicePerfViewModel.uiState.collectAsStateWithLifecycle()
+    val deviceTier = perfState.tier
+
     var showPresetsSheet by remember { mutableStateOf(false) }
-    var isWarningExpanded by remember { mutableStateOf(false) }
+    var showAuroraWarning by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     var isResetting by remember { mutableStateOf(false) }
+
+    // ✅ Auto-desativa o Aurora Glass se o aparelho for rebaixado para BAIXO
+    LaunchedEffect(deviceTier) {
+        if (deviceTier == DevicePerformanceTier.BAIXO && useAuroraGlassUi) {
+            experimentalViewModel.setUseAuroraGlassUi(false)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -93,9 +105,7 @@ fun CustomThemeSettingsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(
-                        onClick = { navController.popBackStack() }
-                    ) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             Icons.Rounded.Close,
                             contentDescription = stringResource(R.string.auth_cd_back),
@@ -200,14 +210,44 @@ fun CustomThemeSettingsScreen(
                 )
             }
 
+            // Lógica condicional do Aurora Glass por tier
             item {
-                SettingsToggleItem(
-                    icon = Icons.Rounded.Science,
-                    title = stringResource(R.string.custom_theme_experimental_aurora_glass_title),
-                    subtitle = stringResource(R.string.custom_theme_experimental_aurora_glass_subtitle),
-                    checked = useAuroraGlassUi,
-                    onCheckedChange = { experimentalViewModel.setUseAuroraGlassUi(it) }
-                )
+                when (deviceTier) {
+                    DevicePerformanceTier.BAIXO -> {
+                        SettingsToggleItem(
+                            icon = Icons.Rounded.Science,
+                            title = stringResource(R.string.custom_theme_experimental_aurora_glass_title),
+                            subtitle = stringResource(R.string.custom_theme_experimental_aurora_glass_not_supported),
+                            checked = false,
+                            enabled = false,
+                            onCheckedChange = { }
+                        )
+                    }
+                    DevicePerformanceTier.MEDIO -> {
+                        SettingsToggleItem(
+                            icon = Icons.Rounded.Science,
+                            title = stringResource(R.string.custom_theme_experimental_aurora_glass_title),
+                            subtitle = stringResource(R.string.custom_theme_experimental_aurora_glass_subtitle),
+                            checked = useAuroraGlassUi,
+                            onCheckedChange = { isChecked ->
+                                if (isChecked) {
+                                    showAuroraWarning = true
+                                } else {
+                                    experimentalViewModel.setUseAuroraGlassUi(false)
+                                }
+                            }
+                        )
+                    }
+                    DevicePerformanceTier.BOM -> {
+                        SettingsToggleItem(
+                            icon = Icons.Rounded.Science,
+                            title = stringResource(R.string.custom_theme_experimental_aurora_glass_title),
+                            subtitle = stringResource(R.string.custom_theme_experimental_aurora_glass_subtitle),
+                            checked = useAuroraGlassUi,
+                            onCheckedChange = { experimentalViewModel.setUseAuroraGlassUi(it) }
+                        )
+                    }
+                }
             }
 
             item {
@@ -220,6 +260,40 @@ fun CustomThemeSettingsScreen(
         ThemePresetsBottomSheet(
             viewModel = viewModel,
             onDismiss = { showPresetsSheet = false }
+        )
+    }
+
+    // Dialog de aviso para desempenho MÉDIO
+    if (showAuroraWarning) {
+        AlertDialog(
+            onDismissRequest = { showAuroraWarning = false },
+            icon = {
+                Icon(
+                    Icons.Rounded.Warning,
+                    contentDescription = null,
+                    tint = colorScheme.error
+                )
+            },
+            title = { Text(stringResource(R.string.custom_theme_aurora_warning_title)) },
+            text = { Text(stringResource(R.string.custom_theme_aurora_warning_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        experimentalViewModel.setUseAuroraGlassUi(true)
+                        showAuroraWarning = false
+                    }
+                ) {
+                    Text(stringResource(R.string.action_continue))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAuroraWarning = false }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            },
+            containerColor = colorScheme.surfaceContainerHigh,
+            titleContentColor = colorScheme.onSurface,
+            textContentColor = colorScheme.onSurfaceVariant
         )
     }
 }
@@ -281,7 +355,6 @@ private fun ThemePreviewHeader(
                 }
             }
 
-            // Mini preview das cores
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -354,9 +427,7 @@ private fun SettingsCardItem(
                 }
             }
 
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
@@ -379,15 +450,13 @@ private fun SettingsCardItem(
     }
 }
 
-/**
- * Item de configuração com um Switch à direita (para toggles).
- */
 @Composable
 private fun SettingsToggleItem(
     icon: ImageVector,
     title: String,
     subtitle: String,
     checked: Boolean,
+    enabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit
 ) {
     Surface(
@@ -408,37 +477,36 @@ private fun SettingsToggleItem(
             Surface(
                 modifier = Modifier.size(42.dp),
                 shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                color = MaterialTheme.colorScheme.primary.copy(alpha = if (enabled) 0.1f else 0.05f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         icon,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = if (enabled) 1f else 0.4f),
                         modifier = Modifier.size(22.dp)
                     )
                 }
             }
 
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.6f),
                     fontWeight = FontWeight.Medium
                 )
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (enabled) 1f else 0.6f)
                 )
             }
 
             Switch(
                 checked = checked,
-                onCheckedChange = onCheckedChange
+                onCheckedChange = onCheckedChange,
+                enabled = enabled
             )
         }
     }

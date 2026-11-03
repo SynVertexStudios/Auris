@@ -2,6 +2,11 @@
 <resources>
 
 <!-- Recursos Experimentais -->
+  <string name="custom_theme_experimental_aurora_glass_not_supported">Não suportado neste dispositivo</string>
+<string name="custom_theme_aurora_warning_title">Aviso de desempenho</string>
+<string name="custom_theme_aurora_warning_message">Seu dispositivo foi classificado com desempenho médio. Ativar a interface Aurora Glass pode causar travamentos, lentidão ou fechamentos inesperados. Deseja continuar?</string>
+<string name="action_continue">Continuar</string>
+<string name="action_cancel">Cancelar</string>
 <string name="custom_theme_experimental_section">Recursos experimentais</string>
 <string name="custom_theme_experimental_aurora_glass_title">Nova tela inicial Aurora Glass</string>
 <string name="custom_theme_experimental_aurora_glass_subtitle">Ativa o novo visual da tela inicial com efeitos de vidro e aurora animada</string>
