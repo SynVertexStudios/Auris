@@ -1,25 +1,25 @@
 package com.goldensystem.auris.data.ai.provider
 
+import android.content.Context
+import com.goldensystem.auris.ai.LocalModelProvider
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Factory for creating AI client instances based on provider type
- */
 @Singleton
-class AiClientFactory @Inject constructor() {
-    
-    /**
-     * Create an AI client for the specified provider
-     * @param provider The AI provider type
-     * @param apiKey The API key for the provider
-     * @return AiClient instance
-     */
+class AiClientFactory @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val localModelProvider: LocalModelProvider
+) {
     fun createClient(provider: AiProvider, apiKey: String): AiClient {
+        if (provider == AiProvider.AURIS_LOCAL) {
+            return LocalAiClient(context, localModelProvider)
+        }
+
         if (apiKey.isBlank()) {
             throw IllegalArgumentException("API Key cannot be blank for ${provider.displayName}")
         }
-        
+
         return when (provider) {
             AiProvider.GEMINI -> GeminiAiClient(apiKey)
             AiProvider.DEEPSEEK -> DeepSeekAiClient(apiKey)
@@ -55,6 +55,7 @@ class AiClientFactory @Inject constructor() {
                 defaultModelId = "google/gemini-2.0-flash-lite-preview-02-05:free",
                 providerName = "OpenRouter"
             )
+            AiProvider.AURIS_LOCAL -> error("Handled above")
         }
     }
 }

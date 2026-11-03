@@ -97,12 +97,14 @@ val emulatorPenalty = 0
         val total = ramScore + coresScore + sdkScore + abiScore +
                     freqScore + lowRamPenalty + emulatorPenalty
 
-       // Android < 12 (API < 31) não suporta RenderEffect/Modifier.blur nativo.
-// Força tier BAIXO independente do hardware, pois recursos visuais
-// essenciais do app não funcionam nessas versões.
-val isUnsupportedAndroid = sdk < 31
+// Regras de reprovação imediata — hardware não importa:
+// 1) Android < 13 (SDK < 33): sem suporte a RenderEffect/Modifier.blur nativo.
+// 2) ABI não arm64: sem suporte a código 64-bit, limita memória por processo
+//    a ~3-4GB e não recebe otimizações modernas de bibliotecas nativas.
+val isUnsupportedAndroid = sdk < 33
+val isUnsupportedAbi = abi != "arm64-v8a"
 
-val tier = if (isUnsupportedAndroid) {
+val tier = if (isUnsupportedAndroid || isUnsupportedAbi) {
     DevicePerformanceTier.BAIXO
 } else {
     when {

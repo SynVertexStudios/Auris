@@ -1,8 +1,5 @@
 package com.goldensystem.auris.data.ai.provider
 
-/**
- * Enum representing available AI providers
- */
 enum class AiProvider(val displayName: String, val requiresApiKey: Boolean) {
     GEMINI("Google Gemini", requiresApiKey = true),
     DEEPSEEK("DeepSeek", requiresApiKey = true),
@@ -12,8 +9,9 @@ enum class AiProvider(val displayName: String, val requiresApiKey: Boolean) {
     KIMI("Kimi (Moonshot)", requiresApiKey = true),
     GLM("Zhipu GLM", requiresApiKey = true),
     OPENAI("OpenAI", requiresApiKey = true),
-    OPENROUTER("OpenRouter", requiresApiKey = true);
-    
+    OPENROUTER("OpenRouter", requiresApiKey = true),
+    AURIS_LOCAL("Auris Local (Offline)", requiresApiKey = false);
+
     companion object {
         fun fromString(value: String): AiProvider {
             return entries.find { it.name == value } ?: GEMINI
