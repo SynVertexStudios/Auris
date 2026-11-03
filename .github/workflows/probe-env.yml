@@ -1,0 +1,27 @@
+name: Probe Android Env
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: OS info
+        run: cat /etc/os-release && uname -a
+
+      - name: SDK location and preinstalled NDK / CMake
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "--- NDK preinstalado ---"
+          ls "$ANDROID_HOME/ndk" || echo "(nenhum NDK preinstalado)"
+          echo "--- CMake preinstalado ---"
+          ls "$ANDROID_HOME/cmake" || echo "(nenhum CMake preinstalado)"
+
+      - name: Available NDK 29 and CMake 3.31 via sdkmanager
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --list > /tmp/sdk-list.txt 2>&1 || true
+          echo "--- NDK 29 disponiveis ---"
+          grep -E "^\s*ndk;29" /tmp/sdk-list.txt | sort -u || true
+          echo "--- CMake 3.31 disponiveis ---"
+          grep -E "^\s*cmake;3\.31" /tmp/sdk-list.txt | sort -u || true
