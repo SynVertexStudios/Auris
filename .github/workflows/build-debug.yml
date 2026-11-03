@@ -31,11 +31,15 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Compile :llama module only (validation)
-        run: ./gradlew :llama:assembleDebug
-
       - name: Restore release keystore (para debug assinado)
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/my-release-key.keystore
+
+      - name: Compile :llama module only (validation)
+        run: ./gradlew :llama:assembleDebug
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Build Auris debug APK com assinatura release
         run: ./gradlew :app:assembleDebug -Pauris.enableAbiSplits=true
