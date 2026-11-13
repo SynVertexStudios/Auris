@@ -72,7 +72,7 @@ private val CATEGORY_CONFIG = mapOf(
     WallpaperCategory.CARR to ("carr" to 10),
     WallpaperCategory.NEON to ("neon" to 10),
     WallpaperCategory.OTRS to ("otrs" to 7),
-    WallpaperCategory.SPACE to ("space" to 10)
+    WallpaperCategory.SPACE to ("space" to 12)
 )
 
 private const val BASE_URL =
